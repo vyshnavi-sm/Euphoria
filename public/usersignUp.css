@@ -1,0 +1,177 @@
+/* Global Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #1a1a1a;
+}
+
+/* Container */
+.container {
+    display: flex;
+    width: 860px;
+    height: 600px;
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Form Section */
+.form-container {
+    width: 50%;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+h2 {
+    text-align: center;
+    font-family: 'Georgia', serif;
+    margin-bottom: 20px;
+}
+
+/* Input Fields */
+form label {
+    font-size: 14px;
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+}
+
+form input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Checkbox */
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Aligns content to the left */
+    gap: 5px; /* Adds spacing between checkbox and text */
+    font-size: 12px; /* Reduces text size */
+    margin-top: 10px;
+    white-space: nowrap; /* Prevents text from wrapping */
+}
+
+.checkbox-container input {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+
+/* Signup Button */
+.signup-btn {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background-color: #665a33;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.signup-btn:hover {
+    background-color: #52482a;
+}
+
+/* Divider */
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+}
+
+.divider hr {
+    flex: 1;
+    border: none;
+    height: 1px;
+    background-color: #ccc;
+}
+
+.divider span {
+    padding: 0 10px;
+    font-size: 14px;
+    color: #777;
+}
+
+/* Social Buttons */
+.social-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.social-buttons button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: white;
+    font-size: 14px;
+}
+
+.social-buttons img {
+    width: 18px;
+}
+
+.google-btn:hover, .apple-btn:hover {
+    background-color: #f1f1f1;
+}
+
+/* Sign In Link */
+.login-link {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.login-link a {
+    color: #665a33;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+
+/* Brand Name */
+.brand-name {
+    text-align: center;
+    margin-top: 10px;
+    font-family: 'Georgia', serif;
+    font-size: 18px;
+    font-style: italic;
+    color: #777;
+}
+
+/* Image Section */
+.image-container {
+    width: 50%;
+}
+
+.image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

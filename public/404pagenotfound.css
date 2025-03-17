@@ -1,0 +1,91 @@
+/* General Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #2b2b2b;
+    color: #2b2929;
+}
+
+/* Navbar */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f6e8d9;
+    padding: 15px 30px;
+}
+
+.logo {
+    font-family: 'Cursive', sans-serif;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    padding: 0;
+    margin: 0;
+}
+
+nav ul li {
+    display: inline;
+}
+
+nav ul li a {
+    text-decoration: none;
+    color: rgb(137, 131, 131);
+    font-weight: 500;
+}
+
+nav ul li a.active {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.icons {
+    display: flex;
+    gap: 20px;
+}
+
+.icons i {
+    font-size: 22px;
+    color: black;
+}
+
+
+/* Error Page */
+.error-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    background:white;
+    padding: 50px;
+    margin: 50px auto;
+    width: 80%;
+    border-radius: 10px;
+}
+
+.error-container img {
+    width: 50%;
+    max-width: 400px;
+}
+
+.error-text {
+    text-align: left;
+    color: rgb(117, 113, 113);
+}
+
+.error-text h2 {
+    font-size: 22px;
+    margin-bottom: 10px;
+}
+
+.error-text p a {
+    text-decoration: none;
+    color: #5fa8ed;
+    font-weight: bold;
+}
