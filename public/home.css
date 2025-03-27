@@ -63,7 +63,7 @@ body {
     justify-content: center;
     height: 100vh;
     padding: 0 80px;
-    background: url('./photos/WhatsApp Image 2025-03-06 at 19.17.10_1997b08c.jpg') no-repeat center center/cover;
+    background: url('./photos/Home\ page.jpg') no-repeat center center/cover;
     position: relative;
 }
 
@@ -367,12 +367,42 @@ footer {
 }
 
 .payment-icons img {
-    width: 50px; /* Adjust the size */
+    width: 50px; 
     height: auto;
     cursor: pointer;
     transition: transform 0.3s ease-in-out;
 }
 
 .payment-icons img:hover {
-    transform: scale(1.1); /* Slight zoom effect on hover */
+    transform: scale(1.1); 
+}
+.dropdown{
+    position: relative;
+    display: inline-block;
+}
+.dropdown-content{
+    display:none;
+    position: absolute;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px black;
+    z-index: 1000;
+    right: 0;
+}
+.dropdown-content a{
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+    width: 100%;
+}
+.dropdown-content a:hover{
+    background-color: #f1f1f1;
+}
+.dropdown:hover .dropdown-content{
+    display: block;
+}
+.header{
+    position: relative;
+    z-index: 500;
 }

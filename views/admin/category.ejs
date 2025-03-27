@@ -1,0 +1,580 @@
+<%- include("../../views/partials/admin/header") %>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css"/>
+  <style>
+ 
+/* General Styles */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    display: flex;
+}
+
+/* Top Navigation Bar */
+.topbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    background: #563d07;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    color: white;
+    z-index: 1000;
+}
+
+/* Logo */
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* Top Right Icons */
+.top-right {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Reduce the gap between elements */
+    margin-right: 20px; /* Adjust the right margin */
+}
+
+
+.search-container {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.search-container input {
+    border: none;
+    outline: none;
+    padding: 5px;
+}
+
+.search-container button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.profile-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    margin-left: -10px; /* Move it slightly left */
+}
+
+.logout {
+    color: whitesmoke;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 220px;
+    height: calc(100vh - 60px);
+    background: #5a3e06;
+    padding-top: 10px;
+    color: white;
+}
+
+.nav-menu {
+    list-style: none;
+    padding: 0;
+}
+
+.nav-menu li {
+    padding: 15px;
+}
+
+.nav-menu a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-menu a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* Main Content */
+.content-main {
+    margin-left: 240px;
+    padding: 80px 20px 20px;
+    width: calc(100% - 240px);
+}
+
+/* Content Header */
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.content-title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* Search Bar */
+.input-group {
+    width: 500px;
+    margin: 0 auto;
+}
+
+.input-group input {
+    border: none;
+    outline: none;
+    padding: 8px;
+    width: 80%;
+    border-radius: 50px;
+}
+
+.input-group button {
+    background: #007bff;
+    border: none;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 50px;
+    cursor: pointer;
+}
+
+.input-group button:hover {
+    background: #0056b3;
+}
+
+/* Card & Form Container */
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.col-md-3 {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Form Elements */
+.form-label {
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+/* Buttons */
+.d-grid {
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-info a {
+    color: white;
+    text-decoration: none;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-danger a {
+    color: white;
+    text-decoration: none;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-success a {
+    color: white;
+    text-decoration: none;
+}
+
+/* Table */
+.table-responsive {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table thead {
+    background-color: #5a3e06;
+    color: white;
+}
+
+.table th, .table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+/* Badges */
+.badge {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 50px;
+}
+
+.alert-success {
+    background: #28a745;
+    color: white;
+}
+
+.alert-danger {
+    background: #dc3545;
+    color: white;
+}
+
+/* Pagination */
+.pagination-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.pagination {
+    display: inline-block;
+}
+
+.pagination a, .pagination .current-page {
+    display: inline-block;
+    padding: 5px 10px;
+    margin: 0 2px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #333;
+}
+
+.pagination a:hover {
+    background-color: #f5f5f5;
+}
+
+/* Error Messages */
+.error-message {
+    color: red;
+    font-weight: bold;
+}
+
+  </style>
+</head>
+<body>
+  <section class="content-main">
+    <div class="content-header">
+      <div>
+        <h2 class="content-title card-title">Category</h2>
+      </div>
+    </div>
+    <header class="card-header text-center mb-20">
+      <form action="/admin/category/" method="get" class="d-inline">
+        <div class="input-group input-group-sm border border-1 border-grey rounded-pill" style="width: 500px; margin-left: 230px">
+          <input type="text" class="form-control border-0 rounded-pill mt-3" placeholder="Search categories" name="search"/>
+          <button class="btn" type="submit">Search</button>
+        </div>
+      </form>
+    </header>
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-3">
+            <form method="post" action="/admin/addCategory" id="categoryForm">
+                <div class="mb-4">
+                <label for="product_name" class="form-label">Name</label>
+                <input type="text" name="name" placeholder="Type here" class="form-control" id="product_name" required/>
+                <div id="name-error" class="error-message"></div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label">Description</label>
+                <textarea placeholder="Type here" name="description" class="form-control" id="descriptionId" required></textarea>
+                <div id="description-error" class="error-message"></div>
+              </div>
+              <div class="d-grid">
+                <button class="btn btn-primary" type="submit">
+                  Create category
+                </button>
+              </div>
+            </form>
+          </div>
+          <div class="col-md-8 ml-10">
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th class="text-center"></th>
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Offer Price</th>
+                    <th>Offer</th>
+                    <th>Status</th>
+                    <th>List/Unlist</th>
+                    <th class="text-start">Edit</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    <% if (cat && cat.length > 0) { %>
+                        <% cat.reverse().forEach((category, index) => { %>
+                          <tr>
+                            <td></td>
+                            <td class="text-start"><%= category.name %></td>
+                            <td class="text-start"><%= category.description %></td>
+                            <td></td>
+                            <td class="text-start">
+                              <button class="btn btn-info" style="width: 100px">
+                                <a href="#" class="text-white">Add Offer</a>
+                              </button>
+                              <button class="btn btn-info" style="width: 100px">
+                                <a href="#" class="text-white">Remove</a>
+                              </button>
+                            </td>
+                            <td class="text-start">
+                              <span class="badge rounded-pill alert-success" style="width: 60px">Listed</span>
+                              <span class="badge rounded-pill alert-danger" style="width: 60px">Unlisted</span>
+                            </td>
+                            <td class="text-start">
+                              <button class="btn btn-danger" style="width: 70px">
+                                <a href="#" class="text-white">Unlist</a>
+                              </button>
+                              <button class="btn btn-success" style="width: 70px">
+                                <a href="" class="text-white">List</a>
+                              </button>
+                            </td>
+                            <td class="text-start">
+                              <a href="" class="btn btn-info text-white">Edit</a>
+                            </td>
+                          </tr>
+                        <% }) %>
+                      <% } else { %>
+                        <!-- <tr>
+                          <td colspan="8" class="text-center">No categories found.</td>
+                        </tr>
+                      <% } %> -->
+                      
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pagination-container">
+        <% if (currentPage > 1){ %>
+      <a href="?page=<%= currentPage - 1%>">&laquo; Previous</a>
+      <% } %> <% for (let i=1; i <=totalPages; i++) { %> <% if (i ===currentPage) { %>
+      <span class="current-page"><%= i %></span>
+      <% } else { %>
+      <a href="?page=<%= i %>"><%= i %></a> 
+      <% } %> <% } %> <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>">Next &raquo;</a>
+      <% } %>
+    </div>
+  </section>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script>
+document.getElementById("categoryForm").addEventListener("submit", handleFormSubmit);
+
+    function handleFormSubmit(event){
+
+        event.preventDefault();
+        if(!validateForm()){
+            return
+        }
+        const name = document.getElementsByName("name")[0].value;
+        const description = document.getElementById("descriptionId").value;
+        const isListed = true;
+
+        fetch('/admin/addCategory',{
+            method:'POST',
+            headers:{
+               'Content-Type':'application/json'
+              },
+
+              body: JSON.stringify({ name, description, isListed })
+            })
+        .then(response=>{
+            if(!response.ok){
+                return response.json().then(err =>{
+                    throw new Error(err.error);
+                })
+            }
+
+            return response.json();
+        })
+        .then(data=>{
+            location.reload();
+        })
+        .catch(error=>{
+            if(error.message === "Category already exists"){
+                Swal.fire({
+
+                    icon:"error",
+                    title:"Oops",
+                    text:"Category already exists"
+                })
+            }else{
+                Swal.fire({
+                    icon:"error",
+                    title:"Oops",
+                    text:"An error occured while adding the category"
+                })
+            }
+        })
+    }
+
+
+    function validateForm (){
+        clearErrorMessages();
+        const name = document.getElementsByName("name")[0].value.trim();
+        const description = document.getElementById("descriptionId").value.trim();
+        isValid = true;
+
+
+
+        if(name===""){
+            displayErrorMessage("name-error","Please enter a name");
+            isValid = false
+        }else if(!/^[a-zA-Z\s]+$/.test(name)){
+            displayErrorMessage("name-error","Category name should contain only alphabetic characters")
+            isValid = false;
+
+
+        }
+
+        if(description===""){
+            displayErrorMessage("description-error","Please enter a description");
+            isValid = false
+        }
+        return isValid;
+    }
+
+    function displayErrorMessage(elementId,message){
+        var errorElement =document.getElementById(elementId);
+        errorElement.innerText = message;
+        errorElement.style.display ="block";
+
+        
+    }
+
+    function clearErrorMessages(){
+        const errorElement = document.getElementsByClassName("error-message");
+        Array.from(errorElement).forEach((element)=>{
+            element.innerText="";
+            element.style.display="none";
+
+        });
+    }
+
+
+
+
+
+
+
+
+
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<%- include("../../views/partials/admin/footer") %>
+
+
+
+

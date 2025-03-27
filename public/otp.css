@@ -59,7 +59,7 @@ p {
 }
 
 .confirm-btn {
-    width: 100px;
+    width: 150px;
     padding: 10px;
     margin-top: 20px;
     background-color: #665a33;
@@ -72,6 +72,27 @@ p {
 
 .confirm-btn:hover {
     background-color: #52482a;
+} /* Circular Timer */
+.timer-container {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin: 15px auto;
+}
+
+#progressCircle {
+    width: 60px;
+    height: 60px;
+    position: relative;
+}
+
+.timer-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    font-weight: bold;
 }
 
 .back-link {

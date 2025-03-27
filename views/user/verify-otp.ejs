@@ -1,0 +1,276 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Euphoria</title>
+    <link rel="stylesheet" href="otp.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+</head>
+<body>
+    <body>
+        <form 
+        id="otpForm"
+        action="/verify-otp"
+        method="post"
+        onsubmit="return validateOTPForm">
+        <div class="container">
+            <div class="form-container">
+                <h2>Confirm With OTP</h2>
+                <p>Please check your mail address for OTP</p>
+                <div class="otp-input">
+                    <input type="text" maxlength="1">
+                    <input type="text" maxlength="1">
+                    <input type="text" maxlength="1">
+                    <input type="text" maxlength="1">
+                    <input type="text" maxlength="1">
+                    <input type="text" maxlength="1">
+                </div>
+                <button class="confirm-btn">Confirm</button>
+                <a href="#" class="back-link">Go back to login page</a>
+                <div class="brand-name">EUPHORIA</div>
+            </div>
+        </form>
+            <div class="image-container">
+                <img src="https://images.pexels.com/photos/8105118/pexels-photo-8105118.jpeg?cs=srgb&dl=pexels-solodsha-8105118.jpg&fm=jpg" alt="Jewelry">
+            </div>
+        </div>
+        <script>
+
+            function validateOTPForm(){
+                const otpInput = document.getElementById("otp").value;
+
+                $.ajax({
+                    type:"POST",
+                    url:"verify-otp",
+                    data:{otp:otpInput},
+                    success:function(response){
+                        if(response.success){
+                           Swal.fire({
+                            icon:"success",
+                            title:"OTP verified successfully",
+                            showConfirmButton:false,
+                            timer:1500,
+
+                           }).then(()=>{
+                            window.location.href = response.redirectUrl;
+                           })
+                        }else{
+                            Swal.fire({
+                                icon:"error",
+                                title:"Error",
+                                text:response.message,
+                            })
+                        }
+                    },
+                    error: function (){
+                        Swal.fire({
+                            icon:"error",
+                            title:"Invalid OTP",
+                            text:"Please try again"
+                        })
+                    }
+                })
+                return false;
+            }
+
+
+
+
+        </script>
+    </body>
+</body>
+
+</html> -->
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Euphoria</title>
+    <link rel="stylesheet" href="otp.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script>
+</head>
+<body>
+    <form id="otpForm" action="/verify-otp" method="post" onsubmit="return validateOTPForm(event);">
+        <div class="container">
+            <div class="form-container">
+                <h2>Confirm With OTP</h2>
+                <p>Please check your mail address for OTP</p>
+                <br>
+                <div class="otp-input">
+                    <input type="text" maxlength="1">
+                    <input type="text" maxlength="1">
+                    <input type="text" maxlength="1">
+                    <input type="text" maxlength="1">
+                    <input type="text" maxlength="1">
+                    <input type="text" maxlength="1">
+                </div>
+                <button class="confirm-btn">Confirm</button>
+                <br>
+
+                <!-- Circular Timer -->
+                <div class="timer-container">
+                    <div id="progressCircle"></div>
+                    <div class="timer-text" id="timerValue">30</div>
+                </div>
+
+                <button type="button" id="resendOTP" class="confirm-btn" disabled>Resend OTP</button>
+                <br>
+                <a href="#" class="back-link">Go back to login page</a>
+                <div class="brand-name">EUPHORIA</div>
+            </div>
+            <div class="image-container">
+                <img src="https://images.pexels.com/photos/8105118/pexels-photo-8105118.jpeg?cs=srgb&dl=pexels-solodsha-8105118.jpg&fm=jpg" alt="Jewelry">
+            </div>
+        </div>
+    </form>
+
+   
+    <script>
+
+let timer = 60;
+let timerInterval;
+let resendBtn = document.getElementById("resendOTP");
+let timerText = document.getElementById("timerValue");
+
+// Circular progress bar setup
+let circle = new ProgressBar.Circle("#progressCircle", {
+    strokeWidth: 6,
+    easing: "linear",
+    duration: 60000, // 60 seconds
+    color: "#6d5d38",
+    trailColor: "#ddd",
+    trailWidth: 6,
+    svgStyle: null
+});
+
+function startTimer() {
+    timer = 60; // Reset to 60 seconds
+    timerText.textContent = timer;
+    resendBtn.disabled = true;
+    resendBtn.style.backgroundColor = "grey";
+    resendBtn.style.cursor = "not-allowed";
+
+    // Restart progress bar
+    circle.set(1);
+    circle.animate(0, { duration: 60000 });
+
+    timerInterval = setInterval(() => {
+        timer--;
+        timerText.textContent = timer;
+
+        if (timer <= 0) {
+            clearInterval(timerInterval);
+            resendBtn.disabled = false;
+            resendBtn.style.backgroundColor = "#6d5d38";
+            resendBtn.style.cursor = "pointer";
+        }
+    }, 1000);
+}
+
+// Start the timer when the page loads
+startTimer();
+
+        function validateOTPForm(event) {
+            event.preventDefault();  // Prevent form from submitting normally
+            
+            // Collect OTP from input fields
+            const otpInputs = document.querySelectorAll(".otp-input input");
+            let otpValue = "";
+            otpInputs.forEach(input => {
+                otpValue += input.value;
+            });
+
+            // Ensure OTP is 6 digits
+            if (otpValue.length !== 6) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Invalid OTP",
+                    text: "OTP must be 6 digits",
+                });
+                return false;
+            }
+
+            // AJAX Request
+            $.ajax({
+                type: "POST",
+                url: "/verify-otp",
+                data: { otp: otpValue },
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "OTP verified successfully",
+                            showConfirmButton: false,
+                            timer: 1500,
+                        }).then(() => {
+                            window.location.href = response.redirectUrl;
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            text: response.message,
+                        });
+                    }
+                },
+                error: function () {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Invalid OTP",
+                        text: "Please try again",
+                    });
+                },
+            });
+
+            return false;
+        }
+
+        function resendOTP() {
+    clearInterval(timerInterval); // Stop existing timer
+    startTimer(); // Restart timer to 60 seconds
+
+    // Enable all OTP input fields
+    document.querySelectorAll(".otp-input input").forEach(input => {
+        input.disabled = false;
+        input.value = ""; // Clear previous OTP
+    });
+
+    $.ajax({
+        type: "POST",
+        url: "/resend-otp",
+        success: function (response) {
+            if (response.success) {
+                Swal.fire({
+                    icon: "success",
+                    title: "OTP Resent Successfully",
+                    text: "Please check your email for the new OTP.",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "An error occurred while resending OTP. Please try again.",
+                });
+            }
+        }
+    });
+
+    return false;
+}
+
+
+    </script>
+</body>
+</html>
