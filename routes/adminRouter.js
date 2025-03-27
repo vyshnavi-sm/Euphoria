@@ -21,7 +21,8 @@ router.get('/unblockCustomer',adminAuth,customerController.customerUnblocked)
 
 router.get("/category",adminAuth,categoryController.categoryInfo);
 router.post("/addCategory",adminAuth,categoryController.addCategory);
-
+router.get("/listCategory",adminAuth,categoryController.getListCategory);
+router.get("/UnlistCategory",adminAuth,categoryController.getUnlistCategory)
 
 // Product Management
 router.get("/products",adminAuth,productController.getProductPage);
