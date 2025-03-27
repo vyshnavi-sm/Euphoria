@@ -1,4 +1,115 @@
+     <style>
+        /* General Styles */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    display: flex;
+}
 
+/* Top Navigation Bar */
+.topbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    height: 60px;
+    background:#563d07;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    color: white;
+    z-index: 1000;
+}
+
+/* Logo */
+.logo {
+    font-size: 22px;
+    font-weight: bold;
+}
+
+/* Top Right Icons */
+.top-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.search-container {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.search-container input {
+    border: none;
+    outline: none;
+    padding: 5px;
+}
+
+.search-container button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.profile-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+}
+.logout{
+    /* background-color:rgb(23, 1, 1); */
+    color: whitesmoke;
+    
+}
+
+/* Sidebar Navigation */
+.sidebar {
+    position: fixed;
+    top: 60px; /* Below the header */
+    left: 0;
+    width: 200px;
+    height: calc(100vh - 60px);
+    background: #5a3e06;
+    padding-top: 10px;
+    color: white;
+}
+
+.nav-menu {
+    list-style: none;
+    padding: 0;
+}
+
+.nav-menu li {
+    padding: 15px;
+}
+
+.nav-menu a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.nav-menu a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 220px; /* Pushes content to the right of the sidebar */
+    padding: 80px 20px 20px;
+    width: calc(100% - 220px);
+    
+}
+
+     </style>
     <header class="topbar">
         <div class="logo">
             <strong>EUPHORIA</strong>
