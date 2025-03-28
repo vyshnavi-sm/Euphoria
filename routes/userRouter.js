@@ -22,8 +22,8 @@ router.get("/login",userController.loadLogin)
 router.post('/login',userController.login)
 
 router.get("/logout",userController.logout)
-
-
+router.get("/products",userController.loadProductpage)
+router.get("/oneProducts",userController.oneProducts)
 
 
 

@@ -5,6 +5,8 @@ const customerController = require("../controllers/admin/customerController")
 const{userAuth,adminAuth} = require("../middlewares/auth")
 const categoryController = require("../controllers/admin/categoryController");
 const productController = require("../controllers/admin/productController");
+const uploads = require('../middlewares/imageUpload.js');
+
 
 router.get("/pageerror",adminController.pageerror)
 // Login Management
@@ -26,8 +28,9 @@ router.get("/UnlistCategory",adminAuth,categoryController.getUnlistCategory)
 router.get("/editCategory",adminAuth,categoryController.getEditCategory);
 router.post("/editCategory/:id",adminAuth,categoryController.editCategory);
 // Product Management
-router.get("/products",adminAuth,productController.getProductPage);
 
+router.get("/products",adminAuth,productController.getProductPage);
+router.post("/addProducts",adminAuth,uploads.array("images",4),productController.addProducts);
 
 
 module.exports = router;

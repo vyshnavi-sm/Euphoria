@@ -315,6 +315,41 @@ const securePassword = async(passwors)=>{
             res.redirect("/pageNotFound");
         }
     };
+
+    const loadProductpage = async(req,res)=>{
+            try {
+                res.render("product"); // This will render the product.ejs file
+            } catch (error) {
+                console.error("Error loading product page:", error);
+                res.status(500).send("Internal Server Error");
+            }
+        };
+        
+    //   const loadPicture = async (req, res) => {
+    //     try {
+    //       const product = await Product.findById(req.params.id);
+    //       if (!product) {
+    //         return res.status(404).json({ error: "Product not found" });
+    //       }
+    //       res.json(product);
+    //     } catch (err) {
+    //       res.status(500).json({ error: "Server Error" });
+    //     }
+    //   };  
+     
+      const oneProducts = async (req,res) =>{
+        try {
+            res.render("oneProducts");
+
+        } catch (error) {
+            console.error("Error loading product page:", error);
+            res.status(500).send("Internal Server Error");
+
+            
+        }
+      }
+
+    
     
 
 module.exports = {
@@ -327,4 +362,7 @@ module.exports = {
     loadLogin,
     login,
     logout,
+    loadProductpage,
+    oneProducts
+    
 }

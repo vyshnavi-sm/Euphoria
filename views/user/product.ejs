@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Euphoria - Products</title>
+    <link rel="stylesheet" href="product.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+<body>
+    <header>
+        <div class="container">
+            <!-- Left Side: Logo & Navigation -->
+            <div class="header-left">
+                <h1 class="logo">EUPHORIA</h1>
+               
+                <nav class="nav-container">
+                
+                    <a href="#">Home</a>
+                    <a href="#" class="active">Products</a>
+                </nav>
+            </div>
+    
+            <!-- Right Side: Icons + Sorting Below -->
+            <div class="header-right">
+                <div class="icons">
+                    <i class="far fa-heart"></i>
+                    <i class="fas fa-search"></i>
+                    <i class="fas fa-shopping-cart"></i>
+                    <i class="fas fa-user"></i>
+                </div>
+                <br>
+                <div class="sort-options">
+                    <a href="#">Sort ▼</a>
+                    <a href="#">Size ▼</a>
+                    <a href="#">Deals/Offers</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Sidebar Filters -->
+        <aside class="sidebar">
+            <h2>Categories</h2>
+            <ul>
+                <li>Earrings</li>
+                <li>Necklace</li>
+                <li>Bracelet</li>
+                <li>Rings</li>
+                <li>Watches</li>
+                <li>Armlet</li>
+            </ul>
+<br>
+            <h2>Price</h2>
+            <input type="range" min="49" max="4999" class="price-range">
+            <p>₹49 - ₹4999</p>
+<br><br>
+<div class="materials-section">
+    <h3>Materials</h3>
+    <br>
+    <ul class="materials-list">
+        <li><input type="checkbox" id="gold"><label for="gold"> Gold (150)</label></li>
+        <li><input type="checkbox" id="silver"><label for="silver"> Silver (320)</label></li>
+        <li><input type="checkbox" id="platinum"><label for="platinum"> Platinum (300)</label></li>
+    </ul>
+</div>
+
+<br><br>
+<div class="brands-section">
+    <h3>Brands</h3>
+    <br>
+    <ul class="brand-list">
+        <li>
+            <input type="checkbox" id="brand1">
+            <label for="brand1">HELENS & JAMES <span>(168)</span></label>
+        </li>
+        <li>
+            <input type="checkbox" id="brand2">
+            <label for="brand2">QKE Jewelry <span>(120)</span></label>
+        </li>
+        <li>
+            <input type="checkbox" id="brand3">
+            <label for="brand3">Roman Paul <span>(105)</span></label>
+        </li>
+        <li>
+            <input type="checkbox" id="brand4">
+            <label for="brand4">KS Silverworks <span>(96)</span></label>
+        </li>
+        <li>
+            <input type="checkbox" id="brand5">
+            <label for="brand5">Love, Executive <span>(72)</span></label>
+        </li>
+    </ul>
+    
+</div>
+
+<br><br>
+
+<div class="size-filter">
+    <h3>Size</h3>
+    <br>
+    <div class="size-options">
+        <button>XS</button>
+        <button>S</button>
+        <button class="selected">M</button>
+        <button>L</button>
+        <button>XL</button>
+        <!-- <button>2XL</button> -->
+    </div>
+    <br><br><br>
+    <p class="clear-filter">✖ CLEAR ALL FILTER</p>
+</div>
+
+            
+        </aside>
+
+        <!-- Product Grid -->
+        <section class="product-grid">
+
+            <div class="product">
+                
+                <a href="/oneProducts"><img src="./photos/Product1.jpg" alt="Golden Necklace"></a>
+                <p>Golden Necklace with Bracelet</p>
+                <span>₹799.00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product2.jpg" alt="Platinum Chain">
+                <p>Platinum Chain</p>
+                <span>₹159.00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product3.jpg" alt="Rose Gold Bracelets">
+                <p>Rose Gold Bracelets</p>
+                <span>₹200.00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product4.jpg" alt="Golden Earrings">
+                <p>Golden Earrings</p>
+                <span>₹120.00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product5.jpg" alt="Golden Simple Chain">
+                <p>Golden Simple Chain</p>
+                <span>₹189.00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product6.jpg" alt="Golden Ring">
+                <p>Golden Ring</p>
+                <span>₹99.00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product7.jpg" alt="Golden Armlet">
+                <p>Golden Armlet</p>
+                <span>₹1200.00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product8.jpg" alt="Golden Chain with Bracelet">
+                <p>Golden Chain with Bracelet</p>
+                <span>₹750.00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product9.jpg" alt="Golden Earrings">
+                <p>Rose Gold Watch</p>
+                <span>₹2999 .00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product10.jpg" alt="Golden Earrings">
+                <p>Golden Earrings</p>
+                <span>₹620.00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product11.jpg" alt="Golden Earrings">
+                <p>Pearl Necklace With Bracelet</p>
+                <span>₹3500.00</span>
+            </div>
+            <div class="product">
+                <img src="./photos/product12.jpg" alt="Golden Earrings">
+                <p>Rose Gold Earrings</p>
+                <span>₹750.00</span>
+            </div>
+        </section>
+    </div>
+
+
+    <div class="pagination">
+        <button class="prev">&lt;</button>
+        <span class="page-number active">1</span>
+        <span class="page-number">2</span>
+        <span class="page-number">3</span>
+        <span class="page-number">4</span>
+        <span class="dots">...</span>
+        <button class="next">&gt;</button>
+    </div>
+    
+  
+   
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-section about">
+                <h3>EUPHORIA</h3>
+                <p>
+                    Welcome to Euphoria, your ultimate destination for exquisite jewelry and classy accessories. 
+                    We take pride in offering premium-quality collections, exceptional customer service, and a seamless shopping experience. 
+                    From elegant statement pieces to timeless everyday wear, we have everything you need to elevate your style with sophistication and grace.
+                </p>
+                <div class="play-store-box">
+                    <i class="fa-brands fa-google-play"></i>
+                    <div class="play-text">
+                        <p>Get the App on</p>
+                        <h2>GOOGLE PLAY</h2>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="footer-section links">
+                <h4>Get to know us</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Store Locations</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms & Conditions</a></li>
+                    <li><a href="#">Affiliate & Partnerships</a></li>
+                    <li><a href="#">Blog & Tech Guides</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Press & Media</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section consumers">
+                <h4>For Consumers</h4>
+                <ul>
+                    <li><a href="#">Shipping Policy</a></li>
+                    <li><a href="#">Terms & Conditions</a></li>
+                    <li><a href="#">Customer Care Support</a></li>
+                    <li><a href="#">Warranty Guidelines</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section contact">
+                <h4>Contact Us</h4>
+                <p>📍 Euphoria HQ</p>
+                <p>1984 Euphoria, Trade Center<br>Kochi, Kerala, India</p>
+                <p>📧 Email: <a href="mailto:support@euphoria.com">support@euphoria.com</a></p>
+                <p>📞 Phone: +1-800-EUPHORIA</p>
+                <p>📠 Fax: +1-123-456-7890</p>
+            </div>
+        </div>
+    
+        <div class="footer-bottom">
+            <div class="social-icons">
+                <!-- <a href="#"><img src="" alt="Facebook"></a> -->
+                <i class="fa-brands fa-facebook"></i>
+                <i class="fa-brands fa-square-x-twitter"></i>
+                <i class="fa-brands fa-youtube"></i>
+                <i class="fa-brands fa-square-instagram"></i>
+
+
+            </div>
+            <p>© 2025 Euphoria - All Rights Reserved.</p>
+            <div class="payment-icons">
+                <i class="fa-brands fa-cc-visa"></i>
+                <i class="fa-brands fa-cc-mastercard"></i>
+                <i class="fa-brands fa-paypal"></i>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
