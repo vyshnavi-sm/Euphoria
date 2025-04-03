@@ -447,6 +447,55 @@ body {
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
 <script>
+
+
+document.addEventListener("DOMContentLoaded", function () {
+    const unlistButtons = document.querySelectorAll(".btn-danger a");
+    const listButtons = document.querySelectorAll(".btn-success a");
+
+    unlistButtons.forEach(button => {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            const unlistUrl = this.getAttribute("href");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You are about to unlist this category!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, unlist it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = unlistUrl;
+                }
+            });
+        });
+    });
+
+    listButtons.forEach(button => {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            const listUrl = this.getAttribute("href");
+
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You are about to list this category again!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#28a745",
+                cancelButtonColor: "#3085d6",
+                confirmButtonText: "Yes, list it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = listUrl;
+                }
+            });
+        });
+    });
+});
+
 document.getElementById("categoryForm").addEventListener("submit", handleFormSubmit);
 
     function handleFormSubmit(event){

@@ -98,25 +98,7 @@ const pageNotFound = async(req,res) => {
 }
 
 
-// const loadHomepage = async (req,res)=>{
-//     try {
-//         const user = req.session.user;
-//         if(user){
-//             const userData = await User.findOne({_id:user._id})
-         
-//             return res.render("home",{user:userData});
-//         }else{
-//            return  res.render("home");
-//         }
-        
-      
 
-//     } catch (error) {
-        
-//         console.log("Home page not found")
-//         res.status(500).Send("Server error ")
-//     }
-// }
 
 const loadHomepage = async (req, res) => {
     try {
@@ -190,7 +172,7 @@ const securePassword = async(passwors)=>{
             const otp = generateOtp();
             req.session.userOtp = otp;
 
-            const emailSent = await sendVerificationEmail(email.otp);
+            const emailSent = await sendVerificationEmail(email,otp);
 
             if(emailSent){
                 console.log("Resend OTP:",otp);
@@ -219,35 +201,6 @@ const securePassword = async(passwors)=>{
         }
     }
 
-    // const login = async(req,res)=>{
-    //     try {
-    //         const{email,password} =req.body;
-
-    //         const findUser = await User.findOne({isAdmin:0,email:email});
-    //         if (!findUser) {
-    //             return res.status(400).json({ success: false, errorMessage: "User not found" });
-    //         }
-    
-    //         if (findUser.isBlocked) {
-    //             return res.status(403).json({ success: false, errorMessage: "User is blocked by admin" });
-    //         }
-    //         const passwordMatch = await bcrypt.compare(password, findUser.password);
-    //         if (!passwordMatch) {
-    //             return res.status(401).json({ success: false, errorMessage: "Incorrect Password" });
-    //         }
-    
-    //         req.session.user = findUser._id;
-    
-    //         return res.json({ success: true, message: "Login successful", redirectUrl: "/" });
-
-    //     } catch (error) {
-
-    //         console.error("login error",error);
-    //         return res.status(500).json({ success: false, errorMessage: "Login failed. Please try again later" }); 
-          
-
-    //     }
-    // }
 
 
     const login = async (req, res) => {
@@ -268,7 +221,7 @@ const securePassword = async(passwors)=>{
                 return res.status(401).json({ success: false, errorMessage: "Incorrect Password" });
             }
     
-            // ✅ Store full user object in session
+            
             req.session.user = findUser;
     
             return res.json({ success: true, message: "Login successful", redirectUrl: "/" });
@@ -280,23 +233,6 @@ const securePassword = async(passwors)=>{
     };
     
 
-    // const logout = async (req,res)=>{
-    //     try {
-            
-    //         req.session.destroy((err) => {
-    //             if(err){
-    //                 console.log("Session destruction error",err.message);
-    //                 return res.redirect()
-    //             }
-    //             return res.redirect("/login")
-
-    //         })
-    //     } catch (error) {
-    //         console.log("Logout error",error)
-    //         res.redirect("/pageNotFound")
-            
-    //     }
-    // }
 
 
 
@@ -363,6 +299,6 @@ module.exports = {
     login,
     logout,
     loadProductpage,
-    oneProducts
+    oneProducts,
     
 }
