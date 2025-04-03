@@ -1,0 +1,221 @@
+<%- include("../../views/partials/admin/header") %>
+
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+    <style>
+        /* General Page Styling */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        /* Centering Content */
+        .content-header {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        /* Search Bar */
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .search-container input {
+            border-radius: 40px;
+            border: 1px solid #ccc;
+            padding: 8px 12px;
+        }
+
+        /* Table Styling */
+        .table-container {
+            margin: auto;
+            margin-top: 200px;
+            margin-left: -110px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 1200px;
+            opacity: 0;
+            transform: translateY(-50px);
+            animation: slideDown 0.6s ease-out forwards;
+        }
+
+        /* Slide Animation */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #5c3d2e;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Button Styling */
+        .btn {
+            padding: 8px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            text-align: center;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .btn a {
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Pagination Styling */
+        .pagination-container {
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: slideDown 0.8s ease-out forwards;
+        }
+
+        .pagination .page-item {
+            display: inline-block;
+            margin: 5px;
+        }
+
+        .pagination .page-link {
+            padding: 8px 12px;
+            border-radius: 5px;
+            background-color: #5c3d2e;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .pagination .page-link:hover {
+            background-color: #4a2f21;
+        }
+    </style>
+</head>
+
+<!-- Page Header -->
+<div class="content-header">
+    <h2 class="content-title card-title">Products</h2>
+</div>
+
+<!-- Search Bar -->
+<header class="card-header text-center mb-20">
+    <form action="" method="get" class="search-container d-inline">
+        <div class="input-group input-group-sm border border-1 rounded-pill">
+            <input type="text" class="form-control border-0" placeholder="Search products or brands" name="search">
+            <button class="btn">Search</button>
+        </div>
+    </form>
+</header>
+
+<!-- Table -->
+
+<div class="table-container">
+
+    <table class="table table-striped">
+
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Brand</th>
+                <th>Category</th>
+                <th>Sale Price</th>
+                <th>Offer Price</th>
+                <th>Offer</th>
+                <th>Quantity</th>
+                <th>Action</th>
+                <th>Edit</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for (let i = data.length - 1; i >= 0; i--) { %>
+                <tr>
+                    <td><%= data[i].productName %></td>
+                    <td><%= data[i].brand %></td>
+                    <td><%= data[i].category.name %></td>
+                    <td>₹<%= data[i].salePrice %></td>
+                    <td>₹<%= data[i].offerPrice %></td>
+                    <td>
+                        <button class="btn btn-info"><a href="#">Add Offer</a></button>
+                        <button class="btn btn-danger"><a href="#">Remove</a></button>
+                    </td>
+                    <td><%= data[i].quantity %></td>
+                    <td>
+                        <button class="btn btn-danger"><a href="#">Block</a></button>
+                        <button class="btn btn-success"><a href="#">Unblock</a></button>
+                    </td>
+                    <td>
+                        <button class="btn btn-info"><a href="#">Edit</a></button>
+                    </td>
+                </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+<div class="pagination-container">
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="page-item <%=(i === currentPage) ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                </li>
+            <% } %>
+        </ul>
+    </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<%- include("../../views/partials/admin/footer") %>

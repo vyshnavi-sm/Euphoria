@@ -29,8 +29,8 @@ router.get("/editCategory",adminAuth,categoryController.getEditCategory);
 router.post("/editCategory/:id",adminAuth,categoryController.editCategory);
 // Product Management
 
-router.get("/products",adminAuth,productController.getProductPage);
+router.get("/addProducts",adminAuth,productController.getProductPage);
 router.post("/addProducts",adminAuth,uploads.array("images",4),productController.addProducts);
-
+router.get("/products",adminAuth,productController.getAllProducts);
 
 module.exports = router;
