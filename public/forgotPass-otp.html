@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password - EUPHORIA</title>
+    <link rel="stylesheet" href="forgotPass-otp.css">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Left Image Section -->
+        <div class="image-container">
+            <img src="https://images.pexels.com/photos/8105118/pexels-photo-8105118.jpeg?cs=srgb&dl=pexels-solodsha-8105118.jpg&fm=jpg" alt="Jewelry Display">
+        </div>
+
+        <!-- Right Form Section -->
+        <div class="form-container">
+            <h2>Forgot Password?</h2>
+            <p>Please confirm your mail address</p>
+
+            <form action="/forgotPass-otp" method="post"  onsubmit="return validateLoginForm()">
+                <input type="email" id="email" placeholder="Enter your Email" required>
+                <button class="send-btn">Send Email</button>
+               
+
+            <a href="/login" class="back-link">Go back to login page</a>
+
+            <p class="brand-name">EUPHORIA</p>
+        </div>
+    </div>
+
+</body>
+

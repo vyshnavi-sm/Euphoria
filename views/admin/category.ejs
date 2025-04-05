@@ -145,7 +145,7 @@ body {
 }
 
 .input-group button {
-    background: #007bff;
+    background: #503b09;
     border: none;
     color: white;
     padding: 8px 15px;
@@ -154,7 +154,7 @@ body {
 }
 
 .input-group button:hover {
-    background: #0056b3;
+    background: #663e06;
 }
 
 /* Card & Form Container */
@@ -199,7 +199,7 @@ body {
 }
 
 .btn-primary {
-    background-color: #007bff;
+    background-color: #5e3e0f;
     color: #fff;
     border: none;
     padding: 10px 20px;
@@ -209,11 +209,11 @@ body {
 }
 
 .btn-primary:hover {
-    background-color: #0056b3;
+    background-color: #b6851b;
 }
 
 .btn-info {
-    background-color: #17a2b8;
+    background-color: #52380d;
     color: white;
     border: none;
     padding: 8px 12px;
@@ -239,6 +239,7 @@ body {
     color: white;
     text-decoration: none;
 }
+
 
 .btn-success {
     background-color: #28a745;
@@ -342,6 +343,7 @@ body {
         </div>
       </form>
     </header>
+    <br>
     <div class="card">
       <div class="card-body">
         <div class="row">
@@ -358,10 +360,11 @@ body {
                 <div id="description-error" class="error-message"></div>
               </div>
               <div class="d-grid">
-                <button class="btn btn-primary" type="submit">
+                <button class="btn" type="submit" style="background-color: rgb(86, 63, 11); color: white;">
                   Create category
                 </button>
               </div>
+              
             </form>
           </div>
           <div class="col-md-8 ml-10">
@@ -388,13 +391,16 @@ body {
                             <td class="text-start"><%= category.description %></td>
                             <td></td>
                             <td class="text-start">
-                              <button class="btn btn-info" style="width: 100px">
-                                <a href="#" class="text-white">Add Offer</a>
-                              </button>
-                              <button class="btn btn-info" style="width: 100px">
-                                <a href="#" class="text-white">Remove</a>
-                              </button>
-                            </td>
+                                <button class="btn btn-info btn-sm me-2" style="margin-bottom: 6px;">
+                                  <a href="#" class="text-white text-decoration-none">Add Offer</a>
+                                </button>
+                                <br>
+                                <button class="btn btn-info btn-sm me-2" style="margin-top: 6px;">
+                                  <a href="#" class="text-white text-decoration-none">Remove</a>
+                                </button>
+                              </td>
+                              
+                              
                             <td class="text-start">
                               <%if(category.isListed){%>
                               <span class="badge rounded-pill alert-success" style="width: 60px">Listed</span>
@@ -547,48 +553,28 @@ document.getElementById("categoryForm").addEventListener("submit", handleFormSub
     }
 
 
-    function validateForm (){
-        clearErrorMessages();
-        const name = document.getElementsByName("name")[0].value.trim();
-        const description = document.getElementById("descriptionId").value.trim();
-        isValid = true;
+    function validateForm() {
+    const name = document.getElementsByName("name")[0].value.trim();
+    const description = document.getElementById("descriptionId").value.trim();
+    let isValid = true;
 
-
-
-        if(name===""){
-            displayErrorMessage("name-error","Please enter a name");
-            isValid = false
-        }else if(!/^[a-zA-Z\s]+$/.test(name)){
-            displayErrorMessage("name-error","Category name should contain only alphabetic characters")
-            isValid = false;
-
-
-        }
-
-        if(description===""){
-            displayErrorMessage("description-error","Please enter a description");
-            isValid = false
-        }
-        return isValid;
+    if (name === "") {
+        document.getElementById("name-error").textContent = "Name is required";
+        isValid = false;
     }
 
-    function displayErrorMessage(elementId,message){
-        var errorElement =document.getElementById(elementId);
-        errorElement.innerText = message;
-        errorElement.style.display ="block";
-
-        
+    if (description === "") {
+        document.getElementById("description-error").textContent = "Description is required";
+        isValid = false;
     }
 
-    function clearErrorMessages(){
-        const errorElement = document.getElementsByClassName("error-message");
-        Array.from(errorElement).forEach((element)=>{
-            element.innerText="";
-            element.style.display="none";
+    return isValid;
+}
 
-        });
-    }
-
+function clearErrorMessages() {
+    document.getElementById("name-error").textContent = "";
+    document.getElementById("description-error").textContent = "";
+}
 
 
 

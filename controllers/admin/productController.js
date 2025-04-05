@@ -44,6 +44,9 @@ const addProducts = async(req,res)=>{
                 for(let i=0;i<req.files.length;i++){
                     const originalImagePath = req.files[i].path;
 
+                    console.log(originalImagePath);
+                    
+
                     const resizedImagePath = path.join('public','uploads','product-images',req.files[i].filename);
                     await sharp(originalImagePath).resize({width:440,height:440}).toFile(resizedImagePath);
                     images.push(req.files[i].filename);

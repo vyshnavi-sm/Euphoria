@@ -63,18 +63,8 @@
             <div class="nav-right">
                 <div class="nav-center">EUPHORIA</div>
                 <div class="nav-right">
-                    <% if (user) { %>
-                        <div class="dropdown">
-                            <a href="#" class="sign-in-link"><%= user.name %></a>
-                            <div class="dropdown-content">
-                                <a href="/userProfile">Profile</a>
-                                <a href="/logout">Logout</a>
-                            </div>
-                        </div>
-                    <% } else { %>
-                        <a href="/signup" class="sign-in-link">Sign Up</a>
-                        <a href="/login" class="sign-in-link">Login</a>
-                    <% } %>
+                    
+                    
     
                 <a href="#">EN <i class="fa-solid fa-chevron-down"></i></a>  
                 <span class="divider">|</span>  <!-- Divider Line -->
@@ -82,9 +72,8 @@
                 <a href="#"><i class="fa-solid fa-magnifying-glass"></i></a>  <!-- Search Icon -->
                 <a href="#"><i class="fa-regular fa-heart"></i></a>  <!-- Heart Icon -->
                 <a href="#"><i class="fa-regular fa-user"></i></a>  <!-- Profile Icon -->
-                <br><br>
-                <!-- <a href="/signup">Logout</a> -->
-
+                <br>
+                <a href="/signup">Logout</a>
             </div>
             
         </nav>
