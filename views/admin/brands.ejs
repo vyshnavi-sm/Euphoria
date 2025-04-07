@@ -41,6 +41,34 @@
   .action-buttons a {
     text-decoration: none;
   }
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .action-buttons a {
+    text-decoration: none;
+  }
+
+  /* STATUS BADGE STYLE */
+  .status-badges {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .status-badges .badge {
+    width: 70px;
+    text-align: center;
+    font-size: 13px;
+  }
+  .table-responsive{
+    width: 120%;
+  }
+  .badge-blocked,.badge-active{
+    color: red;
+  }
 </style>
 
 <section class="content-main">
@@ -55,7 +83,7 @@
       <div class="row">
         <!-- Left Column -->
         <div class="col-md-3">
-          <form method="post" action="" enctype="">
+          <form method="post" action="/admin/addBrand" enctype="multipart/form-data">
             <div class="mb-4">
               <label for="product_name" class="form-label">Brand Name</label>
               <input
@@ -67,7 +95,7 @@
             </div>
             <label for="product_name" class="form-label">Brand Image</label>
             <div class="input-upload">
-              <img src="" alt=""/>
+              <img src="/uploads/product-images" alt=""/>
               <input class="form-control border" name="image" type="file" />
             </div>
             <br>
@@ -93,39 +121,52 @@
                 </tr>
               </thead>
               <tbody>
+                <%data.reverse().forEach((brand,index)=>{%>
                 <tr>
-                  <td class="text-start"></td>
+                  <td class="text-start"><%=brand.brandName%></td>
                   <td class="text-start">
                     <div
                       class="d-flex align-items-center justify-content-center"
                       style="width: 40px; height: 40px; border-radius: 50%; overflow: hidden;"
                     >
                       <img
-                        src=""
-                        alt=""
+                        src="/uploads/product-images/<%=brand.brandImage[0]%>"
+                        alt="<%=brand.brandName%>"
                         class="img-fluid rounded-circle"
                         style="width: 100%; height: auto"
                       />
                     </div>
                   </td>
                   <td class="text-start">
-                    <span class="badge rounded-pill alert-danger" style="width: 60px">Blocked</span>
-                    <span class="badge rounded-pill alert-success" style="width: 60px">Active</span>
+                    <div class="status-badges">
+                        <%if(brand.isBlocked===true){%>
+
+                      <span class="badge-blocked">Blocked</span>
+                      <%}else{%>
+                      <span class="badge-active">Active</span>
+                      <%}%>
+                    </div>
                   </td>
+                  
+                  
                   <td class="text-start">
                     <div class="action-buttons">
+                        <%if(brand.isBlocked===false){%>
                       <button class="btn btn-danger" style="width: 90px">
-                        <a href="" class="text-white">Block</a>
+                        <a href="/admin/blockBrand?id=<%=brand._id%>" class="text-white">Block</a>
                       </button>
+                      <%}else{%>
                       <button class="btn btn-success" style="width: 90px">
-                        <a href="" class="text-white">Unblock</a>
+                        <a href="/admin/unBlockBrand?id=<%=brand._id%>" class="text-white">Unblock</a>
                       </button>
+                      <%}%>
                       <button class="btn btn-danger" style="width: 90px">
-                        <a href="" class="text-white">Delete</a>
+                        <a href="/admin/deleteBrand?id=<%=brand._id%>" class="text-white" onclick="return confirmDelete()">Delete</a>
                       </button>
                     </div>
                   </td>
                 </tr>
+                <%})%>
               </tbody>
             </table>
           </div>
@@ -139,5 +180,10 @@
     <!-- Pagination buttons here -->
   </div>
 </section>
+<script>
+    function confirmDelete(){
+        return confirm("Are you sure you want to delete this brand?")
+    }
+</script>
 
 <%- include("../../views/partials/admin/footer") %>
