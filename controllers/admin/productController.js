@@ -12,20 +12,19 @@ const sharp = require("sharp");
 
 const getProductPage = async(req,res)=>{
     try {
-        
         const category = await Category.find({isListed:true});
-        // const brand = await Brand.find({isBlocked:false})
-        res.render("addProducts",{
-            cat:category,
-            // brand:brand
+        const brand = await Brand.find({isBlocked:false}); 
+
+        res.render("addProducts", {
+            cat: category,
+            brand: brand 
         });
 
     } catch (error) {
-
         res.redirect("/pageerror");
-        
     }
-}
+};
+
 
 
 const addProducts = async(req,res)=>{

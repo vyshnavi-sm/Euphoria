@@ -4,8 +4,10 @@ const adminController = require('../controllers/admin/adminController');
 const customerController = require("../controllers/admin/customerController")
 const{userAuth,adminAuth} = require("../middlewares/auth")
 const categoryController = require("../controllers/admin/categoryController");
+const brandController = require("../controllers/admin/brandController")
 const productController = require("../controllers/admin/productController");
-const uploads = require('../middlewares/imageUpload.js');
+const multer = require("multer");
+const uploads = require('../helpers/multer');
 
 
 router.get("/pageerror",adminController.pageerror)
@@ -28,6 +30,15 @@ router.get("/UnlistCategory",adminAuth,categoryController.getUnlistCategory)
 router.get("/editCategory",adminAuth,categoryController.getEditCategory);
 router.post("/editCategory/:id",adminAuth,categoryController.editCategory);
 router.get("/category/fix-createdAt", categoryController.fixOldCategories);
+
+// Brand Management
+
+router.get("/brands",adminAuth,brandController.getBrandPage);
+
+
+
+
+
 
 // Product Management
 
