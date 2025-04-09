@@ -3,217 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Euphoria</title>
-    <link rel="stylesheet" href="usersignUp.css">
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"> -->
+    <title>Signup - Euphoria</title>
+    <link rel="stylesheet" href="/usersignUp.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-
-    
+    <!-- Add meta tags to prevent caching -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 </head>
 <body>
     <div class="container">
         <div class="form-container">
-            
-            <h2>Get started now</h2>
-            <form id="signform" method="post" action="/signup">
-                <label for="name">Name</label>
-                <input type="text" name="name" id="name" placeholder="Enter your Name" required>
-                
-                    <div id="error1" class="error-message"></div>
-
-                <label for="email">Email address</label>
-                <input type="email"  name="email" id="email" placeholder="Enter your Email" required>
-
-                    <div id="error2" class="error-message"></div>
-
-                    <label for="phone">Phone number</label>
-                    <input type="text"  name="phone" id="phone" placeholder="Enter your Phone Number" required>
-    
-                        <div id="error3" class="error-message"></div>
-    
-
-
-                <label for="password">Password</label>
-                <input type="password" name="password"  id="password" placeholder="Enter your Password" required>
-                
-                    <div id="error4" class="error-message"></div>
-                    
-                <label for="confirm-password">Confirm Password</label>
-                <input type="password"  name="cPassword" id="confirm password" placeholder="Confirm Password" required>
-                
-                <div id="error5" class="error-message"></div>
-
-
-                <div class="checkbox-container">
-                    <input type="checkbox" id="terms">
-                    <label for="terms">I agree to the terms & policy</label>
+            <h2>Create Account</h2>
+            <form id="signupForm" onsubmit="return validateSignupForm(event)">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" required>
                 </div>
-
-                <button class="signup-btn">SignUp</button>
-
-                <div class="divider">
-                    <hr> <span>OR</span> <hr>
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" required>
                 </div>
-
-                <div class="social-buttons">
-                    <a href="/auth/google" class="google-btn"> <img src="https://img.icons8.com/win10/512/google-logo.png" alt="Google" Sign in with Google >
-                    
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required>
                 </div>
-
-                <p class="login-link">Have an account? <a href="/login">Sign in</a></p>
-                <p class="brand-name">EUPHORIA</p>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="form-group">
+                    <label for="cPassword">Confirm Password</label>
+                    <input type="password" id="cPassword" name="cPassword" required>
+                </div>
+                <button type="submit" class="signup-btn">Sign Up</button>
             </form>
+            <div class="login-link">
+                <a href="/login">Already have an account? Login</a>
+            </div>
+            <div class="brand-name">EUPHORIA</div>
         </div>
-        
         <div class="image-container">
-            <img src="https://retrogradejewelry.com/cdn/shop/files/72245542ba046f8621cf283d3ad7c906_300x.jpg?v=1732720302" alt="Jewelry">
+            <img src="https://images.pexels.com/photos/8105118/pexels-photo-8105118.jpeg?cs=srgb&dl=pexels-solodsha-8105118.jpg&fm=jpg" alt="Jewelry">
         </div>
     </div>
+
+    <script>
+    // Prevent going back to previous page
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+        window.history.pushState(null, null, window.location.href);
+    };
+
+    function validateSignupForm(event) {
+        event.preventDefault();
+        
+        const name = document.getElementById('name').value;
+        const phone = document.getElementById('phone').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const cPassword = document.getElementById('cPassword').value;
+        
+        // Basic validation
+        if (password !== cPassword) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Password Mismatch',
+                text: 'Passwords do not match'
+            });
+            return false;
+        }
+        
+        // Show loading state
+        const submitBtn = document.querySelector('.signup-btn');
+        submitBtn.classList.add('loading');
+        submitBtn.textContent = 'Signing up...';
+        
+        $.ajax({
+            type: 'POST',
+            url: '/signup',
+            data: { name, phone, email, password, cPassword },
+            success: function(response) {
+                submitBtn.classList.remove('loading');
+                submitBtn.textContent = 'Sign Up';
+                
+                if (response.status === "error") {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message
+                    });
+                } else if (response.status === "success") {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: response.message,
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        // Redirect to verify-otp page
+                        window.location.href = '/verify-otp';
+                    });
+                }
+            },
+            error: function() {
+                submitBtn.classList.remove('loading');
+                submitBtn.textContent = 'Sign Up';
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred. Please try again.'
+                });
+            }
+        });
+        
+        return false;
+    }
+    </script>
 </body>
-
-<script>
-    const nameid = document.getElementById("name")
-    const emailid = document.getElementById("email")
-    const phoneid = document.getElementById("phone")
-    const passid = document.getElementById("password")
-    const cpassid = document.getElementById("confirm password")
-    const error1=document.getElementById("error1")
-    const error2=document.getElementById("error2")
-    const error3=document.getElementById("error3")
-    const error4=document.getElementById("error4")
-    const error5=document.getElementById("error5")
-    const signform = document.getElementById("signform")
-
-
-
-
-    function nameValidateChecking (e){
-
-        const nameval = nameid.value;
-        const namepattern = /^[A-Za-z\s]+$/;
-
-        if(nameval.trim()===""){
-            error1.style.display="block";
-            error1.innerHTML="PLease enter a valid name";
-
-        }else if(!namepattern.test(nameval)){
-            error1.style.display="block";
-            error1.innerHTML="Name can only contain alphabets and spaces";
-        }else{
-            error1.style.display="none";
-            error1.innerHTML="";
-        }
-
-    }
-
-
-    function emailValidateChecking(e){
-
-        const emailval=emailid.value;
-        const emailpattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
-    
-        if(!emailpattern.test(emailval)){
-        error2.style.display="block";
-        error2.innerHTML="Invalid Format"
-        }else{
-            error2.style.display="none";
-            error2.innerHTML="";
-        }
-
-    }
-
-    function phoneValidateChecking(e){
-        const phoneval=phoneid.value;  
-          const phonePattern = /^[0-9]{10}$/; // Ensures exactly 10 digits
-
-
-
-        if(phoneval.trim()===""){
-            error3.style.display="block";
-            error3.innerHTML="Enter valid phone number";
-        }else if(phoneval.length<10 || phoneval.length>10){
-            error3.style.display="block";
-            error3.innerHTML="Enter 10 digits";
-        }else{
-            error3.style.display="none";
-            error3.innerHTML="";
-        }
-    }
-
-
-
-    function passValidateChecking(e){
-        const passval = passid.value;
-        const cpassval = cpassid.value;
-        const alpha = /[a-zA-Z]/;
-        const digit = /\d/;
-
-
-        if(passval.length<8){
-            error4.style.display="block";
-            error4.innerHTML="Should contain atleast 8 characters";
-
-        }else if(!alpha.test(passval) || !digit.test(passval)){
-            error4.style.display="block";
-            error4.innerHTML="Should contain numbers and alphabets"
-        }else{
-            error4.style.display="none";
-            error4.innerHTML="";
-        }
-
-
-        if(passval!=cpassval){
-            error5.style.display="block";
-            error5.innerHTML="Passwords do not match"
-        }else{
-            error5.style.display="none";
-            error5.innerHTML=""
-        }
-    }
-
-
-
-
-
-
-    document.addEventListener("DOMContentLoaded",function(){
-        signform.addEventListener("submit",function(e){
-
-            nameValidateChecking();
-            emailValidateChecking();
-            phoneValidateChecking();
-            passValidateChecking();
-
-            if(
-                !nameid ||
-                !emailid ||
-                !phoneid ||
-                !passid ||
-                !error1 ||
-                !error2 ||
-                !error3 ||
-                !error4 ||
-                !error5 ||
-                !signform
-            ){
-                console.error("One or more elements not found")
-            }
-
-            if(
-                error1.innerHTML ||
-                error2.innerHTML ||
-                error3.innerHTML ||
-                error4.innerHTML ||
-                error5.innerHTML
-            ){
-                e.preventDefault();
-            }
-
-        })
-    })
-
-
-</script>
-
 </html>
 

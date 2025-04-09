@@ -30,7 +30,8 @@ const getProductPage = async(req,res)=>{
 const addProducts = async(req,res)=>{
     try {
          
-        const products =req.body;;
+        const products = req.body;
+        console.log("Product data:", products); // Add logging to debug
         const productExists = await Product.findOne({
             productName:products.productName,
 
@@ -66,15 +67,14 @@ const addProducts = async(req,res)=>{
                 regularPrice:products.regularPrice,
                 salePrice:products.salePrice,
                 createdOn:new Date(),
-                quantity:products.quantity,
+                quantity:parseInt(products.quantity) || 1, // Ensure quantity is a number
                 size:products.size,
                 color:products.color,
-                productImages:images,
+                productImage:images, // Changed from productImages to productImage to match schema
                 status:'Available',
-
-
             });
 
+            console.log("New product to save:", newProduct); // Add logging to debug
             await newProduct.save();
             return res.redirect("/admin/addProducts");
 
@@ -142,9 +142,42 @@ const getAllProducts = async (req, res) => {
 };
 
 
+const blockProduct = async (req,res)=>{
+    try {
+
+        let id = req.query.id;
+        await Product.updateOne({_id:id},{$set:{isBlocked:true}});
+        res.redirect("/admin/products");
+        
+    } catch (error) {
+
+        res.redirect("/pageerror");
+        
+    }
+}
+
+const unblockProduct = async (req,res)=>{
+try {
+    
+    let id = req.query.id;
+    await Product.updateOne({_id:id},{$set:{isBlocked:false}});
+    res.redirect("/admin/products");
+
+} catch (error) {
+
+    res.redirect("/pageerror");
+    
+}
+    
+   
+}
+
 
 module.exports ={
     getProductPage,
     addProducts,
     getAllProducts,
+    blockProduct,
+    unblockProduct,
+    
 }

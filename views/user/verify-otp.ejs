@@ -1,15 +1,17 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OTP Euphoria</title>
-    <link rel="stylesheet" href="otp.css">
+    <link rel="stylesheet" href="/otp.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/progressbar.js"></script>
+    <!-- Add meta tags to prevent caching -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
 </head>
 <body>
     <form id="otpForm" action="/verify-otp" method="post" onsubmit="return validateOTPForm(event);">
@@ -48,140 +50,159 @@
 
    
     <script>
+    // Prevent going back to previous page
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
+        window.history.pushState(null, null, window.location.href);
+    };
 
-let timer = 60;
-let timerInterval;
-let resendBtn = document.getElementById("resendOTP");
-let timerText = document.getElementById("timerValue");
+    let timer = 30;
+    let timerInterval;
+    let resendBtn = document.getElementById("resendOTP");
+    let timerText = document.getElementById("timerValue");
 
-// Circular progress bar setup
-let circle = new ProgressBar.Circle("#progressCircle", {
-    strokeWidth: 6,
-    easing: "linear",
-    duration: 60000, 
-    color: "#6d5d38",
-    trailColor: "#ddd",
-    trailWidth: 6,
-    svgStyle: null
-});
+    // Add event listener for resend button
+    resendBtn.addEventListener("click", resendOTP);
 
-function startTimer() {
-    timer = 60;
-    timerText.textContent = timer;
-    resendBtn.disabled = true;
-    resendBtn.style.backgroundColor = "grey";
-    resendBtn.style.cursor = "not-allowed";
+    // Circular progress bar setup
+    let circle = new ProgressBar.Circle("#progressCircle", {
+        strokeWidth: 6,
+        easing: "linear",
+        duration: 30000, 
+        color: "#6d5d38",
+        trailColor: "#ddd",
+        trailWidth: 6,
+        svgStyle: null
+    });
 
-    // Restart progress bar
-    circle.set(1);
-    circle.animate(0, { duration: 60000 });
-
-    timerInterval = setInterval(() => {
-        timer--;
+    function startTimer() {
+        timer = 30;
         timerText.textContent = timer;
+        resendBtn.disabled = true;
+        resendBtn.style.backgroundColor = "grey";
+        resendBtn.style.cursor = "not-allowed";
 
-        if (timer <= 0) {
-            clearInterval(timerInterval);
-            resendBtn.disabled = false;
-            resendBtn.style.backgroundColor = "#6d5d38";
-            resendBtn.style.cursor = "pointer";
-        }
-    }, 1000);
-}
+        // Restart progress bar
+        circle.set(1);
+        circle.animate(0, { duration: 30000 });
 
-// Start the timer when the page loads
-startTimer();
+        timerInterval = setInterval(() => {
+            timer--;
+            timerText.textContent = timer;
 
-        function validateOTPForm(event) {
-            event.preventDefault();  
-            
-            // Collect OTP from input fields
-            const otpInputs = document.querySelectorAll(".otp-input input");
-            let otpValue = "";
-            otpInputs.forEach(input => {
-                otpValue += input.value;
-            });
-
-            // Ensure OTP is 6 digits
-            if (otpValue.length !== 6) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Invalid OTP",
-                    text: "OTP must be 6 digits",
-                });
-                return false;
+            if (timer <= 0) {
+                clearInterval(timerInterval);
+                resendBtn.disabled = false;
+                resendBtn.style.backgroundColor = "#6d5d38";
+                resendBtn.style.cursor = "pointer";
             }
+        }, 1000);
+    }
 
-            // AJAX Request
-            $.ajax({
-                type: "POST",
-                url: "/verify-otp",
-                data: { otp: otpValue },
-                success: function (response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: "success",
-                            title: "OTP verified successfully",
-                            showConfirmButton: false,
-                            timer: 1500,
-                        }).then(() => {
-                            window.location.href = response.redirectUrl;
-                        });
-                    } else {
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            text: response.message,
-                        });
-                    }
-                },
-                error: function () {
-                    Swal.fire({
-                        icon: "error",
-                        title: "Invalid OTP",
-                        text: "Please try again",
-                    });
-                },
+    // Start the timer when the page loads
+    startTimer();
+
+    // Enable OTP input fields by default
+    document.querySelectorAll(".otp-input input").forEach(input => {
+        input.disabled = false;
+    });
+
+    function validateOTPForm(event) {
+        event.preventDefault();  
+        
+        // Collect OTP from input fields
+        const otpInputs = document.querySelectorAll(".otp-input input");
+        let otpValue = "";
+        otpInputs.forEach(input => {
+            otpValue += input.value;
+        });
+
+        // Ensure OTP is 6 digits
+        if (otpValue.length !== 6) {
+            Swal.fire({
+                icon: "error",
+                title: "Invalid OTP",
+                text: "OTP must be 6 digits",
             });
-
             return false;
         }
 
-        function resendOTP() {
-    clearInterval(timerInterval); 
-    startTimer();
-
-    // Enable all OTP input fields
-    document.querySelectorAll(".otp-input input").forEach(input => {
-        input.disabled = false;
-        input.value = ""; 
-    });
-
-    $.ajax({
-        type: "POST",
-        url: "/resend-otp",
-        success: function (response) {
-            if (response.success) {
-                Swal.fire({
-                    icon: "success",
-                    title: "OTP Resent Successfully",
-                    text: "Please check your email for the new OTP.",
-                    showConfirmButton: false,
-                    timer: 1500,
-                });
-            } else {
+        // AJAX Request
+        $.ajax({
+            type: "POST",
+            url: "/verify-otp",
+            data: { otp: otpValue },
+            success: function (response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "OTP verified successfully",
+                        showConfirmButton: false,
+                        timer: 1500,
+                    }).then(() => {
+                        // Clear session data before redirecting
+                        $.ajax({
+                            type: "POST",
+                            url: "/clear-otp-session",
+                            success: function() {
+                                window.location.href = response.redirectUrl;
+                            }
+                        });
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: response.message,
+                    });
+                }
+            },
+            error: function () {
                 Swal.fire({
                     icon: "error",
-                    title: "Error",
-                    text: "An error occurred while resending OTP. Please try again.",
+                    title: "Invalid OTP",
+                    text: "Please try again",
                 });
+            },
+        });
+
+        return false;
+    }
+
+    function resendOTP() {
+        clearInterval(timerInterval); 
+        startTimer();
+
+        // Enable all OTP input fields
+        document.querySelectorAll(".otp-input input").forEach(input => {
+            input.disabled = false;
+            input.value = ""; 
+        });
+
+        $.ajax({
+            type: "POST",
+            url: "/resend-otp",
+            success: function (response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "OTP Resent Successfully",
+                        text: "Please check your email for the new OTP.",
+                        showConfirmButton: false,
+                        timer: 1500,
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "An error occurred while resending OTP. Please try again.",
+                    });
+                }
             }
-        }
-    });
+        });
 
-    return false;
-}
-
+        return false;
+    }
 
     </script>
 </body>

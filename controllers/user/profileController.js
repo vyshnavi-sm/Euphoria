@@ -49,6 +49,16 @@ const sendVerificationEmail = async (email,otp)=>{
     }
 }
 
+const securePassword = async (password) => {
+    try {
+        const passwordHash = await bcrypt.hash(password, 10);
+        return passwordHash;
+    } catch (error) {
+        console.error("Error hashing password:", error);
+        throw error; // Re-throw the error to be caught by the calling function
+    }
+}
+
 
 
 const getForgotPassPage = async(req,res)=>{
@@ -66,7 +76,7 @@ const getForgotPassPage = async(req,res)=>{
 
 const forgotEmailValid = async(req,res)=>{  
     try {
-       
+        
         const{email} =req.body;
         console.log(req.body)
         const findUser =await User.findOne({email:email});
@@ -97,28 +107,119 @@ const forgotEmailValid = async(req,res)=>{
 }
 
 
-const verifyForgotPassOtp =async(req,res)=>{
+const verifyForgotPassOtp = async(req, res) => {
     try {
-       const enteredOtp =req.body.otp;
-       if(enteredOtp===req.session.userOtp){
-       res.json({success:true,redirectUrl:"/reset-password"});
-       }else{
-        res.json({success:false,message:"OTP not matching"})
-       }
+        const enteredOtp = req.body.otp;
         
-
+        if (!req.session.userOtp) {
+            return res.json({
+                success: false, 
+                message: "OTP session expired. Please try again."
+            });
+        }
+        
+        if (enteredOtp === req.session.userOtp) {
+            // Clear the OTP from session after successful verification
+            delete req.session.userOtp;
+            return res.json({
+                success: true, 
+                message: "OTP verified successfully",
+                redirectUrl: "/reset-password"
+            });
+        } else {
+            return res.json({
+                success: false, 
+                message: "Invalid OTP. Please try again."
+            });
+        }
     } catch (error) {
-        res.status(500).json({success:false, message:"An error occured. Pleade try again"});
-        
+        console.error("Error verifying OTP:", error);
+        return res.status(500).json({
+            success: false, 
+            message: "An error occurred. Please try again"
+        });
     }
 }
 
 const getResetPassPage = async (req,res)=>{
     try {
+        // Check if email exists in session
+        if (!req.session.email) {
+            console.log("No email in session, redirecting to forgot password page");
+            return res.redirect("/forgot-password");
+        }
+        
+        console.log("Rendering reset password page for email:", req.session.email);
         res.render("reset-password");
+    } catch (error) {
+        console.error("Error rendering reset password page:", error);
+        res.redirect("/pageNotFound");
+    }
+}
+
+
+const resendOtp = async (req,res)=>{
+    try {
+        
+        const otp = generateOtp();
+        req.session.userOtp = otp;
+        const email = req.session.email;
+        console.log("Resend OYP to email:",email);
+        const emailSent = await sendVerificationEmail(email,otp);
+        if(emailSent){
+            console.log("Resend OTP:",otp);
+            res.status(200).json({success:true ,message: "Resend OTP Successful"});
+
+        }
 
     } catch (error) {
-        res.redirect("/pageNotFound")
+        console.error("Error in resend otp",error);
+        res.status(500).json({success:false , message:"Internal Server Error"});
+
+    }
+}
+
+const postNewPassword = async (req,res)=>{
+    try {
+        const {newPass1, newPass2} = req.body;
+        const email = req.session.email;
+        
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: "Session expired. Please try again."
+            });
+        }
+        
+        if (newPass1 !== newPass2) {
+            return res.status(400).json({
+                success: false,
+                message: "Passwords do not match"
+            });
+        }
+
+        const passwordHash = await securePassword(newPass1);
+        await User.updateOne(
+            {email: email},
+            {$set: {password: passwordHash}}
+        );
+        
+        // Clear session data
+        delete req.session.email;
+        delete req.session.userOtp;
+        delete req.session.user;
+        
+        return res.status(200).json({
+            success: true,
+            message: "Password updated successfully",
+            redirectUrl: "/login"
+        });
+    } catch (error) {
+        console.error("Error updating password:", error);
+        return res.status(500).json({
+            success: false,
+            message: "An error occurred while updating the password"
+        });
     }
 }
 
@@ -127,6 +228,7 @@ module.exports = {
     forgotEmailValid,
     verifyForgotPassOtp,
     getResetPassPage,
-    
+    resendOtp,
+    postNewPassword,
 
-}
+};

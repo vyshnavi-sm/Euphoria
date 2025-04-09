@@ -85,10 +85,16 @@ form input {
     border-radius: 5px;
     font-size: 16px;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .signup-btn:hover {
     background-color: #52482a;
+}
+
+.signup-btn.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 /* Divider */

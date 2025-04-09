@@ -11,52 +11,37 @@
             background-color: #f8f9fa;
         }
 
-   /* Ensuring the content header has proper spacing */
-.content-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-    margin-bottom: 10px;
-}
+        /* Ensuring the content header has proper spacing */
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+        }
 
-/* Styling and positioning the Add Product button */
-.add-product-container {
-    display: flex;
-    justify-content: flex-end; /* Align to the right */
-    margin-bottom: 20px; /* Spacing before the table */
-    padding-right: 20px;
+        /* Styling and positioning the Add Product button */
+        .add-product-container {
+            display: flex;
+            justify-content: flex-end; /* Align to the right */
+            margin-bottom: 20px; /* Spacing before the table */
+            padding-right: 20px;
+        }
 
-}
+        .btn-success {
+            padding: 10px 15px;
+            font-size: 16px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: transform 0.2s ease-in-out;
+        }
 
-.btn-success {
-    padding: 10px 15px;
-    font-size: 16px;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: transform 0.2s ease-in-out;
-}
-
-.btn-success:hover {
-    transform: scale(1.05);
-}
-
-
-.btn-success {
-    padding: 10px 15px;
-    font-size: 16px;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: transform 0.2s ease-in-out;
-}
-
-.btn-success:hover {
-    transform: scale(1.05);
-}
-
+        .btn-success:hover {
+            transform: scale(1.05);
+        }
 
         /* Search Bar */
         .search-container {
@@ -186,13 +171,9 @@
 </head>
 
 <!-- Page Header -->
-<!-- Page Header -->
 <div class="content-header">
     <h2 class="content-title card-title">Products</h2>
 </div>
-
-<!-- Add Product Button - Positioned Above the Table -->
-
 
 <!-- Search Bar -->
 <header class="card-header text-center mb-20">
@@ -204,17 +185,12 @@
     </form>
 </header>
 
-
-<!-- Search Bar -->
-
 <!-- Table -->
-
 <div class="table-container">
     <div class="add-product-container">
         <a href="/admin/addProducts" class="btn btn-success">+ Add Product</a>
     </div>
     <table class="table table-striped">
-
         <thead>
             <tr>
                 <th>Product Name</th>
@@ -222,10 +198,10 @@
                 <th>Category</th>
                 <th>Sale Price</th>
                 <th>Offer Price</th>
-                <th>Offer</th>
                 <th>Quantity</th>
+                <th>Offer</th>
+                <th>Status</th>
                 <th>Action</th>
-                <th>Edit</th>
             </tr>
         </thead>
         <tbody>
@@ -236,17 +212,20 @@
                     <td><%= data[i].category.name %></td>
                     <td>₹<%= data[i].salePrice %></td>
                     <td>₹<%= data[i].offerPrice %></td>
+                    <td><%= data[i].quantity %></td> <!-- Added quantity display here -->
                     <td>
                         <button class="btn btn-info"><a href="#">Add Offer</a></button>
                         <button class="btn btn-danger"><a href="#">Remove</a></button>
                     </td>
-                    <td><%= data[i].quantity %></td>
                     <td>
-                        <button class="btn btn-danger"><a href="#">Block</a></button>
-                        <button class="btn btn-success"><a href="#">Unblock</a></button>
+                        <% if(data[i].isBlocked === false) { %>
+                            <a href="#" onclick="confirmBlock('<%= data[i]._id %>')" class="btn btn-danger ps-3">Block</a>
+                        <% } else { %>
+                            <a href="#" onclick="confirmUnblock('<%= data[i]._id %>')" class="btn btn-success ps-3">Unblock</a>
+                        <% } %>
                     </td>
                     <td>
-                        <button class="btn btn-info"><a href="#">Edit</a></button>
+                        <button class="btn btn-info"><a href="/admin/editProduct/<%= data[i]._id %>">Edit</a></button>
                     </td>
                 </tr>
             <% } %>
@@ -269,5 +248,39 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+<script>
+    function confirmBlock(productId) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You are about to block this product!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, Block it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/admin/blockProduct?id=${productId}`;
+            }
+        });
+    }
+
+    function confirmUnblock(productId) {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You are about to unblock this product!",
+            icon: "info",
+            showCancelButton: true,
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, Unblock it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `/admin/unblockProduct?id=${productId}`;
+            }
+        });
+    }
+</script>
 
 <%- include("../../views/partials/admin/footer") %>

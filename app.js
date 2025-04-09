@@ -8,8 +8,14 @@ const session = require("express-session")
 const db = require("./config/db");
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
+const sessionMiddleware = require("./middlewares/sessionMiddleware");
 db()
 
+// Add cache control middleware
+app.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+    next();
+});
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
@@ -40,6 +46,11 @@ app.set("views", [
 
 app.use(express.static("public"));
 
+// Apply session middleware to routes
+app.use("/signup", sessionMiddleware.preventBackToSignup);
+app.use("/login", sessionMiddleware.preventBackToLogin);
+app.use("/verify-otp", sessionMiddleware.preventBackToOtp);
+
 app.use("/",userRouter);
 
 app.use((req, res, next) => {
@@ -48,14 +59,10 @@ app.use((req, res, next) => {
 });
 app.use("/admin",adminRouter);
 
-
-
-
 const PORT=process.env.PORT || 4000;
 
 app.listen(PORT,()=>{
     console.log("Server Running at 4000");
 })
-
 
 module.exports = app;

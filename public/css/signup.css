@@ -1,0 +1,183 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #f5f5f5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Container Styles */
+.container {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    min-height: 600px;
+    background: #fff;
+    border-radius: 20px;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    margin: 20px;
+}
+
+/* Form Container Styles */
+.form-container {
+    flex: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.form-container h2 {
+    color: #333;
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    color: #555;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus {
+    border-color: #6d5d38;
+    outline: none;
+    box-shadow: 0 0 5px rgba(109, 93, 56, 0.2);
+}
+
+/* Button Styles */
+.confirm-btn {
+    width: 100%;
+    padding: 12px;
+    background: #6d5d38;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.confirm-btn:hover {
+    background: #553b0d;
+    transform: translateY(-2px);
+}
+
+/* Links */
+.back-link {
+    display: block;
+    text-align: center;
+    color: #6d5d38;
+    text-decoration: none;
+    margin-top: 20px;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #553b0d;
+}
+
+/* Brand Name */
+.brand-name {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #6d5d38;
+    margin-top: 30px;
+    letter-spacing: 2px;
+}
+
+/* Image Container */
+.image-container {
+    flex: 1;
+    background: url('https://images.pexels.com/photos/8105118/pexels-photo-8105118.jpeg?cs=srgb&dl=pexels-solodsha-8105118.jpg&fm=jpg') center/cover;
+    position: relative;
+}
+
+.image-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(109, 93, 56, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        margin: 10px;
+    }
+
+    .image-container {
+        display: none;
+    }
+
+    .form-container {
+        padding: 30px 20px;
+    }
+
+    .form-container h2 {
+        font-size: 2rem;
+    }
+}
+
+/* Error Message Styles */
+.error-message {
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 5px;
+    display: none;
+}
+
+.form-group.error input {
+    border-color: #dc3545;
+}
+
+.form-group.error .error-message {
+    display: block;
+}
+
+/* Loading State */
+.confirm-btn.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Success Message */
+.success-message {
+    color: #28a745;
+    text-align: center;
+    margin-top: 10px;
+    display: none;
+} 

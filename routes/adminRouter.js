@@ -47,5 +47,8 @@ router.get("/deleteBrand",adminAuth,brandController.deleteBrand);
 router.get("/addProducts",adminAuth,productController.getProductPage);
 router.post("/addProducts",adminAuth,uploads.array("images",4),productController.addProducts);
 router.get("/products",adminAuth,productController.getAllProducts);
+router.get("/blockProduct",adminAuth,productController.blockProduct);
+router.get("/unblockProduct",adminAuth,productController.unblockProduct);
+
 
 module.exports = router;

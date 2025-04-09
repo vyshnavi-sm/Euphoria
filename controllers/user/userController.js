@@ -1,4 +1,3 @@
-
 const User = require("../../models/userSchema")
 const env = require("dotenv").config();
 const nodemailer = require("nodemailer")
@@ -53,37 +52,47 @@ async function sendVerificationEmail(email,otp){
 
 const signup = async(req,res)=>{
     try {
-
         const{name,phone,email,password,cPassword} = req.body;
 
         if(password !== cPassword){
-            return res.render("signup",{message:"Passwords do not match"})
+            return res.json({ status: "error", message: "Passwords do not match" });
         }
 
         const findUser = await User.findOne({email});
         if(findUser){
-            return res.render("signup",{message:"User with this email is already exists"})
+            return res.json({ status: "error", message: "User with this email already exists" });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10)
+        const otp = generateOtp();
 
-        const otp=generateOtp();
-
-        const emailSent =await sendVerificationEmail(email,otp);
-
-        if(!emailSent){
-            return res.json("email-error")
-        }
-
+        // Store user data and OTP in session first
+        req.session.userData = {
+            name,
+            phone,
+            email,
+            hashedPassword
+        };
+        
+        // Store OTP in session immediately
         req.session.userOtp = otp;
-        req.session.userData ={name,phone,email,hashedPassword};
-
-        res.render("Verify-otp");
-        console.log("OTP sent",otp)
+        
+        // Send response immediately to reduce lag
+        res.json({ status: "success", message: "Please check your email for OTP" });
+        
+        // Send email in the background
+        setTimeout(async () => {
+            const emailSent = await sendVerificationEmail(email, otp);
+            if(emailSent) {
+                console.log("OTP sent:", otp);
+            } else {
+                console.error("Failed to send verification email");
+            }
+        }, 0);
 
     } catch (error) {
-        console.error("signup error",error);
-        res.redirect("/pageNotFound")
+        console.error("signup error", error);
+        res.json({ status: "error", message: "Server error occurred" });
     }
 }
 
@@ -114,7 +123,7 @@ const loadHomepage = async (req, res) => {
 };
 
 
-const securePassword = async(passwors)=>{
+const securePassword = async(password)=>{
     try {
         
         const passwordHash = await bcrypt.hash(password,10)
@@ -122,7 +131,8 @@ const securePassword = async(passwors)=>{
         return passwordHash;
 
     } catch (error) {
-        
+        console.error("Error hashing password:", error);
+        throw error;
     }
 }
 
@@ -145,7 +155,8 @@ const securePassword = async(passwors)=>{
                     password:user.hashedPassword,
                 })
                 await saveUserData.save();
-                req.session.user = saveUserData._id;
+                // Remove the automatic login
+                // req.session.user = saveUserData._id;
                 res.json({success:true,redirectUrl:"/login"})
             }else{
                 res.status(400).json({success:false,message:"Invalid OTP,Please try again"})
@@ -190,6 +201,11 @@ const securePassword = async(passwors)=>{
 
     const loadLogin = async(req,res)=>{
         try {
+            // Set cache control headers to prevent caching
+            res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+            res.set('Pragma', 'no-cache');
+            res.set('Expires', '0');
+            
             if(!req.session.user){
                 return res.render("login",{errorMessage : ""})
             }else{
@@ -244,6 +260,10 @@ const securePassword = async(passwors)=>{
                     return res.redirect("/");
                 }
                 res.clearCookie("connect.sid"); 
+                // Set cache control headers to prevent caching
+                res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+                res.set('Pragma', 'no-cache');
+                res.set('Expires', '0');
                 return res.redirect("/login");
             });
         } catch (error) {
@@ -252,10 +272,31 @@ const securePassword = async(passwors)=>{
         }
     };
 
-   
-     
-    
-    
+    const loadVerifyOtp = async (req, res) => {
+        try {
+            if (!req.session.userOtp || !req.session.userData) {
+                return res.redirect('/signup');
+            }
+            res.render('verify-otp');
+        } catch (error) {
+            console.error("Error loading verify OTP page:", error);
+            res.redirect('/pageNotFound');
+        }
+    };
+
+// const checkOtpAvailability = async (req, res) => {
+//     try {
+//         // Check if OTP is available in session
+//         if (req.session.userOtp) {
+//             return res.json({ otpAvailable: true });
+//         } else {
+//             return res.json({ otpAvailable: false });
+//         }
+//     } catch (error) {
+//         console.error("Error checking OTP availability:", error);
+//         return res.status(500).json({ otpAvailable: false });
+//     }
+// };
 
 module.exports = {
     loadHomepage,
@@ -267,8 +308,6 @@ module.exports = {
     loadLogin,
     login,
     logout,
-    
-
-    
-    
+    loadVerifyOtp,
+    // checkOtpAvailability
 }
