@@ -16,8 +16,8 @@
         min-height: 100vh;
         padding-top: 50px;
         padding-right: 50px;
-        margin-left: 250px;
-        margin-top: 600px;
+        margin-left: 550px;
+        margin-top: 500px;
     }
     
     .card {
@@ -123,13 +123,12 @@
                         
                         <div class="mb-4">
                             <label class="form-label">Brand</label>
-                            <select name="brand" required>
+                            <select name="brand" class="form-select" required>
                                 <option value="">Select a Brand</option>
                                 <% brand.forEach(b => { %>
-                                  <option value="<%= b.name %>"><%= b.name %></option>
+                                  <option value="<%= b.brandName %>"><%= b.brandName %></option>
                                 <% }) %>
-                              </select>
-                              
+                            </select>
                             <div id="brand-error" class="error-message"></div>
                         </div>
                         
@@ -178,7 +177,8 @@
                                 <div class="row">
                                     <div class="col-sm-6 mb-3">
                                         <label class="form-label">Category</label>
-                                        <select class="form-select" name="category">
+                                        <select class="form-select" name="category" required>
+                                            <option value="">Select a Category</option>
                                             <%for(let i=0; i<cat.length; i++){%>
                                                 <option value="<%=cat[i].name%>">
                                                     <%=cat[i].name%>

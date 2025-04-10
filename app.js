@@ -5,6 +5,7 @@ const dotenv = require("dotenv")
 dotenv.config();
 const passport = require("./config/passport")
 const session = require("express-session")
+const flash = require('connect-flash');
 const db = require("./config/db");
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
@@ -29,6 +30,16 @@ app.use(session({
         maxAge:72*60*60*1000
     }
 }))
+
+// Add flash middleware
+app.use(flash());
+
+// Make flash messages available to all views
+app.use((req, res, next) => {
+    res.locals.success_msg = req.flash('success');
+    res.locals.error_msg = req.flash('error');
+    next();
+});
 
 app.use(passport.initialize());
 app.use(passport.session());

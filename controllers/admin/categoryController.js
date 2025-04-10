@@ -17,16 +17,26 @@ const fixOldCategories = async (req, res) => {
 const categoryInfo = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 4;
+        const limit = 10;
         const skip = (page - 1) * limit;
+        const search = req.query.search || '';
 
-        const categoryData = await Category.find({})
-            .sort({ createdAt: -1 }) // <-- newest first
+        let query = {};
+        if (search) {
+            query = {
+                $or: [
+                    { name: { $regex: search, $options: 'i' } },
+                    { description: { $regex: search, $options: 'i' } }
+                ]
+            };
+        }
+
+        const categoryData = await Category.find(query)
+            .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(limit)
-            .select("name description isListed categoryOffer createdAt");
+            .limit(limit);
 
-        const totalCategories = await Category.countDocuments();
+        const totalCategories = await Category.countDocuments(query);
         const totalPages = Math.ceil(totalCategories / limit);
 
         res.render("category", {
@@ -34,6 +44,7 @@ const categoryInfo = async (req, res) => {
             currentPage: page,
             totalPages: totalPages,
             totalCategories: totalCategories,
+            search: search
         });
 
     } catch (error) {
@@ -83,7 +94,7 @@ const addCategory = async (req, res) => {
 const getListCategory = async (req, res) => {
     try {
         const id = req.query.id;
-        await Category.updateOne({ _id: id }, { $set: { isListed: false } });
+        await Category.updateOne({ _id: id }, { $set: { isListed: true } });
         res.redirect("/admin/category");
     } catch (error) {
         res.redirect("/pageerror");
@@ -93,7 +104,7 @@ const getListCategory = async (req, res) => {
 const getUnlistCategory = async (req, res) => {
     try {
         const id = req.query.id;
-        await Category.updateOne({ _id: id }, { $set: { isListed: true } });
+        await Category.updateOne({ _id: id }, { $set: { isListed: false } });
         res.redirect("/admin/category");
     } catch (error) {
         res.redirect("/pageerror");
@@ -113,10 +124,10 @@ const getEditCategory = async (req, res) => {
 const editCategory = async (req, res) => {
     try {
         const id = req.params.id;
-        const { categoryName, description } = req.body;
+        const { name, description } = req.body;
 
         const existingCategory = await Category.findOne({
-            name: categoryName,
+            name: name,
             _id: { $ne: id }
         });
         if (existingCategory) {
@@ -124,7 +135,7 @@ const editCategory = async (req, res) => {
         }
 
         const updateCategory = await Category.findByIdAndUpdate(id, {
-            name: categoryName,
+            name: name,
             description: description
         }, { new: true });
 

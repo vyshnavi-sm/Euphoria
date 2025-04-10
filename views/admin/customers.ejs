@@ -14,16 +14,11 @@
     <!-- Top Navigation Bar -->
     <header class="topbar">
         <div class="logo"><strong>EUPHORIA</strong></div>
-        <div class="top-right">
-            <div class="search-container">
-                <input type="text" placeholder="Search">
-                <button><i class="fas fa-search"></i></button>
-            </div>
-            <i class="fas fa-envelope"></i>
-            <i class="fas fa-bell"></i>
-            <img src="https://t4.ftcdn.net/jpg/02/79/66/93/360_F_279669366_Lk12QalYQKMczLEa4ySjhaLtx1M2u7e6.jpg" alt="Profile" class="profile-icon">
-            <a href="/admin/logout" class="logout">Logout</a>
-        </div>
+        <div class="d-flex align-items-center ms-auto gap-3 me-3">
+            <i class="fas fa-envelope text-white fs-5"></i>
+            <i class="fas fa-bell text-white fs-5"></i>
+            <img src="https://t4.ftcdn.net/jpg/02/79/66/93/360_F_279669366_Lk12QalYQKMczLEa4ySjhaLtx1M2u7e6.jpg" alt="Profile" class="rounded-circle" style="width: 35px; height: 35px;">
+          </div>
     </header>
 
     <!-- Sidebar Navigation -->
@@ -32,13 +27,13 @@
             <li><a href="/admin/dashboard"><i class="fas fa-chart-line"></i> Dashboard</a></li>
             <li><a href="/admin/customers"><i class="fas fa-shopping-bag"></i> Customers</a></li>
             <li><a href="/admin/category"><i class="fas fa-box"></i> Category</a></li>
-            <li><a href="#"><i class="fas fa-chart-bar"></i> Brands</a></li>
+            <li><a href="/admin/brands"><i class="fas fa-chart-bar"></i> Brands</a></li>
             <li><a href="/admin/products"><i class="fas fa-users"></i> Products</a></li>
             <li><a href="#"><i class="fas fa-ticket-alt"></i> Coupons</a></li>
             <li><a href="#"><i class="fas fa-th"></i> Banners</a></li>
             <li><a href="#"><i class="fas fa-image"></i> Orders</a></li>
             <li><a href="#"><i class="fas fa-undo-alt"></i> Refunds</a></li>
-            <li><a href="#"><i class="fas fa-sign-out-alt"></i> Sign Out</a></li>
+            <li><a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> Sign Out</a></li>
         </ul>
     </aside>
 
@@ -49,10 +44,10 @@
             
             <!-- Search and Filters -->
             <div class="top-controls">
-                <div class="search-box">
-                    <input type="text" placeholder="Search here">
-                    <i class="fas fa-search"></i>
-                </div>
+                <form action="/admin/customers" method="GET" class="search-box">
+                    <input type="text" name="search" placeholder="Search here" value="<%= searchQuery %>">
+                    <button type="submit"><i class="fas fa-search"></i></button>
+                </form>
                 <button class="export-btn"><i class="fas fa-download"></i> Export</button>
                 <button class="filter-btn"><i class="fas fa-filter"></i> Filters</button>
             </div>

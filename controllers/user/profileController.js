@@ -39,13 +39,9 @@ const sendVerificationEmail = async (email,otp)=>{
         console.log("Email sent:",info.messageId);
         return true;
 
-
-
     } catch (error) {
-
         console.error("Error sending email",error);
         return false;
-        
     }
 }
 
@@ -59,24 +55,17 @@ const securePassword = async (password) => {
     }
 }
 
-
-
 const getForgotPassPage = async(req,res)=>{
     try {
-
-        res.render("forgot-password")
-        
+        res.render("forgot-password", { message: '' });
     } catch (error) {
-
-        res.redirect("/pageNotFound")
-        
+        console.error("Error rendering forgot password page:", error);
+        res.redirect("/pageNotFound");
     }
 };
 
-
 const forgotEmailValid = async(req,res)=>{  
     try {
-        
         const{email} =req.body;
         console.log(req.body)
         const findUser =await User.findOne({email:email});
@@ -88,7 +77,7 @@ const forgotEmailValid = async(req,res)=>{
                 req.session.userOtp =otp;
                 req.session.email = email;
                 req.session.user = findUser ;
-                res.render("forgotPass-otp");
+                res.render("forgotPass-otp", { message: '' });
                 console.log("OTP:",otp);
             }else{
                 res.json({success:false, message:"Failed to send OTP. Please try again"});
@@ -100,12 +89,10 @@ const forgotEmailValid = async(req,res)=>{
             })
         }
     } catch (error) {
-
+        console.error("Error validating email:", error);
         res.redirect("/pageNotFound");
-        
     }
 }
-
 
 const verifyForgotPassOtp = async(req, res) => {
     try {
@@ -150,32 +137,38 @@ const getResetPassPage = async (req,res)=>{
         }
         
         console.log("Rendering reset password page for email:", req.session.email);
-        res.render("reset-password");
+        // Always pass the message variable, even if empty
+        res.render("reset-password", { message: '' });
     } catch (error) {
         console.error("Error rendering reset password page:", error);
         res.redirect("/pageNotFound");
     }
 }
 
-
 const resendOtp = async (req,res)=>{
     try {
-        
         const otp = generateOtp();
         req.session.userOtp = otp;
         const email = req.session.email;
-        console.log("Resend OYP to email:",email);
+        console.log("Resend OTP to email:",email);
+        
+        if (!email) {
+            return res.status(400).json({
+                success: false, 
+                message: "Session expired. Please start over."
+            });
+        }
+        
         const emailSent = await sendVerificationEmail(email,otp);
         if(emailSent){
             console.log("Resend OTP:",otp);
-            res.status(200).json({success:true ,message: "Resend OTP Successful"});
-
+            res.status(200).json({success:true, message: "Resend OTP Successful"});
+        } else {
+            res.status(500).json({success:false, message: "Failed to send OTP"});
         }
-
     } catch (error) {
         console.error("Error in resend otp",error);
-        res.status(500).json({success:false , message:"Internal Server Error"});
-
+        res.status(500).json({success:false, message:"Internal Server Error"});
     }
 }
 
@@ -230,5 +223,4 @@ module.exports = {
     getResetPassPage,
     resendOtp,
     postNewPassword,
-
 };

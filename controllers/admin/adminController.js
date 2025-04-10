@@ -43,11 +43,23 @@ const login = async (req, res) => {
             return res.redirect("/admin/login");
         }
 
-        //  Set Admin Session
-        req.session.admin = { id: admin._id, email: admin.email };
-        console.log(" Admin Logged In:", req.session.admin);
-
-        return res.redirect("/admin/dashboard"); 
+        // First regenerate the session
+        req.session.regenerate((err) => {
+            if (err) {
+                console.error("Session regeneration error:", err);
+                return res.redirect("/pageerror");
+            }
+            
+            // Then set the admin data in the new session
+            req.session.admin = { 
+                id: admin._id, 
+                email: admin.email,
+                lastActivity: Date.now()
+            };
+            
+            console.log(" Admin Logged In:", req.session.admin);
+            return res.redirect("/admin/dashboard");
+        });
     } catch (error) {
         console.error(" Login Error:", error);
         return res.redirect("/pageerror");
@@ -61,29 +73,34 @@ const loadDashboard = async (req, res) => {
         return res.redirect("/admin/login");
     }
     try {
-        res.render("adminDashboard", { activePage: "dashboard" }); // Ensure this file exists in `views/admin/`
+        res.render("adminDashboard");
     } catch (error) {
         console.error(" Error Rendering Dashboard:", error);
         return res.redirect("/pageerror");
     }
 };
 
-const logout = async(req,res)=>{
+const logout = async (req, res) => {
     try {
-        
-        req.session.destroy(err =>{
-            if(err){
-                console.log("Error destroying session",err)
-                return res.redirect("/pageerror")
-            }
-            res.redirect("/admin/login")
-        })
+        if (req.session) {
+            // Clear all session data
+            req.session.destroy((err) => {
+                if (err) {
+                    console.error("Error destroying session:", err);
+                    return res.redirect("/pageerror");
+                }
+                // Clear the session cookie
+                res.clearCookie('connect.sid');
+                res.redirect("/admin/login");
+            });
+        } else {
+            res.redirect("/admin/login");
+        }
     } catch (error) {
-        
-        console.log(("unexpected error during logout,error"));
-        res.redirect("/pageerror")
+        console.error("Unexpected error during logout:", error);
+        res.redirect("/pageerror");
     }
-}
+};
 
 
 module.exports = {

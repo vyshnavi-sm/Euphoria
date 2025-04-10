@@ -4,7 +4,7 @@ const customerInfo = async (req, res) => {
     try {
         let search = req.query.search || ""; // Default search value
         let page = parseInt(req.query.page) || 1; // Default page number
-        const limit = 3; // Number of users per page
+        const limit = 10; // Number of users per page
 
         // Fetch filtered customers
         const userData = await User.find({
