@@ -113,31 +113,32 @@ const pageNotFound = async(req,res) => {
 
 const loadHomepage = async (req, res) => {
     try {
+        const categories = await Category.find({ isListed: true });
+        let productData = await Product.find({
+            isBlocked: false,
+            category: { $in: categories.map(category => category._id) },
+            quantity: { $gt: 0 }
+        });
 
-        const categories =await Category.find({isListed:true});
-        let productData = await Product.find(
-            {isBlocked:false,
-                category:{$in:categories.map(category=>category._id)},quantity:{$gt:0}
-            }
-
-        )
-
-
-        productData.sort((a,b)=>new Date(b.createdOn)-new Date(a.createdOn));
-        productData = productData.slice(0,4);
-
-
-
-
-
+        // Sort products by creation date and get the latest 4
+        productData.sort((a, b) => new Date(b.createdOn) - new Date(a.createdOn));
+        productData = productData.slice(0, 4);
 
         if (req.session.user) {
-            return res.render("home", { user: req.session.user  , products:productData});
+            return res.render("home", { 
+                user: req.session.user,
+                products: productData,
+                categories: categories
+            });
         } else {
-            return res.render("home", { user: null , products:productData});
+            return res.render("home", { 
+                user: null,
+                products: productData,
+                categories: categories
+            });
         }
     } catch (error) {
-        console.log("Home page not found");
+        console.log("Home page not found:", error);
         res.status(500).send("Server error");
     }
 };
@@ -304,19 +305,18 @@ const securePassword = async(password)=>{
         }
     };
 
-// const checkOtpAvailability = async (req, res) => {
-//     try {
-//         // Check if OTP is available in session
-//         if (req.session.userOtp) {
-//             return res.json({ otpAvailable: true });
-//         } else {
-//             return res.json({ otpAvailable: false });
-//         }
-//     } catch (error) {
-//         console.error("Error checking OTP availability:", error);
-//         return res.status(500).json({ otpAvailable: false });
-//     }
-// };
+
+const loadShoppingPage = async (req, res)=>{
+    try {
+        
+        res.render("shop");
+
+    } catch (error) {
+
+        res.redirect("/pageNotFound")
+        
+    }
+}
 
 module.exports = {
     loadHomepage,
@@ -329,5 +329,5 @@ module.exports = {
     login,
     logout,
     loadVerifyOtp,
-    // checkOtpAvailability
+    loadShoppingPage
 }
