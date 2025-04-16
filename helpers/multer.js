@@ -4,11 +4,12 @@ const fs = require('fs');
 
 // Create uploads directories if they don't exist
 const uploadDirs = {
-    general: 'uploads',
-    brand: 'uploads/brand-images',
-    product: 'uploads/product-images'
+    general: path.join('public', 'uploads'),
+    brand: path.join('public', 'uploads', 'brand-images'),
+    product: path.join('public', 'uploads', 'product-images')
 };
 
+// Ensure all directories exist
 Object.values(uploadDirs).forEach(dir => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });

@@ -1,38 +1,38 @@
-const Brand = require("../../models/brandSchema")
-const Product = require("../../models/productSchema")
+const Brand = require("../../models/brandSchema");
+const Product = require("../../models/productSchema");
+const path = require('path');
+const fs = require('fs');
 
-
-
-const getBrandPage = async (req,res)=>{
+const getBrandPage = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit =4;
-        const skip = (page-1)*limit;
-        const brandData = await Brand.find({}).sort({createdAt:-1}).skip(skip).limit(limit);
+        const limit = 4;
+        const skip = (page - 1) * limit;
+        const brandData = await Brand.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit);
         const totalBrands = await Brand.countDocuments();
-        const totalPages = Math.ceil(totalBrands/limit);
+        const totalPages = Math.ceil(totalBrands / limit);
         const reverseBrand = brandData.reverse();
 
         // Get error and success messages from query parameters
         const error = req.query.error;
         const success = req.query.success;
 
-        res.render("brands",{
-            data :reverseBrand,
-            currentPage :page,
-            totalPages :totalPages,
-            totalBrands :totalBrands,
+        res.render("brands", {
+            data: reverseBrand,
+            currentPage: page,
+            totalPages: totalPages,
+            totalBrands: totalBrands,
             error: error,
             success: success
-        })
-        
+        });
+
     } catch (error) {
         console.error("Error in getBrandPage:", error);
         res.redirect("/admin/brands?error=An error occurred while loading brands");
     }
-}
+};
 
-const addBrand = async(req,res) =>{
+const addBrand = async (req, res) => {
     try {
         const brand = req.body.name;
         const image = req.file;
@@ -47,9 +47,15 @@ const addBrand = async(req,res) =>{
         }
 
         // Check if brand already exists
-        const findBrand = await Brand.findOne({brandName: brand});
-        if(findBrand){
+        const findBrand = await Brand.findOne({ brandName: brand });
+        if (findBrand) {
             return res.redirect("/admin/brands?error=Brand already exists");
+        }
+
+        // Ensure the uploads/brand-images directory exists
+        const uploadDir = path.join('public', 'uploads', 'brand-images');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
         }
 
         // Create new brand
@@ -57,64 +63,49 @@ const addBrand = async(req,res) =>{
             brandName: brand,
             brandImage: [image.filename], // Store as array
         });
-        
+
         await newBrand.save();
         res.redirect("/admin/brands?success=Brand added successfully");
-        
+
     } catch (error) {
         console.error("Error adding brand:", error);
         res.redirect("/admin/brands?error=An error occurred while adding the brand");
     }
-}
+};
 
-
-const blockBrand = async (req,res)=>{
+const blockBrand = async (req, res) => {
     try {
-        
         const id = req.query.id;
-        await Brand.updateOne({_id:id},{$set:{isBlocked:true}});
+        await Brand.updateOne({ _id: id }, { $set: { isBlocked: true } });
         res.redirect("/admin/brands");
-
     } catch (error) {
-        res.redirect("/pageerror")
-        
+        res.redirect("/pageerror");
     }
+};
 
-
-}
-
-
-const unBlockBrand = async (req,res)=>{
+const unBlockBrand = async (req, res) => {
     try {
-
         const id = req.query.id;
-        await Brand.updateOne({_id:id},{$set:{isBlocked:false}});
+        await Brand.updateOne({ _id: id }, { $set: { isBlocked: false } });
         res.redirect("/admin/brands");
-
-        
     } catch (error) {
-        res.redirect("/pageerror")
-        
+        res.redirect("/pageerror");
     }
-}
+};
 
-const deleteBrand = async(req,res)=>{
+const deleteBrand = async (req, res) => {
     try {
-
-        const {id} =req.query;
-        if(!id){
-            return res.status(400).redirect("/pageerror")
+        const { id } = req.query;
+        if (!id) {
+            return res.status(400).redirect("/pageerror");
         }
-        await Brand.deleteOne({_id:id});
-        res.redirect("/admin/brands")
-        
+        await Brand.deleteOne({ _id: id });
+        res.redirect("/admin/brands");
     } catch (error) {
-        console.error("Erro delecting brand:",error)
-        res.status(500).redirect("/pageerror")
+        console.error("Error deleting brand:", error);
+        res.status(500).redirect("/pageerror");
     }
-}
-
-
+};
 
 module.exports = {
     getBrandPage,
@@ -122,4 +113,4 @@ module.exports = {
     blockBrand,
     unBlockBrand,
     deleteBrand,
-}
+};

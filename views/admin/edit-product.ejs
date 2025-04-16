@@ -96,6 +96,20 @@
         .image-cropper {
             border: 1px solid #d2b48c;
             background-color: #fcf7f1;
+            margin: 10px 0;
+            padding: 10px;
+        }
+
+        /* Enhanced cropper styling */
+        .cropper-container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .cropper-view-box,
+        .cropper-face {
+            border-radius: 0;
         }
 
         /* Add status message styling */
@@ -120,9 +134,40 @@
             margin-top: 5px;
             border-radius: 4px;
         }
+
+        /* Image preview container */
+        .image-preview {
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .image-preview img {
+            border: 2px solid #e6d3c0;
+            border-radius: 4px;
+        }
+
+        /* Loading spinner for deletion */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #a0522d;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
     
    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css">
+   <!-- Add CSRF token if your application uses it -->
+   <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
 </head>
 <section class="content-main">
     <div class="row">
@@ -227,23 +272,26 @@
                                 <h4>Current Images</h4>
                             </div>
                             <div class="card-body">
-                                <div class="row">
+                                <div class="row" id="current-images-container">
                                 <% if (product.productImage && product.productImage.length > 0) { %>
                                     <% for (let i = 0; i < product.productImage.length; i++) { %>
-                                        <div class="col-md-3 mb-3">
+                                        <div class="col-md-3 mb-3 image-item">
                                             <div class="position-relative">
-                                                <input type="hidden" value="<%= product.productImage[i] %>" id="imageDatas">
+                                                <input type="hidden" name="existingImages" value="<%= product.productImage[i] %>" class="image-data-input">
                                                 <img class="img-fluid rounded" style="width: 100px; height: 100px; object-fit: cover;"
-                                                    src="/uploads/re-image/<%= product.productImage[i] %>" alt="Product Image">
-                                                <button type="button" onclick="deleteSingleImage('<%= product.productImage[i] %>','<%= product._id %>')" 
-                                                    class="btn btn-sm btn-danger position-absolute" style="top: 5px; right: 5px;">
+                                                    src="/uploads/product-images/<%= product.productImage[i] %>" alt="Product Image">
+                                                <button type="button" 
+                                                    class="btn btn-sm btn-danger position-absolute delete-image-btn" 
+                                                    style="top: 5px; right: 5px;"
+                                                    data-image="<%= product.productImage[i] %>"
+                                                    data-product="<%= product._id %>">
                                                     <i class="fa fa-times"></i>
                                                 </button>
                                             </div>
                                         </div>
                                     <% } %>
                                 <% } else { %>
-                                    <div class="col-12">
+                                    <div class="col-12 no-images-message">
                                         <p>No images available</p>
                                     </div>
                                 <% } %>
@@ -259,15 +307,21 @@
                                     <div class="col-12">
                                         <label class="form-label">Image 1</label>
                                         <div class="input-upload">
+                                            <div class="image-preview">
                                             <img src="" alt="" id="imgView1" class="img-thumbnail mb-2" style="max-height: 150px; display: none;">
+                                            </div>
                                             <input class="form-control" type="file" name="images" id="input1"
                                                 accept="image/png, image/jpeg, image/jpg"
-                                                onchange="viewImage1(event), viewImage(event, 1)">
+                                                onchange="viewImage(event, 1)">
                                         </div>
-                                        <div class="image-cropper d-flex align-items-center"
-                                            style="display:none; width: 300px; height: 200px; margin-top: 10px;">
-                                            <img src="" id="croppedImg1" alt="">
-                                            <button type="button" id="saveButton1" class="btn btn-sm btn-primary ms-2">Save</button>
+                                        <div class="image-cropper" id="cropper-container1" style="display:none;">
+                                            <div class="cropper-wrapper" style="max-height: 400px; overflow: hidden;">
+                                                <img src="" id="croppedImg1" alt="" style="max-width: 100%;">
+                                            </div>
+                                            <div class="text-end mt-2">
+                                                <button type="button" id="saveButton1" class="btn btn-primary">Save Crop</button>
+                                                <button type="button" id="cancelButton1" class="btn btn-secondary" onclick="cancelCrop(1)">Cancel</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -277,15 +331,21 @@
                                     <div class="col-12">
                                         <label class="form-label">Image 2</label>
                                         <div class="input-upload">
+                                            <div class="image-preview">
                                             <img src="" alt="" id="imgView2" class="img-thumbnail mb-2" style="max-height: 150px; display: none;">
+                                            </div>
                                             <input class="form-control" type="file" name="images" id="input2"
                                                 accept="image/png, image/jpeg, image/jpg"
-                                                onchange="viewImage2(event), viewImage(event, 2)">
+                                                onchange="viewImage(event, 2)">
                                         </div>
-                                        <div class="image-cropper d-flex align-items-center"
-                                            style="display:none; width: 300px; height: 200px; margin-top: 10px;">
-                                            <img src="" id="croppedImg2" alt="">
-                                            <button type="button" id="saveButton2" class="btn btn-sm btn-primary ms-2">Save</button>
+                                        <div class="image-cropper" id="cropper-container2" style="display:none;">
+                                            <div class="cropper-wrapper" style="max-height: 400px; overflow: hidden;">
+                                                <img src="" id="croppedImg2" alt="" style="max-width: 100%;">
+                                            </div>
+                                            <div class="text-end mt-2">
+                                                <button type="button" id="saveButton2" class="btn btn-primary">Save Crop</button>
+                                                <button type="button" id="cancelButton2" class="btn btn-secondary" onclick="cancelCrop(2)">Cancel</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -295,15 +355,21 @@
                                     <div class="col-12">
                                         <label class="form-label">Image 3</label>
                                         <div class="input-upload">
+                                            <div class="image-preview">
                                             <img src="" alt="" id="imgView3" class="img-thumbnail mb-2" style="max-height: 150px; display: none;">
+                                            </div>
                                             <input class="form-control" type="file" name="images" id="input3"
                                                 accept="image/png, image/jpeg, image/jpg"
-                                                onchange="viewImage3(event), viewImage(event, 3)">
+                                                onchange="viewImage(event, 3)">
                                         </div>
-                                        <div class="image-cropper d-flex align-items-center"
-                                            style="display:none; width: 300px; height: 200px; margin-top: 10px;">
-                                            <img src="" id="croppedImg3" alt="">
-                                            <button type="button" id="saveButton3" class="btn btn-sm btn-primary ms-2">Save</button>
+                                        <div class="image-cropper" id="cropper-container3" style="display:none;">
+                                            <div class="cropper-wrapper" style="max-height: 400px; overflow: hidden;">
+                                                <img src="" id="croppedImg3" alt="" style="max-width: 100%;">
+                                            </div>
+                                            <div class="text-end mt-2">
+                                                <button type="button" id="saveButton3" class="btn btn-primary">Save Crop</button>
+                                                <button type="button" id="cancelButton3" class="btn btn-secondary" onclick="cancelCrop(3)">Cancel</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -313,20 +379,27 @@
                                     <div class="col-12">
                                         <label class="form-label">Image 4</label>
                                         <div class="input-upload">
+                                            <div class="image-preview">
                                             <img src="" alt="" id="imgView4" class="img-thumbnail mb-2" style="max-height: 150px; display: none;">
+                                            </div>
                                             <input class="form-control" type="file" name="images" id="input4"
                                                 accept="image/png, image/jpeg, image/jpg"
-                                                onchange="viewImage4(event), viewImage(event, 4)">
+                                                onchange="viewImage(event, 4)">
                                         </div>
-                                        <div class="image-cropper d-flex align-items-center"
-                                            style="display:none; width: 300px; height: 200px; margin-top: 10px;">
-                                            <img src="" id="croppedImg4" alt="">
-                                            <button type="button" id="saveButton4" class="btn btn-sm btn-primary ms-2">Save</button>
+                                        <div class="image-cropper" id="cropper-container4" style="display:none;">
+                                            <div class="cropper-wrapper" style="max-height: 400px; overflow: hidden;">
+                                                <img src="" id="croppedImg4" alt="" style="max-width: 100%;">
+                                            </div>
+                                            <div class="text-end mt-2">
+                                                <button type="button" id="saveButton4" class="btn btn-primary">Save Crop</button>
+                                                <button type="button" id="cancelButton4" class="btn btn-secondary" onclick="cancelCrop(4)">Cancel</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 
                                 <div id="images-error" class="error-message"></div>
+                            </div>
                             </div>
                         <div class="mt-4">
                             <button class="btn btn-md rounded font-sm hover-up" id="updatebtn" type="submit">Update Product</button>
@@ -342,179 +415,196 @@
 
 <%- include("../../views/partials/admin/footer") %>
 
-
-
-
 <script>
-function validateAndSubmit() {
-    if (validateForm()) {
-        document.getElementById('editProductForm').submit();
-    }
-}
+// Global variables
+let cropper = null;
+let currentImageNumber = null;
 
-function validateForm() {
-    let imageDatas = false;
-    console.log("validate form");
-    clearErrorMessages();
-    const name = document.getElementsByName('productName')[0].value;
-    const description = document.getElementsByName('descriptionData')[0].value;
-    const brand = document.getElementsByName('brand')[0].value;
-    const price = document.getElementsByName('regularPrice')[0].value;
-    const saleprice = document.getElementsByName('salePrice')[0].value;
-    const color = document.getElementsByName('color')[0].value;
-    const category = document.getElementsByName('category')[0].value;
-    const images = document.getElementById('input1');
-    const quantity = document.getElementsByName('quantity')[0].value; // Fixed to get the value
+// Image handling functions
+function viewImage(event, imageNumber) {
+    const file = event.target.files[0];
+    if (!file) return;
     
-    imageDatas = document.getElementById("imageDatas")?.value;
-    let isValid = true;    
-    
-    if (name.trim() === "") {
-        displayErrorMessage('productName-error', 'Please enter a product name.');
-        isValid = false;
-    }
-          
-    if (description.trim() === '') {
-        displayErrorMessage('description-error', 'Please enter a product description.');
-        isValid = false;
-    } 
-
-    if (isNaN(parseInt(quantity)) || parseInt(quantity) < 0) {
-        displayErrorMessage('quantity-error', 'Please enter a valid non-negative quantity.');
-        isValid = false;
-    }
-
-    if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) < 0) {
-        displayErrorMessage('regularPrice-error', 'Please enter a valid non-negative price.');
-        isValid = false;
+    // Reset previous cropper if exists
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
     }
     
-    if (!/^\d+(\.\d{1,2})?$/.test(saleprice) || parseFloat(saleprice) < 0) {
-        displayErrorMessage('salePrice-error', 'Please enter a valid non-negative price.');
-        isValid = false;
-    }
-          
-    if (color.trim() === "") {
-        displayErrorMessage('color-error', 'Please enter a color.');
-        isValid = false;
-    }
-    
-    if (!imageDatas && images.files.length === 0) {
-        displayErrorMessage("images-error",'Please select at least one image.');
-        isValid = false;
-    }
-    
-    return isValid;
-}
-      
-function displayErrorMessage(elementId, message) {
-    var errorElement = document.getElementById(elementId);
-    errorElement.innerText = message;
-    errorElement.style.display = "block";
-    errorElement.classList.add("error-message-visible");
-}
-
-function clearErrorMessages() {
-    const errorElements = document.getElementsByClassName('error-message');
-    Array.from(errorElements).forEach(element => {
-        element.innerText = '';
-        element.style.display = "none";
-    });
-}
-
-function viewImage1(event) {
-    const imgView = document.getElementById('imgView1');
-    imgView.src = URL.createObjectURL(event.target.files[0]);
-    imgView.style.display = 'block';
-}
-
-function viewImage2(event) {
-    const imgView = document.getElementById('imgView2');
-    imgView.src = URL.createObjectURL(event.target.files[0]);
-    imgView.style.display = 'block';
-}
-
-function viewImage3(event) {
-    const imgView = document.getElementById('imgView3');
-    imgView.src = URL.createObjectURL(event.target.files[0]);
-    imgView.style.display = 'block';
-}
-
-function viewImage4(event) {
-    const imgView = document.getElementById('imgView4');
-    imgView.src = URL.createObjectURL(event.target.files[0]);
-    imgView.style.display = 'block';
-}
-
-function viewImage(event, index) {
-    let input = event.target;
-    let reader = new FileReader();
-    reader.onload = function () {
-        let dataURL = reader.result;
-        let image = document.getElementById('imgView' + index);
-        image.src = dataURL;
-        image.style.display = 'block';
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Setup cropper
+        const cropperImg = document.getElementById(`croppedImg${imageNumber}`);
+        cropperImg.src = e.target.result;
         
-        let cropper = new Cropper(image, {
-            aspectRatio: 1,
-            viewMode: 1,
-            guides: true,
-            background: false,
-            autoCropArea: 1,
-            zoomable: true
-        });
-        
-        let cropperContainer = document.querySelector('#croppedImg' + index).parentNode;
+        // Show cropper container
+        const cropperContainer = document.getElementById(`cropper-container${imageNumber}`);
         cropperContainer.style.display = 'block';
         
-        let saveButton = document.querySelector('#saveButton' + index);
-        saveButton.addEventListener('click', async function () {
-            let croppedCanvas = cropper.getCroppedCanvas();
-            let croppedImage = document.getElementById("croppedImg" + index);
-            croppedImage.src = croppedCanvas.toDataURL('image/jpeg', 1.0);
-            let timestamp = new Date().getTime();
-            let fileName = `cropped-img-${timestamp}-${index}.png`;
-            
-            await croppedCanvas.toBlob(blob => {
-                let input = document.getElementById('input' + index);
-                let imgFile = new File([blob], fileName, blob);
-                const fileList = new DataTransfer();
-                fileList.items.add(imgFile);
-                input.files = fileList.files;
+        // Initialize cropper after ensuring the image is loaded
+        cropperImg.onload = function() {
+            cropper = new Cropper(cropperImg, {
+                aspectRatio: 1,
+                viewMode: 1,
+                autoCropArea: 0.8,
+                responsive: true,
+                restore: false,
+                guides: true,
+                center: true,
+                highlight: true,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                toggleDragModeOnDblclick: false,
+                ready: function() {
+                    console.log("Cropper is ready");
+                }
             });
             
-            cropperContainer.style.display = 'none';
-            cropper.destroy();
-        });
+            currentImageNumber = imageNumber;
+        };
     };
-    
-    reader.readAsDataURL(input.files[0]);
+    reader.readAsDataURL(file);
 }
 
-function deleteSingleImage(imageId, productId) {
-    $.ajax({
-        url: "/admin/deleteImage",
-        method: 'post',
-        data: {
-            imageNameToServer: imageId,
-            productIdToServer: productId
-        },
-        success: ((response) => {
-            if(response.status === true) {
-                window.location.reload();
+// Function to cancel cropping
+function cancelCrop(imageNumber) {
+    if (cropper) {
+        cropper.destroy();
+        cropper = null;
+    }
+    
+    // Hide the cropper container
+    document.getElementById(`cropper-container${imageNumber}`).style.display = 'none';
+    
+    // Reset the file input
+    document.getElementById(`input${imageNumber}`).value = '';
+    
+    // Hide the preview
+    document.getElementById(`imgView${imageNumber}`).style.display = 'none';
+}
+
+// Save cropped image
+function saveCroppedImage(imageNumber) {
+    if (!cropper) {
+        console.error("No active cropper found");
+        return;
+    }
+    
+    try {
+        const canvas = cropper.getCroppedCanvas({
+            width: 440,
+            height: 440,
+            imageSmoothingEnabled: true,
+            imageSmoothingQuality: 'high'
+        });
+        
+        if (!canvas) {
+            console.error("Could not create canvas");
+            return;
+        }
+        
+        // Show the preview image with cropped result
+        const imgView = document.getElementById(`imgView${imageNumber}`);
+        imgView.src = canvas.toDataURL('image/jpeg');
+        imgView.style.display = 'block';
+        
+        // Hide the cropper container
+        document.getElementById(`cropper-container${imageNumber}`).style.display = 'none';
+        
+        // Convert canvas to blob and update file input
+        canvas.toBlob((blob) => {
+            const file = new File([blob], `cropped-image-${imageNumber}.jpg`, { type: 'image/jpeg' });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById(`input${imageNumber}`).files = dataTransfer.files;
+            
+            // Clean up
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
             }
-        })
+        }, 'image/jpeg', 0.95);
+    } catch (error) {
+        console.error("Error during cropping:", error);
+        alert("Error during image cropping. Please try again.");
+    }
+}
+
+// Delete single image function
+function deleteSingleImage(imageName, productId) {
+    if (!confirm('Are you sure you want to delete this image?')) {
+        return;
+    }
+    
+    const imageElement = document.querySelector(`.delete-image-btn[data-image="${imageName}"]`);
+    if (!imageElement) {
+        console.error("Could not find image element to delete");
+        return;
+    }
+    
+    // Create a loading spinner
+    const spinner = document.createElement('span');
+    spinner.className = 'spinner';
+    imageElement.parentNode.appendChild(spinner);
+    imageElement.disabled = true;
+    
+    fetch(`/admin/deleteSingleImage/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ imageName: imageName })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const imageContainer = imageElement.closest('.image-item');
+            if (imageContainer) {
+                imageContainer.remove();
+                
+                // Check if there are no images left
+                const remainingImages = document.querySelectorAll('.image-item');
+                if (remainingImages.length === 0) {
+                    const imagesContainer = document.getElementById('current-images-container');
+                    imagesContainer.innerHTML = '<div class="col-12 no-images-message"><p>No images available</p></div>';
+                }
+            }
+        } else {
+            alert('Error deleting image: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting image. Please try again.');
+    })
+    .finally(() => {
+        if (spinner.parentNode) {
+            spinner.remove();
+        }
+        if (imageElement) {
+            imageElement.disabled = false;
+        }
     });
 }
 
-// Connect the update button to the validation function
+// Setup event listeners when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    const updateBtn = document.getElementById('updatebtn');
-    if (updateBtn) {
-        updateBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            validateAndSubmit();
+    // Save button click handlers for each image
+    document.getElementById('saveButton1').addEventListener('click', () => saveCroppedImage(1));
+    document.getElementById('saveButton2').addEventListener('click', () => saveCroppedImage(2));
+    document.getElementById('saveButton3').addEventListener('click', () => saveCroppedImage(3));
+    document.getElementById('saveButton4').addEventListener('click', () => saveCroppedImage(4));
+    
+    // Set up delete image buttons
+    const deleteButtons = document.querySelectorAll('.delete-image-btn');
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const imageName = this.getAttribute('data-image');
+            const productId = this.getAttribute('data-product');
+            if (imageName && productId) {
+                deleteSingleImage(imageName, productId);
+            }
         });
-    }
+    });
 });
 </script>

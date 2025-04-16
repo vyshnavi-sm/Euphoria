@@ -7,85 +7,133 @@
     <link rel="stylesheet" href="home.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-</head>
-
-
 <style>
-.dropdown{
+/* Navbar and alignment styles */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    background-color: white;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 30px; /* Space between items */
+}
+
+/* Style to match the original nav-center class */
+.brand-name {
+    color: #5C4033; /* Brown color for EUPHORIA */
+    font-weight: bold;
+    font-size: 24px; /* Adjusted to match original size */
+    letter-spacing: 1px;
+    margin-right: 20px;
+}
+
+.nav-links {
+    display: flex;
+    gap: 20px;
+    align-items: center; /* Align items vertically */
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: black;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Existing dropdown styles */
+.dropdown {
     position: relative;
     display: inline-block;
 }
-.dropdown-content{
-    display:none;
+
+.dropdown-content {
+    display: none;
     position: absolute;
     background-color: white;
     min-width: 160px;
-    box-shadow: 0px 8px 16px 0px black;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1000;
     right: 0;
 }
-.dropdown-content a{
+
+.dropdown-content a {
     color: black;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
     width: 100%;
 }
-.dropdown-content a:hover{
+
+.dropdown-content a:hover {
     background-color: #f1f1f1;
 }
-.dropdown:hover .dropdown-content{
+
+.dropdown:hover .dropdown-content {
     display: block;
 }
-.header{
+
+.header {
     position: relative;
     z-index: 500;
 }
-</style>
-<body>
 
-    <!-- Navigation Bar -->
-    <!-- <header> -->
-        <section class="hero">
+.divider {
+    color: #ddd;
+}
+
+/* Additional hero section styling */
+.hero {
+    position: relative;
+}
+</style>
+</head>
+
+<body>
+    <section class="hero">
         <nav class="navbar">
             <div class="nav-left">
-                <a href="#">CATEGORIES</a>
-                <a href="#">ABOUT</a>
-                <a href="#">CONTACT</a>
-            </div>
-            <!-- <div class="nav-center">EUPHORIA</div> -->
-            <!-- <div class="nav-right">
-                <a href="#">EN</a>
-                <a href="#">🔍</a>
-                <a href="#">🛒</a>
-                <a href="#"><i class="fa-regular fa-heart"></i></a>
-            </div> -->
-            <div class="nav-right">
-                <div class="nav-center">EUPHORIA</div>
-                <div class="nav-right">
-                    <% if (user) { %>
-                        <div class="dropdown">
-                            <a href="#" class="sign-in-link"><%= user.name %></a>
-                            <div class="dropdown-content">
-                                <a href="/userProfile">Profile</a>
-                                <a href="/logout">Logout</a>
-                            </div>
-                        </div>
-                    <% } else { %>
-                        <a href="/signup" class="sign-in-link">Sign Up</a>
-                        <a href="/login" class="sign-in-link">Login</a>
-                    <% } %>
-    
-                <a href="#">EN <i class="fa-solid fa-chevron-down"></i></a>  
-                <span class="divider">|</span>  <!-- Divider Line -->
-                <a href="#"><i class="fa-solid fa-cart-shopping"></i></a>  <!-- Cart Icon -->
-                <a href="#"><i class="fa-solid fa-magnifying-glass"></i></a>  <!-- Search Icon -->
-                <a href="#"><i class="fa-regular fa-heart"></i></a>  <!-- Heart Icon -->
-                <a href="#"><i class="fa-regular fa-user"></i></a>  <!-- Profile Icon -->
-                <br><br>
-                <!-- <a href="/signup">Logout</a> -->
-
+                <!-- Brown EUPHORIA with original size and navigation links in same line -->
+                <div class="brand-name">EUPHORIA</div>
+                <div class="nav-links">
+                    <a href="#">CATEGORIES</a>
+                    <a href="#">ABOUT</a>
+                    <a href="#">CONTACT</a>
+                </div>
             </div>
             
+            <div class="nav-right">
+                <% if (user) { %>
+                    <div class="dropdown">
+                        <a href="#" class="sign-in-link"><%= user.name %></a>
+                        <div class="dropdown-content">
+                            <a href="/userProfile">Profile</a>
+                            <a href="/logout">Logout</a>
+                        </div>
+                    </div>
+                <% } else { %>
+                    <a href="/signup" class="sign-in-link">Sign Up</a>
+                    <a href="/login" class="sign-in-link">Login</a>
+                <% } %>
+
+                <a href="#">EN <i class="fa-solid fa-chevron-down"></i></a>  
+                <span class="divider">|</span>
+                <a href="#"><i class="fa-solid fa-cart-shopping"></i></a>
+                <a href="#"><i class="fa-solid fa-magnifying-glass"></i></a>
+                <a href="#"><i class="fa-regular fa-heart"></i></a>
+                <a href="#"><i class="fa-regular fa-user"></i></a>
+            </div>
         </nav>
-    <!-- </header> -->
+    </section>
+    
+    <!-- Rest of your page content here -->
+</body>
+</html>
