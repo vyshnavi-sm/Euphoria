@@ -312,21 +312,17 @@ const securePassword = async(password)=>{
 
 const loadShoppingPage = async (req, res) => {
     try {
-        // Get pagination parameters
         const page = parseInt(req.query.page) || 1;
-        const limit = 9; // Number of products per page
+        const limit = 9;
         const skip = (page - 1) * limit;
-
-        // Get search query if any
         const search = req.query.search || '';
+        const sort = req.query.sort || '';
 
-        // Build query for products
+        // Build the query
         let query = {
             isBlocked: false,
             quantity: { $gt: 0 }
         };
-
-        // Add search condition if search query exists
         if (search) {
             query.$or = [
                 { productName: { $regex: search, $options: 'i' } },
@@ -334,37 +330,72 @@ const loadShoppingPage = async (req, res) => {
             ];
         }
 
-        // Get categories for sidebar
-        const categories = await Category.find({ isListed: true });
-
-        // Get brands for sidebar
-        const brands = await Brand.find({ isBlocked: false });
-
-        // Get products with pagination
-        const products = await Product.find(query)
-            .populate('category')
-            .populate('brand')
-            .sort({ createdAt: -1 }) // Sort by newest first
-            .skip(skip)
-            .limit(limit);
+        // Build the sort object
+        let sortOptions = {};
+        switch (sort) {
+            case 'price_low_high':
+                sortOptions = { salePrice: 1 };
+                break;
+            case 'price_high_low':
+                sortOptions = { salePrice: -1 };
+                break;
+            case 'name_asc':
+                sortOptions = { productName: 1 };
+                break;
+            case 'name_desc':
+                sortOptions = { productName: -1 };
+                break;
+            case 'popularity':
+                sortOptions = { views: -1 };
+                break;
+            case 'rating':
+                sortOptions = { rating: -1 };
+                break;
+            case 'newest':
+                sortOptions = { createdAt: -1 };
+                break;
+            case 'featured':
+                sortOptions = { isFeatured: -1 };
+                break;
+            default:
+                sortOptions = { createdAt: -1 }; // Default sort by newest
+        }
 
         // Get total count for pagination
         const totalProducts = await Product.countDocuments(query);
         const totalPages = Math.ceil(totalProducts / limit);
 
-        res.render("shop", {
-            products: products,
-            categories: categories,
-            brands: brands,
-            currentPage: page,
-            totalPages: totalPages,
-            search: search,
-            user: req.session.user || null
-        });
+        // Fetch products with sorting
+        const products = await Product.find(query)
+            .sort(sortOptions)
+            .skip(skip)
+            .limit(limit)
+            .populate('category')
+            .populate('brand');
 
+        // Fetch categories and brands
+        const categories = await Category.find({ isListed: true });
+        const brands = await Brand.find({ isBlocked: false });
+
+        // Get user data if logged in
+        let user = null;
+        if (req.session.user) {
+            user = await User.findById(req.session.user);
+        }
+
+        res.render('user/shop', {
+            products,
+            categories,
+            brands,
+            currentPage: page,
+            totalPages,
+            search,
+            sort,
+            user // Pass the user data to the view
+        });
     } catch (error) {
-        console.error("Error loading shop page:", error);
-        res.redirect("/pageNotFound");
+        console.error('Error loading shop page:', error);
+        res.status(500).render('error', { message: 'Error loading shop page' });
     }
 };
 

@@ -94,6 +94,76 @@
 .hero {
     position: relative;
 }
+
+/* Navigation Button Styles */
+.nav-buttons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.nav-button {
+    padding: 8px 20px;
+    border-radius: 25px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.home-button {
+    background-color: #a97155;
+    color: white;
+    border: 2px solid #a97155;
+}
+
+.home-button:hover {
+    background-color: #8b5e3c;
+    border-color: #8b5e3c;
+    transform: translateY(-2px);
+}
+
+.login-button {
+    background-color: transparent;
+    color: #a97155;
+    border: 2px solid #a97155;
+}
+
+.login-button:hover {
+    background-color: #a97155;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.signup-button {
+    background-color: #a97155;
+    color: white;
+    border: 2px solid #a97155;
+}
+
+.signup-button:hover {
+    background-color: #8b5e3c;
+    border-color: #8b5e3c;
+    transform: translateY(-2px);
+}
+
+.nav-button i {
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    .nav-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .nav-button {
+        width: 100%;
+        justify-content: center;
+    }
+}
 </style>
 </head>
 
