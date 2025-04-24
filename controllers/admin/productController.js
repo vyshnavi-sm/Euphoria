@@ -30,6 +30,48 @@ const addProducts = async(req, res) => {
         console.log("Product data:", products);
         console.log("Files received:", req.files);
          
+        // Validate required fields
+        if (!products.productName || !products.productName.trim()) {
+            return res.redirect("/admin/addProducts?error=Product name is required");
+        }
+
+        if (!products.description || !products.description.trim()) {
+            return res.redirect("/admin/addProducts?error=Product description is required");
+        }
+
+        if (!products.category) {
+            return res.redirect("/admin/addProducts?error=Category is required");
+        }
+
+        if (!products.brand) {
+            return res.redirect("/admin/addProducts?error=Brand is required");
+        }
+
+        // Validate numeric fields
+        const regularPrice = parseFloat(products.regularPrice);
+        if (isNaN(regularPrice) || regularPrice < 0) {
+            return res.redirect("/admin/addProducts?error=Regular price must be a valid positive number");
+        }
+
+        const salePrice = parseFloat(products.salePrice);
+        if (isNaN(salePrice) || salePrice < 0) {
+            return res.redirect("/admin/addProducts?error=Sale price must be a valid positive number");
+        }
+
+        if (salePrice > regularPrice) {
+            return res.redirect("/admin/addProducts?error=Sale price cannot be greater than regular price");
+        }
+
+        const quantity = parseInt(products.quantity);
+        if (isNaN(quantity) || quantity < 0) {
+            return res.redirect("/admin/addProducts?error=Quantity must be a valid non-negative number");
+        }
+
+        // Validate images
+        if (!req.files || req.files.length === 0) {
+            return res.redirect("/admin/addProducts?error=At least one product image is required");
+        }
+
         // Check if product exists
         const productExists = await Product.findOne({
             productName: products.productName,
@@ -63,6 +105,18 @@ const addProducts = async(req, res) => {
                 if(!file || !file.originalname) {
                     console.log(`Skipping empty file slot at index ${i}`);
                     continue;
+                }
+                
+                // Validate file type
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                if (!allowedTypes.includes(file.mimetype)) {
+                    return res.redirect("/admin/addProducts?error=Only JPG, JPEG, and PNG images are allowed");
+                }
+                
+                // Validate file size (max 5MB)
+                const maxSize = 5 * 1024 * 1024; // 5MB
+                if (file.size > maxSize) {
+                    return res.redirect("/admin/addProducts?error=Image size should not exceed 5MB");
                 }
                 
                 console.log(`Processing image ${i+1}/${req.files.length}: ${file.originalname}`);
@@ -101,32 +155,30 @@ const addProducts = async(req, res) => {
                     return res.redirect("/admin/addProducts?error=" + encodeURIComponent(`Error processing image ${file.originalname}: ${error.message}`));
                 }
             }
-        } else {
-            console.log("No files were uploaded");
         }
 
         // Find category by name
         const category = await Category.findOne({name: products.category});
         if(!category) {
-            return res.redirect("/admin/addProducts?error=Invalid category");
+            return res.redirect("/admin/addProducts?error=Invalid category selected");
         }
 
         // Find brand by name
         const brand = await Brand.findOne({brandName: products.brand});
         if(!brand) {
-            return res.redirect("/admin/addProducts?error=Invalid brand");
+            return res.redirect("/admin/addProducts?error=Invalid brand selected");
         }
 
         // Create and save the new product
             const newProduct = new Product({
-            productName: products.productName,
-            description: products.description,
+            productName: products.productName.trim(),
+            description: products.description.trim(),
             brand: brand._id,
             category: category._id,
-            regularPrice: parseFloat(products.regularPrice) || 0,
-            salePrice: parseFloat(products.salePrice) || 0,
-            quantity: parseInt(products.quantity) || 1,
-            color: products.color,
+            regularPrice: regularPrice,
+            salePrice: salePrice,
+            quantity: quantity,
+            color: products.color ? products.color.trim() : '',
             productImage: images,
             status: 'Available',
             isBlocked: false
@@ -166,6 +218,7 @@ const getAllProducts = async (req, res) => {
         const products = await Product.find(query)
             .populate('brand')
             .populate('category')
+            .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
 
@@ -244,6 +297,12 @@ const editProduct = async (req, res) => {
             return res.redirect(`/admin/editProduct?id=${id}&error=Product with this name already exists`);
         }
 
+        // Validate quantity
+        const quantity = parseInt(data.quantity);
+        if (quantity < 0) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Product quantity cannot be negative`);
+        }
+
         // Find category and brand by name and get their IDs
         const category = await Category.findOne({name: data.category});
         const brand = await Brand.findOne({brandName: data.brand});
@@ -312,7 +371,7 @@ const editProduct = async (req, res) => {
 
         return res.redirect("/admin/products?success=Product updated successfully");
 
-    } catch (error) {
+} catch (error) {
         console.error("Error updating product:", error);
         return res.redirect(`/admin/editProduct?id=${req.params.id}&error=${encodeURIComponent(error.message)}`);
     }

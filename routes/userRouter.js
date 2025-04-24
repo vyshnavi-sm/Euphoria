@@ -48,10 +48,27 @@ router.post("/verify-passForgot-otp",profileController.verifyForgotPassOtp);
 router.get("/reset-password",profileController.getResetPassPage);
 router.post("/reset-password",profileController.postNewPassword);
 router.post("/resend-forgot-otp",profileController.resendOtp);
-
+router.post("/resend-change-email-otp",profileController.resendOtp);
+router.get("/userProfile",userAuth,profileController.userProfile);
+router.get("/change-email",profileController.changeEmail )
+router.post("/change-email",profileController.changeEmailValid)
+router.post("/verify-email-otp",profileController.verifyEmailOtp)
+router.post("/update-email",profileController.updateEmail);
+router.get("/change-password",profileController.changePassword);
+router.post("/change-password",profileController.changePasswordValid);
+router.post("/verify-changepassword-otp",profileController.verifyChangePassOtp);
+router.get("/addresses", profileController.viewAddresses);
 
 // Product Management
 router.get("/product/:id",productController.productDetails);
+
+// Address Management
+router.get("/addAddress", profileController.addAddress);
+router.post("/addAddress", profileController.postAddAddress);
+router.get("/edit-address/:id",profileController.editAddress);
+router.post("/edit-address/:id", profileController.updateAddress);
+router.get("/deleteAddress",userAuth, profileController.deleteAddress);
+
 
 
 

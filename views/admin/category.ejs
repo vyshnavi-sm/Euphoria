@@ -1,6 +1,6 @@
 <%- include("../../views/partials/admin/header") %>
-<style>
-   
+  <style>
+ 
 .search-input {
     border: 1px solid #5C4033;
     border-radius: 4px;
@@ -44,7 +44,7 @@
     align-items: center;
     gap: 8px;
 }
-</style>
+  </style>
 
 
 <!-- Required Bootstrap CSS -->
@@ -79,11 +79,11 @@
                     <% } %>
                 </form>
             </div>
-        </div>
+              </div>
         
-    </div>
-</div>
-
+              </div>
+              </div>
+              
 
             <!-- Category Table -->
             <div class="col-12">
@@ -93,15 +93,15 @@
                         <thead style="background-color: #8B5E3C; color: white;">
                             <tr>
                                 <th>No</th>
-                                <th>Name</th>
-                                <th>Description</th>
-                                <th>Status</th>
-                                <th>List/Unlist</th>                                                                                                            
+                    <th>Name</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>List/Unlist</th>
                                 <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (cat && cat.length > 0) { %>
+                  </tr>
+                </thead>
+                <tbody>
+                    <% if (cat && cat.length > 0) { %>
                                 <% cat.forEach((category, index) => { %>
                                     <tr>
                                         <td><%= index + 1 %></td>
@@ -111,27 +111,27 @@
                                             <span class="badge <%= category.isListed ? 'bg-success' : 'bg-danger' %>">
                                                 <%= category.isListed ? 'Listed' : 'Unlisted' %>
                                             </span>
-                                        </td>
+                              </td>
                                         <td>
                                             <% if (category.isListed) { %>
                                                 <a href="/admin/UnlistCategory?id=<%= category._id %>" class="btn btn-sm text-white" style="background-color: #A0522D;">Unlist</a>
                                             <% } else { %>
                                                 <a href="/admin/listCategory?id=<%= category._id %>" class="btn btn-sm text-white" style="background-color: #6B8E23;">List</a>
                                             <% } %>
-                                        </td>
+                            </td>
                                         <td>
                                             <a href="/admin/editCategory?id=<%= category._id %>" class="btn btn-info btn-sm">Edit</a>
-                                        </td>
-                                    </tr>
+                            </td>
+                          </tr>
                                 <% }); %>
-                            <% } else { %>
+                      <% } else { %>
                                 <tr>
                                     <td colspan="6" class="text-center">No categories found</td>
-                                </tr>
+                        </tr>
                             <% } %>
-                        </tbody>
-                    </table>
-                </div>
+                </tbody>
+              </table>
+            </div>
 
                 <!-- Pagination -->
                 <div class="d-flex justify-content-center mt-4">
@@ -155,10 +155,10 @@
                         </ul>
                     </nav>
                 </div>
-            </div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
 <!-- Add Category Modal -->
 <div class="modal fade" id="addCategoryModal" tabindex="-1" aria-labelledby="addCategoryModalLabel" aria-hidden="true">
@@ -193,86 +193,86 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
         // Initialize Bootstrap modal
         const addCategoryModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
 
         const unlistButtons = document.querySelectorAll("[href*='UnlistCategory']");
         const listButtons = document.querySelectorAll("[href*='listCategory']");
 
-        unlistButtons.forEach(button => {
-            button.addEventListener("click", function (event) {
-                event.preventDefault();
-                const unlistUrl = this.getAttribute("href");
+    unlistButtons.forEach(button => {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            const unlistUrl = this.getAttribute("href");
 
-                Swal.fire({
-                    title: "Are you sure?",
-                    text: "You are about to unlist this category!",
-                    icon: "warning",
-                    showCancelButton: true,
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You are about to unlist this category!",
+                icon: "warning",
+                showCancelButton: true,
                     confirmButtonColor: "#8B0000",
                     cancelButtonColor: "#5C4033",
-                    confirmButtonText: "Yes, unlist it!"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = unlistUrl;
-                    }
-                });
+                confirmButtonText: "Yes, unlist it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = unlistUrl;
+                }
             });
         });
+    });
 
-        listButtons.forEach(button => {
-            button.addEventListener("click", function (event) {
-                event.preventDefault();
-                const listUrl = this.getAttribute("href");
+    listButtons.forEach(button => {
+        button.addEventListener("click", function (event) {
+            event.preventDefault();
+            const listUrl = this.getAttribute("href");
 
-                Swal.fire({
-                    title: "Are you sure?",
-                    text: "You are about to list this category again!",
-                    icon: "warning",
-                    showCancelButton: true,
+            Swal.fire({
+                title: "Are you sure?",
+                text: "You are about to list this category again!",
+                icon: "warning",
+                showCancelButton: true,
                     confirmButtonColor: "#6B8E23",
                     cancelButtonColor: "#5C4033",
-                    confirmButtonText: "Yes, list it!"
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = listUrl;
-                    }
-                });
-            });
+                confirmButtonText: "Yes, list it!"
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = listUrl;
+                }
         });
+    });
+});
 
         document.getElementById("addCategoryForm").addEventListener("submit", handleFormSubmit);
 
         function handleFormSubmit(event) {
-            event.preventDefault();
+        event.preventDefault();
             if (!validateForm()) return;
 
             const name = document.getElementById("categoryName").value;
             const description = document.getElementById("description").value;
-            const isListed = true;
+        const isListed = true;
 
             fetch('/admin/addCategory', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ name, description, isListed })
+              body: JSON.stringify({ name, description, isListed })
             })
             .then(response => {
                 if (!response.ok) {
                     return response.json().then(err => {
-                        throw new Error(err.error);
+                    throw new Error(err.error);
                     });
-                }
-                return response.json();
-            })
+            }
+            return response.json();
+        })
             .then(() => {
                 // Close the modal
                 addCategoryModal.hide();
                 // Reload the page
-                location.reload();
-            })
+            location.reload();
+        })
             .catch(error => {
                 Swal.fire({
                     icon: "error",

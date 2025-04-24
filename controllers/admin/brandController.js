@@ -6,19 +6,21 @@ const fs = require('fs');
 const getBrandPage = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = 4;
+        const limit = 5;
         const skip = (page - 1) * limit;
-        const brandData = await Brand.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit);
+        const brandData = await Brand.find({})
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
         const totalBrands = await Brand.countDocuments();
         const totalPages = Math.ceil(totalBrands / limit);
-        const reverseBrand = brandData.reverse();
 
         // Get error and success messages from query parameters
         const error = req.query.error;
         const success = req.query.success;
 
         res.render("brands", {
-            data: reverseBrand,
+            data: brandData,
             currentPage: page,
             totalPages: totalPages,
             totalBrands: totalBrands,

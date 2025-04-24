@@ -1,4 +1,5 @@
 const User = require("../../models/userSchema");
+const Address = require("../../models/addressSchema")
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const env = require('dotenv').config();
@@ -162,7 +163,7 @@ const resendOtp = async (req,res)=>{
         const emailSent = await sendVerificationEmail(email,otp);
         if(emailSent){
             console.log("Resend OTP:",otp);
-            res.status(200).json({success:true, message: "Resend OTP Successful"});
+            res.status(200).json({success:true, message: "New OTP has been sent to your email"});
         } else {
             res.status(500).json({success:false, message: "Failed to send OTP"});
         }
@@ -216,6 +217,446 @@ const postNewPassword = async (req,res)=>{
     }
 }
 
+
+const userProfile = async (req,res)=>{
+    try {
+        const userId = req.session.user;
+        if (!userId) {
+            return res.redirect('/login');
+        }
+
+        const userData = await User.findById(userId);
+        const addressData = await Address.findOne({userId: userId});
+        
+        console.log("User ID:", userId);
+        console.log("Address Data:", addressData);
+        
+        // Ensure addressData is properly structured
+        const formattedAddressData = addressData || { address: [] };
+        
+        res.render("profile", {
+            user: userData,
+            userAddress: formattedAddressData
+        });
+        
+    } catch (error) {
+        console.error("Error retrieving profile data:", error);
+        res.redirect("/pageNotFound");
+    }
+}
+
+const changeEmail = async(req,res)=>{
+    try {
+        if (!req.session.user) {
+            return res.redirect('/login');
+        }
+        
+        const userId = req.session.user;
+        const userData = await User.findById(userId);
+        
+        if (!userData) {
+            return res.redirect('/login');
+        }
+        
+        res.render("change-email", { 
+            user: userData,
+            message: '' 
+        });
+    } catch (error) {
+        console.error("Error loading change email page:", error);
+        res.redirect("/pageNotFound");
+    }
+}
+
+const changeEmailValid = async(req,res)=>{
+    try {
+        const {email}=req.body;
+        const userId = req.session.user;
+
+        if (!userId) {
+            return res.redirect('/login');
+        }
+
+        const userData = await User.findById(userId);
+        if (!userData) {
+            return res.redirect('/login');
+        }
+
+        const userExists = await User.findOne({email});
+        if(userExists){
+            const otp = generateOtp();
+            const emailSent = await sendVerificationEmail(email,otp);
+            if(emailSent){
+                req.session.userOtp = otp;
+                req.session.userData = req.body;
+                req.session.email = email;
+                res.render("change-email-otp", {
+                    user: userData,
+                    message: ''
+                });
+                console.log("Email sent:",email)
+                console.log("OTP:",otp)
+            }else{
+                res.json("email-error");
+            }
+        }else{
+            res.render("change-email",{
+                user: userData,
+                message : "User with this email not exist"
+            })
+        }
+    } catch (error) {
+        console.error("Error in change email validation:", error);
+        res.redirect("/pageNotFound")
+    }
+}
+
+
+const verifyEmailOtp = async(req,res)=>{
+    try {
+        const enteredOtp = req.body.otp;
+        const userId = req.session.user;
+        
+        if (!userId) {
+            return res.redirect('/login');
+        }
+
+        const userData = await User.findById(userId);
+        if (!userData) {
+            return res.redirect('/login');
+        }
+
+        if(enteredOtp === req.session.userOtp){
+            res.render("new-email", {
+                user: userData,
+                userData: req.session.userData
+            });
+        } else {
+            res.render("change-email-otp", {
+                message: "OTP not matching",
+                user: userData
+            });
+        }
+    } catch (error) {
+        console.error("Error verifying email OTP:", error);
+        res.redirect("/pageNotFound");
+    }
+}
+
+
+const updateEmail = async(req,res)=>{
+    try {
+
+        const newEmail = req.body.newEmail;
+        const userId = req.session.user;
+        await User.findByIdAndUpdate(userId,{email:newEmail});
+        res.redirect("userProfile")
+        
+    } catch (error) {
+        res.redirect('/pageNotFound')
+        
+    }
+}
+
+const changePassword = async(req,res)=>{
+    try {
+        const userId = req.session.user;
+        
+        if (!userId) {
+            return res.redirect('/login');
+        }
+
+        const userData = await User.findById(userId);
+        if (!userData) {
+            return res.redirect('/login');
+        }
+        
+        res.render("change-password", {
+            user: userData
+        });
+    } catch (error) {
+        console.error("Error loading change password page:", error);
+        res.redirect("/pageNotFound");
+    }
+}
+
+const changePasswordValid = async(req,res)=>{
+    try {
+        const userId = req.session.user;
+        if (!userId) {
+            return res.redirect('/login');
+        }
+
+        const userData = await User.findById(userId);
+        if (!userData) {
+            return res.redirect('/login');
+        }
+
+        const {email} = req.body;
+        const userExists = await User.findOne({email});
+        
+        if(userExists){
+            const otp = generateOtp();
+            const emailSent = await sendVerificationEmail(email,otp);
+            if(emailSent){
+                req.session.userOtp = otp;
+                req.session.userData = req.body;
+                req.session.email = email;
+                res.render("change-password-otp", {
+                    user: userData,
+                    message: ''
+                });
+                console.log("OTP:",otp)
+            } else {
+                res.render("change-password", {
+                    user: userData,
+                    message: "Failed to send OTP. Please try again"
+                });
+            }
+        } else {
+            res.render("change-password", {
+                user: userData,
+                message: "User with this email does not exist"
+            });
+        }
+
+    } catch (error) {
+        console.error("Error in change password validation:", error);
+        res.redirect("/pageNotFound");
+    }
+}
+
+const verifyChangePassOtp = async(req,res)=>{
+    try {
+        
+        const enteredOtp = req.body.otp;
+        if(enteredOtp===req.session.userOtp){
+
+            res.json({
+                success:true,
+                redirectUrl:"/reset-password"
+            })
+        }else{
+            res.json({
+                success:false,
+                message:"OTP not matching"
+            })
+        }
+
+
+    } catch (error) {
+
+        res.status(500).json({success:false, message : "An error occured. Please try again later"})
+        
+    }
+}
+
+
+const addAddress = async(req,res)=>{
+    try {
+        
+        const user = req.session.user;
+        res.render("add-address",{user: user})
+
+
+
+    } catch (error) {
+        res.redirect("/pageNotFound")
+    }
+}
+
+const viewAddresses = async(req,res)=>{
+    try {
+        const userId = req.session.user;
+        if (!userId) {
+            return res.redirect('/login');
+        }
+
+        const userData = await User.findById(userId);
+        const addressDoc = await Address.findOne({ userId: userId });
+
+        res.render("addresses", {
+            user: userData,
+            userAddress: addressDoc ? addressDoc.address : []
+        });
+    } catch (error) {
+        console.error("Error loading addresses:", error);
+        res.redirect("/pageNotFound");
+    }
+}
+
+const postAddAddress = async(req,res)=>{
+    try {
+        const userId = req.session.user;
+        const userData = await User.findOne({_id:userId});
+        const {name, mobile, addressType, addressLine1, addressLine2, city, state, pincode} = req.body;
+
+        // Find existing address document for the user
+        let userAddress = await Address.findOne({userId: userData._id});
+
+        const newAddress = {
+            addressType,
+            name,
+            city,
+            landMark: addressLine1,
+            state,
+            pincode,
+            phone: mobile,
+            altPhone: mobile // Using same number as alternate phone since it's required
+        };
+
+        if (!userAddress) {
+            // Create new address document if none exists
+            userAddress = new Address({
+                userId: userData._id,
+                address: [newAddress]
+            });
+        } else {
+            // Add new address to existing document
+            userAddress.address.push(newAddress);
+        }
+
+        await userAddress.save();
+        // Redirect to profile page with address tab active
+        res.redirect("/userProfile#address");
+
+    } catch (error) {
+        console.error("Error adding address:", error);
+        res.redirect("/pageNotFound");
+    }
+}
+
+
+const editAddress = async(req,res)=>{
+    try {
+        const addressId = req.params.id;
+        const user = req.session.user;
+        const currAddress = await Address.findOne({
+            "address._id": addressId
+        });
+
+        if(!currAddress){
+            return res.redirect("/pageNotFound");
+        }
+
+        const addressData = currAddress.address.find((item)=>{
+            return item._id.toString() === addressId.toString();
+        });
+
+        if(!addressData){
+            return res.redirect("/pageNotFound");
+        }
+
+        res.render("edit-address", {
+            address: addressData,
+            user: user
+        });
+
+    } catch (error) {
+        console.error("Error in edit address:", error);
+        res.redirect("/pageNotFound");
+    }
+}
+
+const updateAddress = async(req,res)=>{
+    try {
+        const addressId = req.params.id;
+        const userId = req.session.user;
+        const {name, mobile, addressType, addressLine1, city, state, pincode} = req.body;
+
+        // Find the address document
+        const result = await Address.updateOne(
+            {
+                userId: userId,
+                "address._id": addressId
+            },
+            {
+                $set: {
+                    "address.$.name": name,
+                    "address.$.phone": mobile,
+                    "address.$.addressType": addressType,
+                    "address.$.landMark": addressLine1,
+                    "address.$.city": city,
+                    "address.$.state": state,
+                    "address.$.pincode": pincode,
+                    "address.$.altPhone": mobile
+                }
+            }
+        );
+
+        if (result.modifiedCount === 0) {
+            throw new Error('Address not found or not modified');
+        }
+
+        res.redirect("/userProfile#address");
+
+    } catch (error) {
+        console.error("Error updating address:", error);
+        res.redirect("/pageNotFound");
+    }
+}
+
+const deleteAddress = async(req,res)=>{
+    try {
+        const addressId = req.query.id;
+        const userId = req.session.user;
+
+        if (!addressId) {
+            return res.status(400).json({ success: false, message: "Address ID is required" });
+        }
+
+        // Find address document for the specific user
+        const findAddress = await Address.findOne({
+            userId: userId,
+            "address._id": addressId
+        });
+
+        if(!findAddress){
+            return res.status(404).json({ success: false, message: "Address not found" });
+        }
+
+        // Verify the address belongs to the user
+        const addressBelongsToUser = findAddress.address.some(addr => addr._id.toString() === addressId);
+        if (!addressBelongsToUser) {
+            return res.status(403).json({ success: false, message: "Unauthorized to delete this address" });
+        }
+
+        const result = await Address.updateOne(
+            {
+                userId: userId,
+                "address._id": addressId
+            },
+            {
+                $pull: {
+                    address: {
+                        _id: addressId
+                    }
+                }
+            }
+        );
+
+        if (result.modifiedCount === 0) {
+            return res.status(404).json({ success: false, message: "Address not found or already deleted" });
+        }
+
+        res.redirect("/userProfile#address");
+
+    } catch (error) {
+        console.error("Error in delete address:", error);
+        res.status(500).json({ success: false, message: "Internal server error" });
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 module.exports = {
     getForgotPassPage,
     forgotEmailValid,
@@ -223,4 +664,19 @@ module.exports = {
     getResetPassPage,
     resendOtp,
     postNewPassword,
+    userProfile,
+    changeEmail,
+    changeEmailValid,
+    verifyEmailOtp,
+    updateEmail,
+    changePassword,
+    changePasswordValid,
+    verifyChangePassOtp,
+    addAddress,
+    viewAddresses,
+    postAddAddress,
+    editAddress,
+    updateAddress,
+    deleteAddress,
+    
 };

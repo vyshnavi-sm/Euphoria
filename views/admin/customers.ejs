@@ -47,6 +47,11 @@
                 <form action="/admin/customers" method="GET" class="search-box">
                     <input type="text" name="search" placeholder="Search here" value="<%= searchQuery %>">
                     <button type="submit"><i class="fas fa-search"></i></button>
+                    <% if (searchQuery) { %>
+                        <a href="/admin/customers" class="clear-btn">
+                            <i class="fas fa-times"></i> Clear
+                        </a>
+                    <% } %>
                 </form>
                 <!-- <button class="export-btn"><i class="fas fa-download"></i> Export</button>
                 <button class="filter-btn"><i class="fas fa-filter"></i> Filters</button> -->
@@ -176,6 +181,42 @@
     }
 </script>
 
+<style>
+    .search-box {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
 
+    .search-box input {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .search-box button {
+        padding: 8px 12px;
+        background-color: #5c3d2e;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .clear-btn {
+        padding: 8px 12px;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .clear-btn:hover {
+        background-color: #c82333;
+    }
+</style>
 
 </html>

@@ -1,14 +1,80 @@
 <%- include("../../views/partials/user/header") %>
+<style>
+    /* Add these font imports at the top of your style section */
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap');
 
+    .jewelry-heading {
+        font-family: 'Playfair Display', serif;
+        font-weight: 700;
+        font-size: 2.5rem;
+        color: #ffffff;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+    }
+
+    .jewelry-title {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 600;
+        font-size: 4rem;
+        color: #ffffff;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+        letter-spacing: 2px;
+    }
+
+    .jewelry-description {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 400;
+        font-size: 1.5rem;
+        color: #ffffff;
+        line-height: 1.6;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* Add responsive styles */
+    @media (max-width: 768px) {
+        .jewelry-heading {
+            font-size: 2rem;
+        }
+        
+        .jewelry-title {
+            font-size: 3rem;
+        }
+        
+        .jewelry-description {
+            font-size: 1.2rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .jewelry-heading {
+            font-size: 1.5rem;
+        }
+        
+        .jewelry-title {
+            font-size: 2.5rem;
+        }
+        
+        .jewelry-description {
+            font-size: 1.1rem;
+        }
+    }
+
+    .btn{
+        color: rgb(173, 93, 8);
+    }
+</style>
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
             <!-- <div class="hero-image">
                 <img src="./photos/Home page.jpg" alt="Jewelry Display">
             </div> -->
-            <h2>JEWELRY</h2>
-            <h1>DISCOVER SPARKLE<br>WITH STYLE</h1>
-            <p>Whether casual or formal, find the perfect jewelry for every occasion with us.</p>
+            <h2 class="jewelry-heading">JEWELRY</h2>
+            <h1 class="jewelry-title">DISCOVER SPARKLE<br>WITH STYLE</h1>
+            <p class="jewelry-description">Whether casual or formal, find the perfect jewelry for every occasion with us.</p>
             <br><br>
             <a href="/shop" class="btn">SHOP NOW</a>
         </div>
@@ -18,7 +84,7 @@
     <section class="categories">
         <% categories.forEach(category => { %>
             <div class="category-item">
-                <img src="<%= category.image %>" alt="<%= category.name %>">
+                <img src="/uploads/category-images/<%= category.image %>" alt="<%= category.name %>">
                 <div class="category-text"><%= category.name.toUpperCase() %></div>
             </div>
         <% }); %>
@@ -32,14 +98,14 @@
             <% const limitedProducts = products.slice(0, 5); %>
             <% limitedProducts.forEach(product => { %>
                 <div class="product">
-                    <img src="<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                    <img src="/uploads/product-images/<%= product.productImage[0] %>" alt="<%= product.productName %>">
                     <p><%= product.productName %></p>
                     <p>₹<%= product.salePrice %></p>
                 </div>
             <% }); %>
         </div>
         <br><br>
-        <a href="/products" class="btn">SEE MORE</a>
+        <a href="/shop" class="btn">SEE MORE</a>
     </section>
 
     <!-- Offers Section -->

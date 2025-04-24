@@ -184,6 +184,22 @@
             color: white;
             transform: translateY(-1px);
         }
+
+        .clear-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .clear-btn:hover {
+            background-color: #c82333;
+            color: white;
+            transform: translateY(-1px);
+        }
       
     </style>
 </head>
@@ -197,6 +213,11 @@
                 <button type="submit" class="btn search-btn ms-2">
                     <i class="fas fa-search"></i> Search
                 </button>
+                <% if (search) { %>
+                    <a href="/admin/products" class="btn clear-btn ms-2">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                <% } %>
             </form>
         </div>
         <a href="/admin/addProducts" class="btn btn-success" style="background-color: #5c3d2e; border-color: #5c3d2e;">+ Add Product</a>

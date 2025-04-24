@@ -1,0 +1,217 @@
+<%- include("../../views/partials/user/header") %>
+<style>
+.otp-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding-top: 30px;
+    background: linear-gradient(135deg, #f8f9fa, #ffffff);
+    min-height: 100vh;
+    margin-bottom: 10px;
+}
+
+.otp-container {
+    max-width: 350px;
+    width: 100%;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    text-align: center;
+    margin-top: -40px;
+}
+
+.otp-container h3 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #5C4033;
+    margin-bottom: 20px;
+    font-family: 'Playfair Display', serif;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 500;
+    color: #5C4033;
+    margin-bottom: 8px;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.otp-input {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    text-align: center;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.otp-input:focus {
+    border-color: #a97155;
+    box-shadow: 0 0 0 0.2rem rgba(169, 113, 85, 0.25);
+}
+
+.btn-primary {
+    width: 100%;
+    font-weight: 600;
+    background-color: #a97155;
+    border-color: #a97155;
+    margin-top: 20px;
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.btn-primary:hover {
+    background-color: #8b5e3c;
+    border-color: #8b5e3c;
+}
+
+.otp-timer {
+    display: inline-block;
+    font-size: 14px;
+    color: #5C4033;
+    margin-top: 15px;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.resend-btn {
+    display: inline-block;
+    font-size: 14px;
+    color: #a97155;
+    margin-top: 15px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    opacity: 0.5;
+    pointer-events: none;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.resend-btn.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.resend-btn:hover {
+    color: #8b5e3c;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 15px;
+    font-family: 'Cormorant Garamond', serif;
+}
+</style>
+
+<div class="otp-wrapper">
+   <div class="otp-container">
+       <h3>Email Verification</h3>
+       <form action="/verify-email-otp" method="post">
+           <div class="form-group">
+               <label for="otp">Enter OTP:</label>
+               <input type="text" id="otp" name="otp" class="otp-input" required>
+           </div>
+           <button type="submit" class="btn btn-primary">Verify OTP</button>
+           <div class="otp-timer">
+               <span id="otpTimer">OTP Expires in: 1:00</span>
+           </div>
+           <button type="button" id="resendBtn" class="resend-btn" onclick="resendOTP()">Resend OTP</button>
+           <% if (locals.message && message.length > 0) { %>
+               <div class="alert alert-danger mt-3">
+                   <%= message %>
+               </div>
+           <% } %>
+       </form>
+   </div>
+</div>
+<script>
+let timerInterval;
+let timeLeft = 60; // 1 minute in seconds
+
+function startOTPTimer() {
+    const timerDisplay = document.getElementById('otpTimer');
+    const resendBtn = document.getElementById('resendBtn');
+    
+    // Clear any existing interval
+    if (timerInterval) {
+        clearInterval(timerInterval);
+    }
+    
+    // Reset timer
+    timeLeft = 60;
+    resendBtn.classList.remove('active');
+    
+    timerInterval = setInterval(() => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        
+        timerDisplay.textContent = `OTP Expires in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = 'OTP Expired';
+            resendBtn.classList.add('active');
+        }
+        
+        timeLeft--;
+    }, 1000);
+}
+
+async function resendOTP() {
+    const resendBtn = document.getElementById('resendBtn');
+    resendBtn.classList.remove('active');
+    
+    try {
+        const response = await fetch('/resend-change-email-otp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'New OTP has been sent to your email',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            startOTPTimer();
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Failed to resend OTP'
+            });
+            resendBtn.classList.add('active');
+        }
+    } catch (error) {
+        console.error('Error resending OTP:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occurred while resending OTP'
+        });
+        resendBtn.classList.add('active');
+    }
+}
+
+// Start the timer when the page loads
+document.addEventListener('DOMContentLoaded', startOTPTimer);
+</script>
+
+
+
+
+

@@ -12,21 +12,43 @@
   }
 
   .pagination {
-    display: inline-block;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
   }
 
   .pagination a,
   .pagination .current-page {
-    display: inline-block;
-    padding: 5px 10px;
-    margin: 0 2px;
+    padding: 8px 12px;
     border: 1px solid #ddd;
+    border-radius: 4px;
     text-decoration: none;
     color: #333;
+    transition: all 0.3s ease;
   }
 
   .pagination a:hover {
     background-color: #f5f5f5;
+    border-color: #a97155;
+    color: #a97155;
+  }
+
+  .current-page {
+    background-color: #a97155;
+    color: white;
+    border-color: #a97155;
+  }
+
+  .page-link {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .page-link i {
+    font-size: 12px;
   }
 
   .error-message {
@@ -103,6 +125,17 @@
 
     .table-responsive {
       width: 100%;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .pagination a,
+    .pagination .current-page {
+        padding: 6px 10px;
+        font-size: 14px;
     }
   }
 </style>
@@ -229,7 +262,27 @@
   </div>
 
   <div class="pagination-container">
-    <!-- Pagination buttons here -->
+    <div class="pagination">
+      <% if (currentPage > 1) { %>
+        <a href="?page=<%= currentPage - 1 %>" class="page-link">
+          <i class="fas fa-chevron-left"></i> Previous
+        </a>
+      <% } %>
+
+      <% for(let i = 1; i <= totalPages; i++) { %>
+        <% if (i === currentPage) { %>
+          <span class="current-page"><%= i %></span>
+        <% } else { %>
+          <a href="?page=<%= i %>" class="page-link"><%= i %></a>
+        <% } %>
+      <% } %>
+
+      <% if (currentPage < totalPages) { %>
+        <a href="?page=<%= currentPage + 1 %>" class="page-link">
+          Next <i class="fas fa-chevron-right"></i>
+        </a>
+      <% } %>
+    </div>
   </div>
 </section>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -76,16 +76,31 @@
  .filter-item {
    margin: 5px 0;
    list-style-type: none;
+   transition: all 0.3s ease;
  }
 
  .filter-item a {
    text-decoration: none;
    color: #333;
-   transition: color 0.3s;
+   transition: all 0.3s ease;
+   display: block;
+   padding: 8px 15px;
+   border-radius: 8px;
+   background-color: #f8f9fa;
  }
 
  .filter-item a:hover {
    color: #5C4033;
+   background-color: #f1f1f1;
+   transform: translateX(5px);
+ }
+
+ .filter-item a.selected {
+   background-color: #5C4033;
+   color: white;
+   font-weight: 500;
+   box-shadow: 0 2px 8px rgba(92, 64, 51, 0.2);
+   transform: translateX(5px);
  }
 
  .product-list-container {
@@ -236,10 +251,11 @@
    border: 1px solid #ddd;
    border-radius: 30px;
    cursor: pointer;
-   transition: background-color 0.3s, transform 0.2s;
+   transition: all 0.3s ease;
    text-align: center;
    font-size: 14px;
    font-family: 'Cormorant Garamond', serif;
+   margin: 5px 0;
  }
 
  .price-button:hover {
@@ -249,8 +265,12 @@
    border-color: #5C4033;
  }
 
- .price-button:active {
-   transform: scale(0.95);
+ .price-button.selected {
+   background-color: #5C4033;
+   color: white;
+   border-color: #5C4033;
+   box-shadow: 0 2px 8px rgba(92, 64, 51, 0.2);
+   transform: scale(1.05);
  }
 
  .category-brand-container {
@@ -527,5 +547,63 @@
         }
         window.location.href = currentUrl.toString();
     }
+
+    // Highlight selected filters
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get current URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const category = urlParams.get('category');
+        const brand = urlParams.get('brand');
+        const priceRange = urlParams.get('gt') && urlParams.get('lt') ? 
+            `${urlParams.get('gt')}-${urlParams.get('lt')}` : null;
+
+        // Highlight selected category
+        if (category) {
+            document.querySelectorAll('.filter-item a').forEach(link => {
+                if (link.getAttribute('href').includes(`category=${category}`)) {
+                    link.classList.add('selected');
+                }
+            });
+        }
+
+        // Highlight selected brand
+        if (brand) {
+            document.querySelectorAll('.filter-item a').forEach(link => {
+                if (link.getAttribute('href').includes(`brand=${brand}`)) {
+                    link.classList.add('selected');
+                }
+            });
+        }
+
+        // Highlight selected price range
+        if (priceRange) {
+            document.querySelectorAll('.price-button').forEach(button => {
+                const buttonHref = button.parentElement.getAttribute('href');
+                if (buttonHref.includes(priceRange)) {
+                    button.classList.add('selected');
+                }
+            });
+        }
+
+        // Add click handlers for filters
+        document.querySelectorAll('.filter-item a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                // Remove selected class from all category/brand links
+                document.querySelectorAll('.filter-item a').forEach(l => l.classList.remove('selected'));
+                // Add selected class to clicked link
+                this.classList.add('selected');
+            });
+        });
+
+        // Add click handlers for price buttons
+        document.querySelectorAll('.price-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Remove selected class from all price buttons
+                document.querySelectorAll('.price-button').forEach(b => b.classList.remove('selected'));
+                // Add selected class to clicked button
+                this.classList.add('selected');
+            });
+        });
+    });
 </script>
 <%- include("../../views/partials/user/footer") %>
