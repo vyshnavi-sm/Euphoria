@@ -1,0 +1,383 @@
+<%- include("../../views/partials/user/header") %>
+<style>
+ .main-container {
+   max-width: 1200px;
+   margin: 0 auto;
+   padding: 20px;
+   font-family: 'Playfair Display', 'Cormorant Garamond', serif;
+ }
+
+ .wishlist-header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   margin-bottom: 30px;
+   padding-bottom: 20px;
+   border-bottom: 1px solid #ddd;
+ }
+
+ .wishlist-title {
+   font-family: 'Playfair Display', serif;
+   font-weight: 700;
+   color: #5C4033;
+   margin: 0;
+ }
+
+ .product-grid {
+   display: grid;
+   grid-template-columns: repeat(3, 1fr);
+   gap: 30px;
+   margin-top: 20px;
+ }
+
+ .product-card {
+   width: 100%;
+   border: 1px solid #ddd;
+   padding: 20px;
+   border-radius: 8px;
+   text-align: center;
+   position: relative;
+   transition: transform 0.3s, box-shadow 0.3s;
+   background-color: #fff;
+   overflow: hidden;
+   display: flex;
+   flex-direction: column;
+ }
+
+ .product-card:hover {
+   transform: translateY(-5px);
+   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+ }
+
+ .product-card img {
+   width: 100%;
+   height: 200px;
+   object-fit: contain;
+   border-radius: 5px;
+   margin-bottom: 15px;
+   background-color: #f9f9f9;
+   padding: 5px;
+ }
+
+ .product-card h4 {
+   margin: 10px 0;
+   color: #333;
+   font-family: 'Playfair Display', serif;
+   font-weight: 600;
+ }
+
+ .product-card p {
+   margin: 10px 0;
+   color: #666;
+   font-family: 'Cormorant Garamond', serif;
+ }
+
+ .product-card p.description {
+   height: 40px;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   display: -webkit-box;
+   /* -webkit-line-clamp: 2; */
+   -webkit-box-orient: vertical;
+ }
+
+ .product-card a {
+   text-decoration: none;
+   color: inherit;
+ }
+
+ .remove-wishlist-btn {
+   position: absolute;
+   top: 10px;
+   right: 10px;
+   background-color: white;
+   border: none;
+   border-radius: 50%;
+   width: 35px;
+   height: 35px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   cursor: pointer;
+   transition: all 0.3s ease;
+   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+   color: #f44336;
+ }
+
+ .remove-wishlist-btn:hover {
+   transform: scale(1.1);
+   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+ }
+
+ .add-to-cart-btn {
+   background-color: #5C4033;
+   color: white;
+   border: none;
+   padding: 12px 20px;
+   border-radius: 25px;
+   cursor: pointer;
+   transition: all 0.3s ease;
+   margin-top: auto;
+   font-family: 'Cormorant Garamond', serif;
+   font-weight: 600;
+   letter-spacing: 0.5px;
+   text-transform: uppercase;
+   font-size: 14px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 8px;
+   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+ }
+
+ .add-to-cart-btn:hover {
+   background-color: #8B5E3C;
+   transform: translateY(-2px);
+   box-shadow: 0 5px 15px rgba(92, 64, 51, 0.2);
+ }
+
+ .price-info {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   gap: 8px;
+   margin: 10px 0;
+ }
+
+ .sale-price {
+   font-size: 18px;
+   font-weight: bold;
+   color: #5C4033;
+ }
+
+ .regular-price {
+   font-size: 14px;
+   color: #999;
+   text-decoration: line-through;
+ }
+
+ .empty-wishlist {
+   text-align: center;
+   padding: 40px;
+   background-color: #f9f9f9;
+   border-radius: 8px;
+   margin-top: 20px;
+ }
+
+ .empty-wishlist-icon {
+   font-size: 48px;
+   color: #5C4033;
+   margin-bottom: 20px;
+ }
+
+ .empty-wishlist h2 {
+   color: #333;
+   margin-bottom: 10px;
+ }
+
+ .empty-wishlist p {
+   color: #666;
+   margin-bottom: 20px;
+ }
+
+ .shop-btn {
+   display: inline-block;
+   background-color: #5C4033;
+   color: white;
+   padding: 12px 30px;
+   border-radius: 25px;
+   text-decoration: none;
+   transition: all 0.3s ease;
+ }
+
+ .shop-btn:hover {
+   background-color: #8B5E3C;
+   transform: translateY(-2px);
+   box-shadow: 0 5px 15px rgba(92, 64, 51, 0.2);
+   color: white;
+   text-decoration: none;
+ }
+
+ /* Toast Styles */
+ .toast {
+   position: fixed;
+   bottom: 20px;
+   right: 20px;
+   padding: 12px 24px;
+   border-radius: 8px;
+   background-color: #4CAF50;
+   color: white;
+   font-family: 'Cormorant Garamond', serif;
+   z-index: 1000;
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+ }
+
+ .toast.error {
+   background-color: #f44336;
+ }
+
+ @keyframes slideIn {
+   from {
+     transform: translateX(100%);
+     opacity: 0;
+   }
+   to {
+     transform: translateX(0);
+     opacity: 1;
+   }
+ }
+
+ @keyframes slideOut {
+   from {
+     transform: translateX(0);
+     opacity: 1;
+   }
+   to {
+     transform: translateX(100%);
+     opacity: 0;
+   }
+ }
+
+ @keyframes fadeOut {
+   from {
+     opacity: 1;
+     transform: translateY(0);
+   }
+   to {
+     opacity: 0;
+     transform: translateY(-20px);
+   }
+ }
+</style>
+
+<div class="main-container">
+ <div class="wishlist-header">
+   <h1 class="wishlist-title">My Wishlist</h1>
+   <a href="/shop" class="shop-btn">
+     <i class="fas fa-shopping-bag"></i> Continue Shopping
+   </a>
+ </div>
+
+ <div class="product-grid">
+   <% if (wishlist && wishlist.items && wishlist.items.length > 0) { %>
+     <% wishlist.items.forEach(item => { %>
+       <div class="product-card">
+         <button class="remove-wishlist-btn" onclick="removeFromWishlist('<%= item.productId._id %>')">
+           <i class="fas fa-heart"></i>
+         </button>
+         <div class="product-image">
+           <a href="/product/<%= item.productId._id %>">
+             <img src="/uploads/product-images/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>" />
+           </a>
+         </div>
+         <a href="/product/<%= item.productId._id %>" class="product-info">
+           <h4><%= item.productId.productName %></h4>
+           <p class="description"><%= item.productId.description %></p>
+           <div class="price-info">
+             <span class="sale-price">₹<%= item.productId.salePrice %></span>
+             <% if (item.productId.regularPrice) { %>
+               <span class="regular-price">₹<%= item.productId.regularPrice %></span>
+             <% } %>
+           </div>
+         </a>
+         <button class="add-to-cart-btn" onclick="addToCart('<%= item.productId._id %>')">
+           <i class="fas fa-shopping-cart"></i> Add to Cart
+         </button>
+       </div>
+     <% }); %>
+   <% } else { %>
+     <div class="empty-wishlist">
+       <i class="fas fa-heart empty-wishlist-icon"></i>
+       <h2>Your wishlist is empty</h2>
+       <p>Add items that you like to your wishlist</p>
+       <a href="/shop" class="shop-btn">Start Shopping</a>
+     </div>
+   <% } %>
+ </div>
+</div>
+
+<script>
+async function removeFromWishlist(productId) {
+  try {
+    const response = await fetch('/wishlist/toggle', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ productId })
+    });
+    
+    const data = await response.json();
+    if (response.ok) {
+      // Remove the product card from the wishlist
+      const productCard = document.querySelector(`[data-product-id="${productId}"]`);
+      if (productCard) {
+        productCard.remove();
+        showToast('Product removed from wishlist');
+        
+        // Update wishlist count if empty
+        const wishlistContainer = document.querySelector('.wishlist-container');
+        if (!wishlistContainer.querySelector('.product-card')) {
+          wishlistContainer.innerHTML = '<p class="empty-wishlist">Your wishlist is empty</p>';
+        }
+      }
+    } else {
+      showToast(data.message || 'Error removing from wishlist', 'error');
+    }
+  } catch (error) {
+    console.error('Error removing from wishlist:', error);
+    showToast('Error removing from wishlist', 'error');
+  }
+}
+
+async function addToCart(productId) {
+  try {
+    const response = await fetch('/cart/add', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        productId,
+        quantity: 1
+      })
+    });
+    
+    const data = await response.json();
+    if (response.ok) {
+      showToast('Product added to cart successfully');
+      // Optionally remove from wishlist after adding to cart
+      await removeFromWishlist(productId);
+    } else {
+      showToast(data.message || 'Error adding to cart', 'error');
+    }
+  } catch (error) {
+    console.error('Error adding to cart:', error);
+    showToast('Error adding to cart', 'error');
+  }
+}
+
+function showToast(message, type = 'success') {
+  const existingToasts = document.querySelectorAll('.toast');
+  existingToasts.forEach(toast => toast.remove());
+  
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+  toast.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+  
+  document.body.appendChild(toast);
+  toast.style.animation = 'slideIn 0.3s ease-out';
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideOut 0.3s ease-in';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+</script>
+
+<%- include("../../views/partials/user/footer") %> 

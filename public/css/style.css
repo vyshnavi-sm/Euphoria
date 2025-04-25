@@ -211,4 +211,50 @@ footer {
     .footer-content {
         flex-direction: column;
     }
+}
+
+.add-to-cart-btn, .add-to-wishlist-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    margin: 5px;
+}
+
+.add-to-cart-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.add-to-cart-btn:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.add-to-wishlist-btn {
+    background-color: #ff4081;
+    color: white;
+}
+
+.add-to-wishlist-btn:hover {
+    background-color: #e91e63;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.add-to-cart-btn:active, .add-to-wishlist-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.add-to-cart-btn:disabled, .add-to-wishlist-btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 } 

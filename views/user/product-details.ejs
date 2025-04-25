@@ -4,6 +4,10 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zoom-vanilla.js/dist/zoom.css">
 <script src="https://cdn.jsdelivr.net/npm/zoom-vanilla.js/dist/zoom-vanilla.min.js"></script>
 
+<!-- Add SweetAlert2 CSS and JS in the head section -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
 /* Main Container Styles */
 .product-detail {
@@ -448,7 +452,7 @@
 /* Quantity and Add to Cart Styles */
 .detail-extralink {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 20px;
     margin: 25px 0;
 }
@@ -460,6 +464,8 @@
     padding: 8px 15px;
     border: 1px solid #ddd;
     border-radius: 25px;
+    width: fit-content;
+    margin-bottom: 10px;
 }
 
 .qty-val {
@@ -479,31 +485,106 @@
     color: #8b5e3c;
 }
 
+/* Button Group Styles */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+/* Add to Cart Button Styles */
 .button-add-to-cart {
-    background-color: #a97155;
+    background: linear-gradient(135deg, #a97155, #8b5e3c);
     color: white;
     border: none;
-    padding: 8px 20px;
-    border-radius: 25px;
+    padding: 12px 24px;
+    border-radius: 30px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-size: 12px;
+    font-size: 14px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 8px rgba(139, 94, 60, 0.2);
 }
 
 .button-add-to-cart:hover {
-    background-color: #8b5e3c;
+    background: linear-gradient(135deg, #8b5e3c, #6d4c30);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(169, 113, 85, 0.3);
+    box-shadow: 0 6px 12px rgba(139, 94, 60, 0.3);
 }
 
 .button-add-to-cart:disabled {
-    background-color: #ccc;
+    background: linear-gradient(135deg, #cccccc, #a0a0a0);
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+}
+
+.button-add-to-cart i {
+    font-size: 16px;
+}
+
+/* Wishlist Button Styles */
+.wishlist-btn {
+    background: transparent;
+    border: 2px solid #a97155;
+    color: #a97155;
+    padding: 10px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    width: 100%;
+}
+
+.wishlist-btn:hover {
+    background-color: rgba(169, 113, 85, 0.1);
+    color: #8b5e3c;
+    transform: translateY(-2px);
+}
+
+.wishlist-btn.active {
+    background-color: rgba(169, 113, 85, 0.15);
+    color: #a97155;
+    border-color: #a97155;
+}
+
+.wishlist-btn i {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+}
+
+.wishlist-btn:hover i {
+    transform: scale(1.2);
+}
+
+/* For responsive design */
+@media (min-width: 768px) {
+    .product-extra-link2 {
+        width: 100%;
+    }
+    
+    .button-group {
+        flex-direction: row;
+        gap: 15px;
+    }
+    
+    .button-add-to-cart, .wishlist-btn {
+        width: auto;
+        flex: 1;
+    }
 }
 
 /* Reviews Section Styles */
@@ -732,7 +813,6 @@
     align-items: center;
 }
 
-
 /* Rating Styles */
 .rating-container {
     display: flex;
@@ -921,39 +1001,33 @@
     }
 }
 
-/* Wishlist Button Styles */
-.wishlist-btn {
-    background-color: #fff;
-    color: #dc3545;
-    border: 2px solid #dc3545;
-    padding: 8px 20px;
-    border-radius: 25px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-}
-
-.wishlist-btn:hover {
-    background-color: #dc3545;
+/* Toast Styles */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    background-color: #4CAF50;
     color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+    font-family: 'Cormorant Garamond', serif;
+    z-index: 1000;
+    animation: slideIn 0.3s ease-out;
 }
 
-.wishlist-btn i {
-    font-size: 18px;
+.toast.error {
+    background-color: #f44336;
 }
 
-.product-extra-link2 {
-    display: flex;
-    gap: 15px;
-    align-items: center;
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 /* Add this CSS for the plus icon */
@@ -964,6 +1038,7 @@
     vertical-align: middle;
 }
 </style>
+
 
 <main class="main">
   <div class="page-header breadcrumb-wrap">
@@ -1083,15 +1158,18 @@
                       <a href="#" class="qty-up" onclick="increaseQuantity()"><i class="fi-rs-angle-small-up"></i></a>
                     </div>
                     <div class="product-extra-link2">
-                      <button type="submit" 
-                              class="button button-add-to-cart" 
-                              id="addToCartBtn"
-                              <%= product.quantity <= 0 ? 'disabled' : '' %>>
-                        <%= product.quantity <= 0 ? 'Sold Out' : 'Add to cart' %>
-                      </button>
-                      <button class="wishlist-btn">
-                        <i class="fas fa-heart"></i> Add to Wishlist
-                      </button>
+                      <div class="button-group">
+                        <button type="button" 
+                                class="button button-add-to-cart" 
+                                id="addToCartBtn"
+                                data-product-id="<%= product._id %>"
+                                <%= product.quantity <= 0 ? 'disabled' : '' %>>
+                          <i class="fas fa-shopping-cart"></i> <%= product.quantity <= 0 ? 'Sold Out' : 'Add to cart' %>
+                        </button>
+                        <button type="button" class="wishlist-btn" onclick="toggleWishlist('<%= product._id %>')" id="wishlistBtn">
+                          <i class="fas fa-heart"></i> <span id="wishlistText">Add to Wishlist</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -1264,52 +1342,343 @@
     });
   }
 
-  // Quantity handling
+  // Add this script to the bottom of your product detail page before the closing </body> tag
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialize variables
   let currentQuantity = 1;
   const maxQuantity = parseInt(document.getElementById('maxQuantity').value);
   const quantityElement = document.getElementById('quantity');
   const addToCartBtn = document.getElementById('addToCartBtn');
   const stockError = document.getElementById('stockError');
+  let selectedSize = '';
+
+  // Size Selection
+  const sizeButtons = document.querySelectorAll('.size-btn');
+  sizeButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      sizeButtons.forEach(btn => btn.classList.remove('active'));
+      this.classList.add('active');
+      selectedSize = this.dataset.size;
+      
+      if (!selectedSize) {
+        addToCartBtn.disabled = true;
+        addToCartBtn.title = 'Please select a size';
+      } else {
+        addToCartBtn.disabled = maxQuantity <= 0;
+      }
+    });
+  });
+
+  // Quantity Controls
+  function updateQuantityDisplay() {
+    quantityElement.innerHTML = currentQuantity;
+    const plusIcon = document.createElement('i');
+    plusIcon.className = 'fas fa-plus qty-plus-icon';
+    quantityElement.appendChild(plusIcon);
+  }
 
   function updateQuantity() {
-    quantityElement.textContent = currentQuantity;
+    updateQuantityDisplay();
     if (currentQuantity > maxQuantity) {
       stockError.classList.add('visible');
+      stockError.textContent = `Only ${maxQuantity} items available in stock`;
       addToCartBtn.disabled = true;
     } else {
       stockError.classList.remove('visible');
-      addToCartBtn.disabled = maxQuantity <= 0;
-    }
-  }
-
-  function increaseQuantity() {
-    if (currentQuantity < maxQuantity) {
-      currentQuantity++;
-      updateQuantity();
-    }
-  }
-
-  function decreaseQuantity() {
-    if (currentQuantity > 1) {
-      currentQuantity--;
-      updateQuantity();
+      addToCartBtn.disabled = maxQuantity <= 0 || !selectedSize;
     }
   }
 
   // Initialize quantity
   updateQuantity();
 
-  // Size selection handling
-  document.querySelectorAll('.size-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      // Remove active class from all buttons
-      document.querySelectorAll('.size-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      // Add active class to clicked button
-      this.classList.add('active');
-    });
+  // Add event listeners for quantity controls
+  document.querySelector('.qty-up').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (currentQuantity < maxQuantity) {
+      currentQuantity++;
+      updateQuantity();
+    } else {
+      showToast(`Only ${maxQuantity} items available in stock`, 'error');
+    }
   });
+
+  document.querySelector('.qty-down').addEventListener('click', function(e) {
+    e.preventDefault();
+    if (currentQuantity > 1) {
+      currentQuantity--;
+      updateQuantity();
+    }
+  });
+
+  // Add to Cart functionality with enhanced auth handling
+  if (addToCartBtn) {
+    addToCartBtn.addEventListener('click', async function(e) {
+      e.preventDefault();
+      
+      if (!selectedSize) {
+        Swal.fire({
+          title: 'Select Size',
+          text: 'Please select a size before adding to cart',
+          icon: 'warning',
+          confirmButtonColor: '#a97155'
+        });
+        return;
+      }
+
+      try {
+        const response = await fetch('/user/cart/add', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            productId: this.dataset.productId,
+            quantity: currentQuantity,
+            size: selectedSize
+          })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Success case
+          Swal.fire({
+            title: 'Added to Cart!',
+            text: 'Product has been added to your cart',
+            icon: 'success',
+            confirmButtonColor: '#a97155',
+            timer: 2000,
+            timerProgressBar: true
+          }).then(() => {
+            window.location.href = '/user/cart';
+          });
+        } else if (response.status === 401) {
+  // Authentication required case - more casual message
+  Swal.fire({
+    title: 'Hello there!',
+    text: 'Please sign in to add items to your cart',
+    icon: 'info',
+    showCancelButton: true,
+    confirmButtonColor: '#a97155',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sign In',
+    cancelButtonText: 'Continue Shopping'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Store current product details in session storage before redirecting
+      sessionStorage.setItem('pendingCartItem', JSON.stringify({
+        productId: addToCartBtn.dataset.productId,
+        quantity: currentQuantity,
+        size: selectedSize,
+        returnUrl: window.location.href
+      }));
+      window.location.href = '/login';
+    }
+  });
+
+        } else {
+          // Other error cases
+          Swal.fire({
+            title: 'Error',
+            text: data.message || 'Could not add product to cart',
+            icon: 'error',
+            confirmButtonColor: '#a97155'
+          });
+        }
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        Swal.fire({
+          title: 'Hello there!',
+    text: 'Please sign in to add items to your cart',
+    icon: 'info',
+    showCancelButton: true,
+    confirmButtonColor: '#a97155',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ok',
+    cancelButtonText: 'Continue Shopping'
+        });
+      }
+    });
+  }
+
+  // Enhanced wishlist functionality with auth handling
+  async function toggleWishlist(productId) {
+    try {
+      const response = await fetch('/user/wishlist/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        updateWishlistButton(data.isInWishlist);
+        showToast(data.message);
+      } else if (response.status === 401) {
+  // Authentication required case with more casual messaging
+  Swal.fire({
+    title: 'Hello there!',
+    text: 'Please sign in to save items to your wishlist',
+    icon: 'info',
+    showCancelButton: true,
+    confirmButtonColor: '#a97155',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sign In',
+    cancelButtonText: 'Continue Shopping'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // Store current product ID in session storage before redirecting
+      sessionStorage.setItem('pendingWishlistItem', JSON.stringify({
+        productId: productId,
+        returnUrl: window.location.href
+      }));
+      window.location.href = '/login';
+    }
+  });
+
+      } else {
+        Swal.fire({
+          title: 'Error',
+          text: data.message || 'Could not update wishlist',
+          icon: 'error',
+          confirmButtonColor: '#a97155'
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error);
+      Swal.fire({
+        title: 'Hello there!',
+    text: 'Please sign in to save items to your wishlist',
+    icon: 'info',
+    showCancelButton: true,
+    confirmButtonColor: '#a97155',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ok',
+    cancelButtonText: 'Continue Shopping'
+      });
+    }
+  }
+
+  // Expose the wishlist toggle function to global scope
+  window.toggleWishlist = toggleWishlist;
+
+  // Check wishlist status when page loads
+  const checkWishlistStatus = async () => {
+    const productId = addToCartBtn.dataset.productId;
+    try {
+      const response = await fetch(`/user/wishlist/status/${productId}`);
+      if (response.status === 401) {
+        // User not logged in - just initialize as not in wishlist
+        updateWishlistButton(false);
+      } else {
+        const data = await response.json();
+        updateWishlistButton(data.isInWishlist);
+      }
+    } catch (error) {
+      console.error('Error checking wishlist status:', error);
+    }
+  };
+
+  checkWishlistStatus();
+
+  // Update wishlist button UI based on status
+  function updateWishlistButton(isInWishlist) {
+    const wishlistBtn = document.getElementById('wishlistBtn');
+    const wishlistText = document.getElementById('wishlistText');
+    const heartIcon = wishlistBtn.querySelector('i');
+    
+    if (isInWishlist) {
+      wishlistBtn.classList.add('active');
+      heartIcon.className = 'fas fa-heart';
+      wishlistText.textContent = 'Remove from Wishlist';
+    } else {
+      wishlistBtn.classList.remove('active');
+      heartIcon.className = 'far fa-heart';
+      wishlistText.textContent = 'Add to Wishlist';
+    }
+  }
+
+  // Toast notification function
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  // Handle post-login returns from session storage
+  const checkPendingActions = () => {
+    // Check if we have a pending cart item
+    const pendingCartItem = sessionStorage.getItem('pendingCartItem');
+    if (pendingCartItem) {
+      const cartData = JSON.parse(pendingCartItem);
+      // Clear the pending item
+      sessionStorage.removeItem('pendingCartItem');
+      
+      // Add the item to cart automatically
+      fetch('/user/cart/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          productId: cartData.productId,
+          quantity: cartData.quantity,
+          size: cartData.size
+        })
+      }).then(response => {
+        if (response.ok) {
+          Swal.fire({
+            title: 'Success!',
+            text: 'Product has been added to your cart',
+            icon: 'success',
+            confirmButtonColor: '#a97155',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      }).catch(error => {
+        console.error('Error adding pending item to cart:', error);
+      });
+    }
+    
+    // Check if we have a pending wishlist item
+    const pendingWishlistItem = sessionStorage.getItem('pendingWishlistItem');
+    if (pendingWishlistItem) {
+      const wishlistData = JSON.parse(pendingWishlistItem);
+      // Clear the pending item
+      sessionStorage.removeItem('pendingWishlistItem');
+      
+      // Add the item to wishlist automatically
+      fetch('/user/wishlist/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          productId: wishlistData.productId
+        })
+      }).then(response => {
+        if (response.ok) {
+          // Refresh wishlist status
+          checkWishlistStatus();
+          showToast('Product added to wishlist');
+        }
+      }).catch(error => {
+        console.error('Error adding pending item to wishlist:', error);
+      });
+    }
+  };
+  
+  // Run this on page load to check for pending actions after login
+  checkPendingActions();
+});
 </script>
 
 <%- include("../../views/partials/user/footer") %>

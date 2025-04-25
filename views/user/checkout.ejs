@@ -1,0 +1,155 @@
+<%- include("../../views/partials/user/header") %>
+<style>
+  .checkout-container {
+    max-width: 900px;
+    margin: 100px auto 50px;
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    padding: 30px;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  .section-title {
+    font-size: 24px;
+    color: #5C4033;
+    margin-bottom: 20px;
+    font-family: 'Playfair Display', serif;
+    text-align: center;
+  }
+
+  .address-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background-color: #f8f9fa;
+  }
+
+  .default-address {
+    border: 2px solid #a97155;
+    background-color: #fff3e0;
+  }
+
+  .product-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+
+  .product-item img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-right: 15px;
+  }
+
+  .price-summary {
+    border-top: 1px solid #ddd;
+    margin-top: 20px;
+    padding-top: 15px;
+  }
+
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .btn-brown {
+    background-color: #a97155;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-family: 'Cormorant Garamond', serif;
+    transition: 0.3s;
+  }
+
+  .btn-brown:hover {
+    background-color: #8b5e3c;
+  }
+
+  .btn-link-brown {
+    color: #a97155;
+    text-decoration: underline;
+    font-size: 14px;
+    margin-left: 10px;
+    cursor: pointer;
+  }
+
+</style>
+
+<div class="checkout-container">
+  <h2 class="section-title">Checkout</h2>
+
+  <div class="mb-4">
+    <h5 class="mb-3">Select Address</h5>
+    <% addresses.forEach(address => { %>
+      <div class="address-card <%= address.isDefault ? 'default-address' : '' %>">
+        <p><strong><%= address.name %></strong></p>
+        <p><%= address.line1 %>, <%= address.city %>, <%= address.state %> - <%= address.zip %></p>
+        <p>Phone: <%= address.phone %></p>
+        <% if (!address.isDefault) { %>
+          <button class="btn btn-sm btn-brown" onclick="setDefaultAddress('<%= address._id %>')">Set as Default</button>
+        <% } %>
+        <button class="btn-link-brown" onclick="editAddress('<%= address._id %>')">Edit</button>
+      </div>
+    <% }) %>
+    <button class="btn btn-brown" onclick="addNewAddress()">Add New Address</button>
+  </div>
+
+  <div>
+    <h5 class="mb-3">Order Summary</h5>
+    <% cartItems.forEach(item => { %>
+      <div class="product-item">
+        <img src="<%= item.product.image %>" alt="<%= item.product.name %>">
+        <div>
+          <p><strong><%= item.product.name %></strong></p>
+          <p>Qty: <%= item.quantity %></p>
+          <p>Item Total: ₹<%= item.quantity * item.product.price %></p>
+        </div>
+      </div>
+    <% }) %>
+
+    <div class="price-summary">
+      <div class="summary-line">
+        <span>Subtotal</span>
+        <span>₹<%= subtotal %></span>
+      </div>
+      <div class="summary-line">
+        <span>Taxes</span>
+        <span>₹<%= taxes %></span>
+      </div>
+      <div class="summary-line">
+        <span>Discount</span>
+        <span>- ₹<%= discount %></span>
+      </div>
+      <div class="summary-line">
+        <strong>Total</strong>
+        <strong>₹<%= total %></strong>
+      </div>
+    </div>
+
+    <button class="btn btn-brown mt-3 w-100">Place Order</button>
+  </div>
+</div>
+
+<script>
+  function setDefaultAddress(id) {
+    // AJAX call to set default address
+    console.log('Set default address:', id);
+  }
+
+  function addNewAddress() {
+    // Redirect or open modal to add address
+    window.location.href = "/user/add-address";
+  }
+
+  function editAddress(id) {
+    // Redirect or open modal to edit address
+    window.location.href = "/user/edit-address/" + id;
+  }
+</script>

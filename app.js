@@ -10,6 +10,7 @@ const db = require("./config/db");
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
 const sessionMiddleware = require("./middlewares/sessionMiddleware");
+
 db()
 
 // Add cache control middleware
@@ -45,15 +46,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.set("view engine","ejs");
-// app.set("views",[path.join(__dirname,'views/user'),path.join(__dirname,'views/admin')])
 app.set("views", [
     path.join(__dirname, "views"),
     path.join(__dirname, "views/admin"),
     path.join(__dirname, "views/user"),
 ]);
-
-// app.set("views", path.join(__dirname, "views"));
-
 
 app.use(express.static("public"));
 
@@ -62,13 +59,18 @@ app.use("/signup", sessionMiddleware.preventBackToSignup);
 app.use("/login", sessionMiddleware.preventBackToLogin);
 app.use("/verify-otp", sessionMiddleware.preventBackToOtp);
 
-app.use("/",userRouter);
-
+// Make user data available to all views
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     next();
 });
-app.use("/admin",adminRouter);
+
+// Mount routes
+app.use("/", userRouter);
+app.use("/admin", adminRouter);
+
+// Increase event emitter max listeners
+require('events').EventEmitter.defaultMaxListeners = 15;
 
 const PORT=process.env.PORT || 4000;
 
