@@ -7,6 +7,7 @@ const { userAuth } = require("../middlewares/auth");
 const productController = require("../controllers/user/productController")
 const cartController = require("../controllers/user/cartController")
 const wishlistController = require("../controllers/user/wishlistController")
+const checkoutController = require("../controllers/user/checkoutController");
 
 router.get("/pageNotFound",userController.pageNotFound);
 router.get("/",userController.loadHomepage)
@@ -81,5 +82,11 @@ router.post("/user/cart/update", userAuth, cartController.updateCart);
 router.get("/user/wishlist", userAuth, wishlistController.getWishlist);
 router.post("/user/wishlist/toggle", userAuth, wishlistController.toggleWishlist);
 router.get("/user/wishlist/status/:productId", userAuth, wishlistController.getWishlistStatus);
+
+
+// Checkout Routes
+router.get("/user/checkout", userAuth, checkoutController.getCheckoutPage);
+
+
 
 module.exports=router;

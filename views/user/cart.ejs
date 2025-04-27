@@ -806,7 +806,7 @@
             showToast('Your cart is empty', 'error');
             return;
         }
-        window.location.href = '/checkout';
+        window.location.href = '/user/checkout';
     }
 
     function showToast(message, type = 'success') {
@@ -821,15 +821,7 @@
     document.addEventListener('DOMContentLoaded', loadCart);
 
 
-    function proceedToCheckout() {
-    const total = parseFloat(document.getElementById('total').textContent.replace('₹', ''));
-    if (total <= 0) {
-        showToast('Your cart is empty', 'error');
-        return;
-    }
-    // ✅ Set the correct checkout route path here
-    window.location.href = '/user/checkout';
-}
+  
 
     </script>
 </body>

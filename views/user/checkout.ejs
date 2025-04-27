@@ -1,155 +1,578 @@
-<%- include("../../views/partials/user/header") %>
-<style>
-  .checkout-container {
-    max-width: 900px;
-    margin: 100px auto 50px;
-    background: #fff;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    padding: 30px;
-    font-family: 'Cormorant Garamond', serif;
-  }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - Your Store</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #5D4037;
+      --primary-light: #8B6B61;
+      --primary-dark: #321911;
+      --accent-color: #D7CCC8;
+      --accent-dark: #A1887F;
+      --text-light: #F5F5F5;
+      --text-dark: #3E2723;
+      --background-light: #EFEBE9;
+      --gold: #D4AF37;
+    }
+    
+    body {
+      background-color: var(--background-light);
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+    
+    .checkout-container {
+      max-width: 950px;
+      margin: 80px auto 50px;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 15px 35px rgba(50, 25, 17, 0.1);
+      padding: 0;
+      overflow: hidden;
+    }
+    
+    .checkout-header {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      padding: 20px 30px;
+      text-align: center;
+      border-bottom: 3px solid var(--gold);
+    }
+    
+    .checkout-content {
+      padding: 30px;
+    }
 
-  .section-title {
-    font-size: 24px;
-    color: #5C4033;
-    margin-bottom: 20px;
-    font-family: 'Playfair Display', serif;
-    text-align: center;
-  }
+    .section-title {
+      font-size: 32px;
+      color: var(--text-light);
+      margin-bottom: 0;
+      font-family: 'Playfair Display', serif;
+      letter-spacing: 1px;
+    }
+    
+    .section-subtitle {
+      font-size: 14px;
+      color: var(--accent-color);
+      font-family: 'Montserrat', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
 
-  .address-card {
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-    background-color: #f8f9fa;
-  }
+    .section-heading {
+      font-family: 'Playfair Display', serif;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      font-size: 22px;
+      position: relative;
+      padding-bottom: 10px;
+      font-weight: 600;
+    }
+    
+    .section-heading::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 60px;
+      height: 2px;
+      background-color: var(--gold);
+    }
 
-  .default-address {
-    border: 2px solid #a97155;
-    background-color: #fff3e0;
-  }
+    .address-card {
+      border: 1px solid #e0d6d1;
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 15px;
+      background-color: #fff;
+      transition: all 0.3s ease;
+      position: relative;
+    }
 
-  .product-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-  }
+    .address-card:hover {
+      box-shadow: 0 5px 15px rgba(62, 39, 35, 0.1);
+    }
 
-  .product-item img {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 10px;
-    margin-right: 15px;
-  }
+    .default-address {
+      border: 2px solid var(--gold);
+      background-color: rgba(212, 175, 55, 0.05);
+    }
+    
+    .default-address::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      right: 20px;
+      width: 0; 
+      height: 0; 
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid var(--gold);
+    }
 
-  .price-summary {
-    border-top: 1px solid #ddd;
-    margin-top: 20px;
-    padding-top: 15px;
-  }
+    .product-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 15px;
+      border: 1px solid #e0d6d1;
+      border-radius: 10px;
+      background-color: #fff;
+      transition: all 0.3s ease;
+    }
+    
+    .product-item:hover {
+      box-shadow: 0 5px 15px rgba(62, 39, 35, 0.05);
+    }
 
-  .summary-line {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-  }
+    .product-item img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 20px;
+      border: 1px solid #e0d6d1;
+    }
 
-  .btn-brown {
-    background-color: #a97155;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-family: 'Cormorant Garamond', serif;
-    transition: 0.3s;
-  }
+    .product-info {
+      flex-grow: 1;
+    }
+    
+    .product-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    
+    .product-price {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
 
-  .btn-brown:hover {
-    background-color: #8b5e3c;
-  }
+    .price-summary {
+      border-top: 1px solid #e0d6d1;
+      margin-top: 25px;
+      padding-top: 20px;
+    }
 
-  .btn-link-brown {
-    color: #a97155;
-    text-decoration: underline;
-    font-size: 14px;
-    margin-left: 10px;
-    cursor: pointer;
-  }
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    
+    .summary-total {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed #e0d6d1;
+    }
 
-</style>
+    .btn-brown {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-family: 'Montserrat', sans-serif;
+      transition: 0.3s;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 14px;
+    }
 
-<div class="checkout-container">
-  <h2 class="section-title">Checkout</h2>
+    .btn-brown:hover {
+      background-color: var(--primary-dark);
+      color: var(--text-light);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(62, 39, 35, 0.2);
+    }
+    
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
 
-  <div class="mb-4">
-    <h5 class="mb-3">Select Address</h5>
-    <% addresses.forEach(address => { %>
-      <div class="address-card <%= address.isDefault ? 'default-address' : '' %>">
-        <p><strong><%= address.name %></strong></p>
-        <p><%= address.line1 %>, <%= address.city %>, <%= address.state %> - <%= address.zip %></p>
-        <p>Phone: <%= address.phone %></p>
-        <% if (!address.isDefault) { %>
-          <button class="btn btn-sm btn-brown" onclick="setDefaultAddress('<%= address._id %>')">Set as Default</button>
+    .btn-link-brown {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-size: 14px;
+      margin-left: 10px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      transition: 0.3s;
+      font-family: 'Montserrat', sans-serif;
+      position: relative;
+    }
+
+    .btn-link-brown::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 1px;
+      bottom: -2px;
+      left: 0;
+      background-color: var(--primary-color);
+      transition: width 0.3s;
+    }
+    
+    .btn-link-brown:hover::after {
+      width: 100%;
+    }
+
+    .badge-gold {
+      background-color: var(--gold);
+      color: var(--text-dark);
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      margin-right: 10px;
+      font-family: 'Montserrat', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 500;
+    }
+    
+    .address-selection, .order-summary, .payment-method {
+      margin-bottom: 40px;
+      padding-bottom: 25px;
+      position: relative;
+    }
+    
+    .address-selection::after, .order-summary::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 1px;
+      background: radial-gradient(ellipse at center, #e0d6d1 0%, transparent 80%);
+    }
+    
+    .form-check-input:checked {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+    
+    .payment-option {
+      border: 1px solid #e0d6d1;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      transition: all 0.3s ease;
+    }
+    
+    .payment-option:hover, .payment-option-selected {
+      border-color: var(--primary-color);
+      background-color: rgba(93, 64, 55, 0.05);
+    }
+    
+    .payment-option label {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      cursor: pointer;
+      margin: 0;
+    }
+    
+    .payment-icon {
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--primary-light);
+      color: white;
+      border-radius: 50%;
+      margin-right: 15px;
+      font-size: 14px;
+    }
+    
+    .payment-title {
+      font-weight: 600;
+      font-family: 'Playfair Display', serif;
+      font-size: 16px;
+    }
+    
+    .order-button-container {
+      margin-top: 30px;
+    }
+    
+    .address-card-content {
+      padding-left: 10px;
+    }
+    
+    .address-name {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    
+    .address-details {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 3px;
+    }
+    
+    .address-actions {
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <%- include("../../views/partials/user/header") %>
+
+  <div class="checkout-container">
+    <div class="checkout-header">
+      <p class="section-subtitle">Complete Your Purchase</p>
+      <h2 class="section-title">Checkout</h2>
+    </div>
+    
+    <div class="checkout-content">
+      <div class="address-selection">
+        <h5 class="section-heading">Delivery Address</h5>
+        
+        <% if (user && user.addresses && user.addresses.length > 0) { %>
+          <% user.addresses.forEach(address => { %>
+            <div class="address-card <%= address.isDefault ? 'default-address' : '' %>">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="selectedAddress" 
+                       value="<%= address._id %>" id="address<%= address._id %>"
+                       <%= address.isDefault ? 'checked' : '' %>>
+                <div class="address-card-content">
+                  <p class="address-name"><%= address.name %></p>
+                  <p class="address-details"><%= address.line1 %><% if (address.line2) { %>, <%= address.line2 %><% } %></p>
+                  <p class="address-details"><%= address.city %>, <%= address.state %> - <%= address.zip %></p>
+                  <p class="address-details">Phone: <%= address.phone %></p>
+                  <div class="address-actions">
+                    <% if (address.isDefault) { %>
+                      <span class="badge-gold">Default Address</span>
+                    <% } else { %>
+                      <button type="button" class="btn btn-sm btn-brown" onclick="setDefaultAddress('<%= address._id %>')">Set as Default</button>
+                    <% } %>
+                    <button type="button" class="btn-link-brown" onclick="editAddress('<%= address._id %>')">Edit</button>
+                    <button type="button" class="btn-link-brown" onclick="removeAddress('<%= address._id %>')">Remove</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="alert alert-info">
+            <p>No addresses found. Please add a new address to continue.</p>
+          </div>
         <% } %>
-        <button class="btn-link-brown" onclick="editAddress('<%= address._id %>')">Edit</button>
+        <button type="button" class="btn btn-brown mt-3" onclick="window.location.href='/addAddress'">
+          <i class="fas fa-plus"></i> Add New Address
+        </button>
+        
       </div>
-    <% }) %>
-    <button class="btn btn-brown" onclick="addNewAddress()">Add New Address</button>
-  </div>
 
-  <div>
-    <h5 class="mb-3">Order Summary</h5>
-    <% cartItems.forEach(item => { %>
-      <div class="product-item">
-        <img src="<%= item.product.image %>" alt="<%= item.product.name %>">
-        <div>
-          <p><strong><%= item.product.name %></strong></p>
-          <p>Qty: <%= item.quantity %></p>
-          <p>Item Total: ₹<%= item.quantity * item.product.price %></p>
+      <div class="order-summary">
+        <h5 class="section-heading">Order Summary</h5>
+        <% if (cart && cart.items && cart.items.length > 0) { %>
+          <% cart.items.forEach(item => { %>
+            <div class="product-item">
+              <img src="<%= item.productId.image %>" alt="<%= item.productId.name %>">
+              <div class="product-info">
+                <h6 class="product-name"><%= item.productId.name %></h6>
+                <p class="text-muted mb-1">Quantity: <%= item.quantity %></p>
+                <p class="product-price">₹<%= item.totalPrice.toFixed(2) %></p>
+              </div>
+            </div>
+          <% }) %>
+
+          <div class="price-summary">
+            <div class="summary-line">
+              <span>Subtotal</span>
+              <span>₹<%= subtotal.toFixed(2) %></span>
+            </div>
+            <div class="summary-line">
+              <span>Taxes</span>
+              <span>₹<%= taxes.toFixed(2) %></span>
+            </div>
+            <% if (discount > 0) { %>
+              <div class="summary-line">
+                <span>Discount</span>
+                <span>- ₹<%= discount.toFixed(2) %></span>
+              </div>
+            <% } %>
+            <div class="summary-total">
+              <span>Total</span>
+              <span>₹<%= total.toFixed(2) %></span>
+            </div>
+          </div>
+        <% } else { %>
+          <div class="alert alert-warning">
+            <p>Your cart is empty. Please add products to continue.</p>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="payment-method">
+        <h5 class="section-heading">Payment Method</h5>
+        <div class="payment-option" onclick="selectPayment('cod')">
+          <label class="form-check-label" for="paymentCOD">
+            <input class="form-check-input" type="radio" name="paymentMethod" id="paymentCOD" value="cod" checked>
+            <span class="payment-icon">
+              <i class="fas fa-money-bill-wave"></i>
+            </span>
+            <div>
+              <span class="payment-title">Cash on Delivery</span>
+              <p class="mb-0 text-muted small">Pay when your order arrives</p>
+            </div>
+          </label>
+        </div>
+        
+        <div class="payment-option" onclick="selectPayment('card')">
+          <label class="form-check-label" for="paymentCard">
+            <input class="form-check-input" type="radio" name="paymentMethod" id="paymentCard" value="card">
+            <span class="payment-icon">
+              <i class="fas fa-credit-card"></i>
+            </span>
+            <div>
+              <span class="payment-title">Credit / Debit Card</span>
+              <p class="mb-0 text-muted small">Secure payment with your card</p>
+            </div>
+          </label>
+        </div>
+        
+        <div class="payment-option" onclick="selectPayment('upi')">
+          <label class="form-check-label" for="paymentUPI">
+            <input class="form-check-input" type="radio" name="paymentMethod" id="paymentUPI" value="upi">
+            <span class="payment-icon">
+              <i class="fas fa-mobile-alt"></i>
+            </span>
+            <div>
+              <span class="payment-title">UPI</span>
+              <p class="mb-0 text-muted small">Pay using UPI apps</p>
+            </div>
+          </label>
         </div>
       </div>
-    <% }) %>
 
-    <div class="price-summary">
-      <div class="summary-line">
-        <span>Subtotal</span>
-        <span>₹<%= subtotal %></span>
-      </div>
-      <div class="summary-line">
-        <span>Taxes</span>
-        <span>₹<%= taxes %></span>
-      </div>
-      <div class="summary-line">
-        <span>Discount</span>
-        <span>- ₹<%= discount %></span>
-      </div>
-      <div class="summary-line">
-        <strong>Total</strong>
-        <strong>₹<%= total %></strong>
+      <div class="order-button-container">
+        <button type="button" class="btn btn-brown w-100" onclick="placeOrder()">Complete Order</button>
       </div>
     </div>
-
-    <button class="btn btn-brown mt-3 w-100">Place Order</button>
   </div>
-</div>
 
-<script>
-  function setDefaultAddress(id) {
-    // AJAX call to set default address
-    console.log('Set default address:', id);
-  }
-
-  function addNewAddress() {
-    // Redirect or open modal to add address
-    window.location.href = "/user/add-address";
-  }
-
-  function editAddress(id) {
-    // Redirect or open modal to edit address
-    window.location.href = "/user/edit-address/" + id;
-  }
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <script>
+    function setDefaultAddress(id) {
+      fetch(`/user/address/default/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          window.location.reload();
+        } else {
+          alert('Failed to set default address');
+        }
+      })
+      .catch(err => {
+        console.error('Error setting default address:', err);
+        alert('An error occurred. Please try again.');
+      });
+    }
+  
+    function editAddress(id) {
+      window.location.href = `/user/address/edit/${id}`;
+    }
+  
+    function removeAddress(id) {
+      if (confirm('Are you sure you want to remove this address?')) {
+        fetch(`/user/address/remove/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+          }
+        })
+        .then(response => {
+          if (response.ok) {
+            window.location.reload();
+          } else {
+            alert('Failed to remove address');
+          }
+        })
+        .catch(err => {
+          console.error('Error removing address:', err);
+          alert('An error occurred. Please try again.');
+        });
+      }
+    }
+  
+    function addNewAddress() {
+      window.location.href = '/user/address/add';
+    }
+  
+    function selectPayment(method) {
+      document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+        if (radio.value === method) {
+          radio.checked = true;
+        }
+      });
+    }
+  
+    function placeOrder() {
+      const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
+      const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+  
+      if (!selectedAddress) {
+        alert('Please select a delivery address.');
+        return;
+      }
+      if (!paymentMethod) {
+        alert('Please select a payment method.');
+        return;
+      }
+  
+      fetch('/user/place-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        },
+        body: JSON.stringify({
+          addressId: selectedAddress.value,
+          paymentMethod: paymentMethod.value
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = `/user/order-success/${data.orderId}`;
+        } else {
+          alert('Failed to place order. Please try again.');
+        }
+      })
+      .catch(err => {
+        console.error('Error placing order:', err);
+        alert('An error occurred. Please try again.');
+      });
+    }
+  </script>
+  
+</body>
+</html>

@@ -84,12 +84,13 @@
     <section class="categories">
         <% categories.forEach(category => { %>
             <div class="category-item">
-                <img src="/uploads/category-images/<%= category.image %>" alt="<%= category.name %>">
+                <!-- Check if category has an image, if not use a default image -->
+                <img src="/uploads/category-images/<%= category.image || 'default-image.jpg' %>" alt="<%= category.name %>">
                 <div class="category-text"><%= category.name.toUpperCase() %></div>
             </div>
         <% }); %>
     </section>
-
+    
     <!-- Best Seller Section -->
     <section class="best-seller">
         <h3>BEST SELLER</h3>
