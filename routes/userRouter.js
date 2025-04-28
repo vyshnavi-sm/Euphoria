@@ -86,6 +86,9 @@ router.get("/user/wishlist/status/:productId", userAuth, wishlistController.getW
 
 // Checkout Routes
 router.get("/user/checkout", userAuth, checkoutController.getCheckoutPage);
+router.post("/user/place-order", userAuth, checkoutController.placeOrder);
+router.get("/user/order-success/:orderId", userAuth, checkoutController.getOrderSuccess);
+router.get("/user/orders", userAuth, checkoutController.getOrders);
 
 
 

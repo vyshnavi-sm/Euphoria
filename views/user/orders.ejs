@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders - Euphoria</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #5D4037;
+      --primary-light: #8B6B61;
+      --primary-dark: #321911;
+      --accent-color: #D7CCC8;
+      --accent-dark: #A1887F;
+      --text-light: #F5F5F5;
+      --text-dark: #3E2723;
+      --background-light: #EFEBE9;
+      --gold: #D4AF37;
+    }
+    
+    body {
+      background-color: var(--background-light);
+      font-family: 'Cormorant Garamond', serif;
+      color: var(--text-dark);
+      line-height: 1.6;
+    }
+    
+    .orders-container {
+      max-width: 1200px;
+      margin: 80px auto 50px;
+      padding: 0 20px;
+    }
+    
+    .orders-header {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      padding: 20px 30px;
+      text-align: center;
+      border-bottom: 3px solid var(--gold);
+      border-radius: 15px 15px 0 0;
+    }
+    
+    .section-title {
+      font-size: 32px;
+      color: var(--text-light);
+      margin-bottom: 0;
+      font-family: 'Playfair Display', serif;
+      letter-spacing: 1px;
+    }
+    
+    .section-subtitle {
+      font-size: 14px;
+      color: var(--accent-color);
+      font-family: 'Montserrat', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .order-card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(50, 25, 17, 0.1);
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .order-header {
+      background-color: var(--primary-light);
+      color: var(--text-light);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .order-id {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .order-date {
+      font-size: 14px;
+      color: var(--accent-color);
+    }
+
+    .order-status {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .status-pending {
+      background-color: #FFF3E0;
+      color: #E65100;
+    }
+
+    .status-delivered {
+      background-color: #E8F5E9;
+      color: #2E7D32;
+    }
+
+    .status-cancelled {
+      background-color: #FFEBEE;
+      color: #C62828;
+    }
+
+    .order-content {
+      padding: 20px;
+    }
+
+    .product-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      padding: 15px;
+      border: 1px solid #e0d6d1;
+      border-radius: 10px;
+      background-color: #fff;
+    }
+
+    .product-item img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-right: 20px;
+      border: 1px solid #e0d6d1;
+    }
+
+    .product-info {
+      flex-grow: 1;
+    }
+    
+    .product-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+    
+    .product-price {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .order-summary {
+      background-color: var(--background-light);
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 16px;
+    }
+    
+    .summary-total {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed #e0d6d1;
+    }
+
+    .empty-orders {
+      text-align: center;
+      padding: 50px 20px;
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(50, 25, 17, 0.1);
+    }
+
+    .empty-orders-icon {
+      font-size: 60px;
+      color: var(--primary-light);
+      margin-bottom: 20px;
+    }
+
+    .empty-orders-text {
+      font-family: 'Playfair Display', serif;
+      font-size: 24px;
+      color: var(--primary-color);
+      margin-bottom: 20px;
+    }
+
+    .btn-brown {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-family: 'Montserrat', sans-serif;
+      transition: 0.3s;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 14px;
+    }
+
+    .btn-brown:hover {
+      background-color: var(--primary-dark);
+      color: var(--text-light);
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(62, 39, 35, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <%- include("../../views/partials/user/header") %>
+
+  <div class="orders-container">
+    <div class="orders-header">
+      <p class="section-subtitle">Your Purchase History</p>
+      <h2 class="section-title">My Orders</h2>
+    </div>
+
+    <% if (orders && orders.length > 0) { %>
+      <% orders.forEach(order => { %>
+        <div class="order-card">
+          <div class="order-header">
+            <div>
+              <span class="order-id">Order #<%= order.orderId %></span>
+              <span class="order-date">Placed on <%= new Date(order.createdAt).toLocaleDateString() %></span>
+            </div>
+            <span class="order-status status-<%= order.status.toLowerCase() %>"><%= order.status %></span>
+          </div>
+          
+          <div class="order-content">
+            <% order.orderedItems.forEach(item => { %>
+              <div class="product-item">
+                <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
+                  <img src="/uploads/product-images/<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>">
+                <% } else { %>
+                  <img src="/images/default-product.jpg" alt="Product Image">
+                <% } %>
+                <div class="product-info">
+                  <h6 class="product-name"><%= item.product.productName %></h6>
+                  <p class="text-muted mb-1">Quantity: <%= item.quantity %></p>
+                  <p class="product-price">₹<%= (item.price * item.quantity).toFixed(2) %></p>
+                </div>
+              </div>
+            <% }) %>
+
+            <div class="order-summary">
+              <div class="summary-line">
+                <span>Subtotal</span>
+                <span>₹<%= order.totalPrice.toFixed(2) %></span>
+              </div>
+              <div class="summary-line">
+                <span>Taxes</span>
+                <span>₹<%= (order.totalPrice * 0.18).toFixed(2) %></span>
+              </div>
+              <% if (order.discount > 0) { %>
+                <div class="summary-line">
+                  <span>Discount</span>
+                  <span>- ₹<%= order.discount.toFixed(2) %></span>
+                </div>
+              <% } %>
+              <div class="summary-total">
+                <span>Total</span>
+                <span>₹<%= order.finalAmount.toFixed(2) %></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <div class="empty-orders">
+        <div class="empty-orders-icon">
+          <i class="fas fa-shopping-bag"></i>
+        </div>
+        <h3 class="empty-orders-text">You haven't placed any orders yet</h3>
+        <a href="/shop" class="btn btn-brown">
+          <i class="fas fa-shopping-bag"></i> Start Shopping
+        </a>
+      </div>
+    <% } %>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</body>
+</html> 

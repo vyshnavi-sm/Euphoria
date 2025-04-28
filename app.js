@@ -54,6 +54,9 @@ app.set("views", [
 
 app.use(express.static("public"));
 
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Apply session middleware to routes
 app.use("/signup", sessionMiddleware.preventBackToSignup);
 app.use("/login", sessionMiddleware.preventBackToLogin);

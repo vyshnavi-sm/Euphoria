@@ -6,12 +6,12 @@ const {v4:uuidv4} = require("uuid")
 const orderSchema = new Schema({
     orderId:{
         type:String,
-        dafault:()=>uuidv4(),
+        default:()=>uuidv4(),
         unique:true
     },
     orderedItems:[{
         product:{
-            type:Schema.Types.orderId,
+            type:Schema.Types.ObjectId,
             ref:"Product",
             required:true
         },
@@ -41,8 +41,16 @@ const orderSchema = new Schema({
     },
     address:{
         type:Schema.Types.ObjectId,
-        ref:"User",
+        ref:"Address",
         required:true
+    },
+    addressDetails: {
+        name: String,
+        address: String,
+        city: String,
+        state: String,
+        pincode: String,
+        phone: String
     },
     invoiceDate:{
         type:Date
@@ -61,7 +69,7 @@ const orderSchema = new Schema({
     },
     couponApplied:{
         type:Boolean,
-        dafault:false
+        default:false
     }
 })
 

@@ -343,44 +343,38 @@
       <h2 class="section-title">Checkout</h2>
     </div>
     
-    <div class="checkout-content">
+    <div class="checkout-content" data-addresses='<%- JSON.stringify(addresses || []) %>'>
       <div class="address-selection">
-        <h5 class="section-heading">Delivery Address</h5>
-        
-        <% if (user && user.addresses && user.addresses.length > 0) { %>
-          <% user.addresses.forEach(address => { %>
-            <div class="address-card <%= address.isDefault ? 'default-address' : '' %>">
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="selectedAddress" 
-                       value="<%= address._id %>" id="address<%= address._id %>"
-                       <%= address.isDefault ? 'checked' : '' %>>
-                <div class="address-card-content">
-                  <p class="address-name"><%= address.name %></p>
-                  <p class="address-details"><%= address.line1 %><% if (address.line2) { %>, <%= address.line2 %><% } %></p>
-                  <p class="address-details"><%= address.city %>, <%= address.state %> - <%= address.zip %></p>
-                  <p class="address-details">Phone: <%= address.phone %></p>
-                  <div class="address-actions">
-                    <% if (address.isDefault) { %>
-                      <span class="badge-gold">Default Address</span>
-                    <% } else { %>
-                      <button type="button" class="btn btn-sm btn-brown" onclick="setDefaultAddress('<%= address._id %>')">Set as Default</button>
-                    <% } %>
-                    <button type="button" class="btn-link-brown" onclick="editAddress('<%= address._id %>')">Edit</button>
-                    <button type="button" class="btn-link-brown" onclick="removeAddress('<%= address._id %>')">Remove</button>
-                  </div>
+        <h2 class="section-heading">Select Delivery Address</h2>
+        <% if (addresses && addresses.length > 0) { %>
+            <% addresses.forEach((address, index) => { %>
+                <div class="address-card <%= address.isDefault ? 'default-address' : '' %>">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="selectedAddress" 
+                               value="<%= index %>" id="address<%= index %>"
+                               <%= address.isDefault ? 'checked' : '' %>>
+                        <div class="address-card-content">
+                            <h5 class="address-name"><%= address.name %></h5>
+                            <p class="address-details"><%= address.line1 %></p>
+                            <p class="address-details"><%= address.city %>, <%= address.state %> - <%= address.zip %></p>
+                            <p class="address-details">Phone: <%= address.phone %></p>
+                            <div class="address-actions">
+                                <% if (address.isDefault) { %>
+                                    <span class="badge-gold">Default Address</span>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            </div>
-          <% }) %>
+            <% }); %>
         <% } else { %>
-          <div class="alert alert-info">
-            <p>No addresses found. Please add a new address to continue.</p>
-          </div>
+            <div class="alert alert-info">
+                No addresses found. Please add an address to continue.
+            </div>
         <% } %>
         <button type="button" class="btn btn-brown mt-3" onclick="window.location.href='/addAddress'">
-          <i class="fas fa-plus"></i> Add New Address
+            <i class="fas fa-plus"></i> Add New Address
         </button>
-        
       </div>
 
       <div class="order-summary">
@@ -388,9 +382,13 @@
         <% if (cart && cart.items && cart.items.length > 0) { %>
           <% cart.items.forEach(item => { %>
             <div class="product-item">
-              <img src="<%= item.productId.image %>" alt="<%= item.productId.name %>">
+              <% if (item.productId && item.productId.productImage && item.productId.productImage.length > 0) { %>
+                <img src="/uploads/product-images/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
+              <% } else { %>
+                <img src="/images/default-product.jpg" alt="Product Image">
+              <% } %>
               <div class="product-info">
-                <h6 class="product-name"><%= item.productId.name %></h6>
+                <h6 class="product-name"><%= item.productId.productName %></h6>
                 <p class="text-muted mb-1">Quantity: <%= item.quantity %></p>
                 <p class="product-price">₹<%= item.totalPrice.toFixed(2) %></p>
               </div>
@@ -467,7 +465,7 @@
       </div>
 
       <div class="order-button-container">
-        <button type="button" class="btn btn-brown w-100" onclick="placeOrder()">Complete Order</button>
+        <button type="button" class="btn btn-brown w-100" id="placeOrderBtn">Complete Order</button>
       </div>
     </div>
   </div>
@@ -475,102 +473,69 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <script>
-    function setDefaultAddress(id) {
-      fetch(`/user/address/default/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+    // Get addresses from data attribute
+    const userAddresses = JSON.parse(document.querySelector('.checkout-content').dataset.addresses);
+
+    document.getElementById('placeOrderBtn').addEventListener('click', async function() {
+      try {
+        const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
+        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+        
+        if (!selectedAddress || !paymentMethod) {
+          alert('Please select both address and payment method');
+          return;
         }
-      })
-      .then(response => {
-        if (response.ok) {
-          window.location.reload();
-        } else {
-          alert('Failed to set default address');
+
+        const addressIndex = parseInt(selectedAddress.value);
+        const selectedAddressData = userAddresses[addressIndex];
+
+        if (!selectedAddressData) {
+          alert('Invalid address selected. Please try again.');
+          return;
         }
-      })
-      .catch(err => {
-        console.error('Error setting default address:', err);
-        alert('An error occurred. Please try again.');
-      });
-    }
-  
-    function editAddress(id) {
-      window.location.href = `/user/address/edit/${id}`;
-    }
-  
-    function removeAddress(id) {
-      if (confirm('Are you sure you want to remove this address?')) {
-        fetch(`/user/address/remove/${id}`, {
-          method: 'DELETE',
+
+        // Show loading state
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Placing Order...';
+
+        const response = await fetch('/user/place-order', {
+          method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-          }
-        })
-        .then(response => {
-          if (response.ok) {
-            window.location.reload();
-          } else {
-            alert('Failed to remove address');
-          }
-        })
-        .catch(err => {
-          console.error('Error removing address:', err);
-          alert('An error occurred. Please try again.');
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            addressId: addressIndex,
+            address: selectedAddressData,
+            paymentMethod: paymentMethod.value
+          })
         });
-      }
-    }
-  
-    function addNewAddress() {
-      window.location.href = '/user/address/add';
-    }
-  
-    function selectPayment(method) {
-      document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
-        if (radio.value === method) {
-          radio.checked = true;
-        }
-      });
-    }
-  
-    function placeOrder() {
-      const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
-      const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
-  
-      if (!selectedAddress) {
-        alert('Please select a delivery address.');
-        return;
-      }
-      if (!paymentMethod) {
-        alert('Please select a payment method.');
-        return;
-      }
-  
-      fetch('/user/place-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
-        },
-        body: JSON.stringify({
-          addressId: selectedAddress.value,
-          paymentMethod: paymentMethod.value
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
+
+        const data = await response.json();
+        
         if (data.success) {
+          // Redirect to order success page
           window.location.href = `/user/order-success/${data.orderId}`;
         } else {
-          alert('Failed to place order. Please try again.');
+          alert(data.message || 'Failed to place order');
+          // Reset button state
+          this.disabled = false;
+          this.innerHTML = 'Complete Order';
         }
-      })
-      .catch(err => {
-        console.error('Error placing order:', err);
-        alert('An error occurred. Please try again.');
-      });
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while placing the order');
+        // Reset button state
+        this.disabled = false;
+        this.innerHTML = 'Complete Order';
+      }
+    });
+
+    function selectPayment(method) {
+        document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+            if (radio.value === method) {
+                radio.checked = true;
+            }
+        });
     }
   </script>
   
