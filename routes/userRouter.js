@@ -86,10 +86,14 @@ router.get("/user/wishlist/status/:productId", userAuth, wishlistController.getW
 
 // Checkout Routes
 router.get("/user/checkout", userAuth, checkoutController.getCheckoutPage);
+
+// Order Placement Route (POST)
 router.post("/user/place-order", userAuth, checkoutController.placeOrder);
+
+// Order Success Page (GET)
 router.get("/user/order-success/:orderId", userAuth, checkoutController.getOrderSuccess);
+
+// View All Orders (optional)
 router.get("/user/orders", userAuth, checkoutController.getOrders);
-
-
 
 module.exports=router;

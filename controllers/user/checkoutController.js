@@ -58,101 +58,79 @@ const getCheckoutPage = async (req, res) => {
         res.status(500).render('error', { message: 'Internal server error' });
     }
 };
-
 const placeOrder = async (req, res) => {
     try {
         const userId = req.session.user;
+        if (!userId) {
+            return res.json({ success: false, message: 'User not logged in' });
+        }
+
         const { addressId, address, paymentMethod } = req.body;
 
-        console.log('Order placement attempt:', { userId, addressId, address, paymentMethod });
-
-        if (!userId) {
-            console.log('No user session found');
-            return res.status(401).json({ success: false, message: 'Please login to place order' });
-        }
-
-        // Get user's cart
-        const cart = await Cart.findOne({ userId })
-            .populate('items.productId');
-
-        console.log('Cart found:', cart ? 'Yes' : 'No');
+        // 1. Fetch the user's cart
+        const cart = await Cart.findOne({ userId }).populate('items.productId');
         if (!cart || cart.items.length === 0) {
-            console.log('Cart is empty');
-            return res.status(400).json({ success: false, message: 'Cart is empty' });
+            return res.json({ success: false, message: 'Your cart is empty.' });
         }
 
-        console.log('Cart items:', cart.items);
+        // 2. Prepare order items
+        const orderedItems = cart.items.map(item => ({
+            product: item.productId._id,
+            quantity: item.quantity,
+            price: item.productId.price
+        }));
 
-        // Get the user's address document
-        const addressDoc = await Address.findOne({ userId });
-        if (!addressDoc) {
-            console.log('No address document found for user');
-            return res.status(400).json({ success: false, message: 'Address not found' });
-        }
-
-        // Calculate totals
-        const totalPrice = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
-        const taxes = Math.round(totalPrice * 0.18);
+        // 3. Calculate totals
+        const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
+        const taxes = Math.round(subtotal * 0.18);
         const discount = 0;
-        const finalAmount = totalPrice + taxes - discount;
+        const total = subtotal + taxes - discount;
 
-        // Create new order
-        const order = new Order({
+        // 4. Create the order - using the schema fields correctly
+        const order = await Order.create({
             userId,
-            orderedItems: cart.items.map(item => ({
-                product: item.productId._id,
-                quantity: item.quantity,
-                price: item.price
-            })),
-            totalPrice,
-            discount,
-            finalAmount,
-            address: addressDoc._id,
-            status: 'Pending',
-            paymentMethod,
+            orderedItems,
+            address: addressId,
             addressDetails: {
-                name: address.name,
-                address: address.line1 + (address.line2 ? ', ' + address.line2 : ''),
-                city: address.city,
-                state: address.state,
-                pincode: address.zip,
-                phone: address.phone
-            }
+                name: address?.name || '',
+                address: address?.address || '',
+                city: address?.city || '',
+                state: address?.state || '',
+                pincode: address?.pincode || '',
+                phone: address?.phone || ''
+            },
+            paymentMethod,
+            discount,
+            totalPrice: subtotal,
+            finalAmount: total,
+            status: 'Processing', // Using valid enum from schema
+            createdOn: new Date()
         });
 
-        console.log('Order object created:', order);
+        console.log('Order created with ID:', order._id);
+        console.log('Order details:', JSON.stringify(order, null, 2));
 
-        await order.save();
-        console.log('Order saved successfully with ID:', order.orderId);
+        // 5. Clear the user's cart
+        cart.items = [];
+        await cart.save();
 
-        // Clear the cart after successful order placement
-        await Cart.findOneAndUpdate(
-            { userId },
-            { $set: { items: [] } }
-        );
-        console.log('Cart cleared successfully');
-
+        // 6. Respond with the MongoDB _id (which is what we're actually using in routes)
         res.json({ 
             success: true, 
-            message: 'Order placed successfully',
-            orderId: order.orderId
+            orderId: order._id,
+            message: 'Order placed successfully!' 
         });
-
-    } catch (error) {
-        console.error('Detailed error in placeOrder:', error);
-        console.error('Error stack:', error.stack);
-        res.status(500).json({ 
-            success: false, 
-            message: 'Failed to place order',
-            error: error.message 
-        });
+    } catch (err) {
+        console.error('Order error:', err);
+        res.json({ success: false, message: 'Failed to place order: ' + err.message });
     }
 };
 
 const getOrderSuccess = async (req, res) => {
     try {
         const { orderId } = req.params;
-        const userId = req.session.user._id;
+        // Use user._id if available, otherwise use user directly
+        const userId = req.session.user._id ? req.session.user._id : req.session.user;
 
         if (!userId) {
             return res.redirect('/login');
@@ -161,22 +139,51 @@ const getOrderSuccess = async (req, res) => {
         console.log('Looking for order with ID:', orderId);
         console.log('User ID:', userId);
 
-        // Get order details using the orderId field
-        const order = await Order.findOne({ 
-            orderId: orderId, 
-            userId: userId
-        }).populate('orderedItems.product');
+        // First, try finding by _id if it looks like a MongoDB ObjectId
+        let order = null;
+        if (orderId.match(/^[0-9a-fA-F]{24}$/)) {
+            console.log('Trying to find by _id...');
+            order = await Order.findOne({
+                userId: userId,
+                _id: orderId
+            }).populate('orderedItems.product');
+        }
+
+        // If not found by _id, try by orderId
+        if (!order) {
+            console.log('Trying to find by orderId...');
+            order = await Order.findOne({ 
+                orderId: orderId, 
+                userId: userId
+            }).populate('orderedItems.product');
+        }
+
+        // If still not found, try case-insensitive search
+        if (!order) {
+            console.log('Trying case-insensitive search...');
+            order = await Order.findOne({
+                userId: userId,
+                orderId: { $regex: new RegExp('^' + orderId + '$', 'i') }
+            }).populate('orderedItems.product');
+        }
 
         console.log('Found order:', order);
 
         if (!order) {
-            console.log('Order not found with orderId:', orderId);
-            return res.redirect('/user/orders');
+            console.log('Order not found with any method. Trying direct lookup...');
+            // Last resort: try to find the order directly without userId filtering
+            order = await Order.findById(orderId).populate('orderedItems.product');
+            console.log('Direct lookup result:', order);
+            
+            if (!order) {
+                console.log('Order not found with orderId:', orderId);
+                return res.redirect('/user/orders');
+            }
         }
 
         // Render the order success page with the order details
         res.render('user/order-success', { 
-            orderId: order.orderId,
+            orderId: order.orderId || order._id,
             order
         });
 
@@ -185,7 +192,6 @@ const getOrderSuccess = async (req, res) => {
         res.redirect('/user/orders');
     }
 };
-
 const getOrders = async (req, res) => {
     try {
         const userId = req.session.user;

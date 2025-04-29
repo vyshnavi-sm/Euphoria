@@ -7,6 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    /* All existing CSS styles remain the same */
     :root {
       --primary-color: #5D4037;
       --primary-light: #8B6B61;
@@ -355,8 +356,8 @@
                                <%= address.isDefault ? 'checked' : '' %>>
                         <div class="address-card-content">
                             <h5 class="address-name"><%= address.name %></h5>
-                            <p class="address-details"><%= address.line1 %></p>
-                            <p class="address-details"><%= address.city %>, <%= address.state %> - <%= address.zip %></p>
+                            <p class="address-details"><%= address.addressType %></p>
+                            <p class="address-details"><%= address.city %>, <%= address.state %> - <%= address.pincode %></p>
                             <p class="address-details">Phone: <%= address.phone %></p>
                             <div class="address-actions">
                                 <% if (address.isDefault) { %>
@@ -470,74 +471,98 @@
     </div>
   </div>
 
+  <!-- Added jQuery for better Ajax handling -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <script>
     // Get addresses from data attribute
     const userAddresses = JSON.parse(document.querySelector('.checkout-content').dataset.addresses);
+    
+    // Log addresses for debugging
+    console.log("Available addresses:", userAddresses);
 
-    document.getElementById('placeOrderBtn').addEventListener('click', async function() {
-      try {
-        const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
-        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
-        
-        if (!selectedAddress || !paymentMethod) {
-          alert('Please select both address and payment method');
-          return;
-        }
-
-        const addressIndex = parseInt(selectedAddress.value);
-        const selectedAddressData = userAddresses[addressIndex];
-
-        if (!selectedAddressData) {
-          alert('Invalid address selected. Please try again.');
-          return;
-        }
-
-        // Show loading state
-        this.disabled = true;
-        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Placing Order...';
-
-        const response = await fetch('/user/place-order', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            addressId: addressIndex,
-            address: selectedAddressData,
-            paymentMethod: paymentMethod.value
-          })
-        });
-
-        const data = await response.json();
-        
-        if (data.success) {
-          // Redirect to order success page
-          window.location.href = `/user/order-success/${data.orderId}`;
-        } else {
-          alert(data.message || 'Failed to place order');
-          // Reset button state
-          this.disabled = false;
-          this.innerHTML = 'Complete Order';
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred while placing the order');
-        // Reset button state
-        this.disabled = false;
-        this.innerHTML = 'Complete Order';
+    document.getElementById('placeOrderBtn').addEventListener('click', function() {
+      const selectedAddress = document.querySelector('input[name="selectedAddress"]:checked');
+      const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked');
+      
+      if (!selectedAddress || !paymentMethod) {
+        alert('Please select both address and payment method');
+        return;
       }
+
+      const addressIndex = parseInt(selectedAddress.value);
+      const selectedAddressData = userAddresses[addressIndex];
+
+      if (!selectedAddressData) {
+        alert('Invalid address selected. Please try again.');
+        return;
+      }
+
+      // Show loading state
+      const button = this;
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Placing Order...';
+
+      // Prepare address object - match properties with what backend expects
+      const addressToSend = {
+        name: selectedAddressData.name,
+        address: selectedAddressData.addressType, // Using addressType as address line
+        city: selectedAddressData.city,
+        state: selectedAddressData.state,
+        pincode: selectedAddressData.pincode,
+        phone: selectedAddressData.phone
+      };
+
+      // Using jQuery AJAX for better compatibility
+      $.ajax({
+        url: '/user/place-order',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({
+          addressId: selectedAddressData._id,
+          address: addressToSend,
+          paymentMethod: paymentMethod.value
+        }),
+        success: function(response) {
+          console.log("Order response:", response);
+          
+          if (response.success) {
+            // Important: Use the exact orderId from response
+            window.location.href = '/user/order-success/' + response.orderId;
+          } else {
+            alert('Error: ' + (response.message || 'Failed to place order'));
+            button.disabled = false;
+            button.innerHTML = 'Complete Order';
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error("Order error:", error);
+          alert('Error placing order. Please try again.');
+          button.disabled = false;
+          button.innerHTML = 'Complete Order';
+        }
+      });
     });
 
     function selectPayment(method) {
-        document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
-            if (radio.value === method) {
-                radio.checked = true;
-            }
-        });
+      document.querySelectorAll('.payment-option').forEach(option => {
+        option.classList.remove('payment-option-selected');
+      });
+      
+      document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+        if (radio.value === method) {
+          radio.checked = true;
+          radio.closest('.payment-option').classList.add('payment-option-selected');
+        }
+      });
     }
+    
+    // Initialize selected payment method
+    document.addEventListener('DOMContentLoaded', function() {
+      const initialPayment = document.querySelector('input[name="paymentMethod"]:checked').value;
+      selectPayment(initialPayment);
+    });
   </script>
-  
 </body>
 </html>
