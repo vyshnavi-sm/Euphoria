@@ -39,6 +39,14 @@
       text-align: center;
       border-bottom: 3px solid var(--gold);
       border-radius: 15px 15px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header-content {
+      flex-grow: 1;
+      text-align: center;
     }
     
     .section-title {
@@ -57,6 +65,43 @@
       letter-spacing: 2px;
     }
 
+    .search-container {
+      display: flex;
+      margin: 20px 0;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(50, 25, 17, 0.1);
+      overflow: hidden;
+    }
+
+    .search-input {
+      flex-grow: 1;
+      padding: 12px 15px;
+      border: none;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      color: var(--text-dark);
+    }
+
+    .search-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+
+    .search-btn {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      border: none;
+      padding: 0 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .search-btn:hover {
+      background-color: var(--primary-dark);
+    }
+
     .order-card {
       background: #fff;
       border-radius: 10px;
@@ -72,6 +117,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+
+    .order-header-left {
+      display: flex;
+      flex-direction: column;
     }
 
     .order-id {
@@ -99,6 +149,16 @@
       color: #E65100;
     }
 
+    .status-processing {
+      background-color: #E3F2FD;
+      color: #1565C0;
+    }
+
+    .status-shipped {
+      background-color: #E8F5E9;
+      color: #2E7D32;
+    }
+
     .status-delivered {
       background-color: #E8F5E9;
       color: #2E7D32;
@@ -107,6 +167,67 @@
     .status-cancelled {
       background-color: #FFEBEE;
       color: #C62828;
+    }
+
+    .status-returned {
+      background-color: #F3E5F5;
+      color: #6A1B9A;
+    }
+
+    .order-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 6px;
+      font-family: 'Montserrat', sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-detail {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      border: none;
+    }
+
+    .btn-detail:hover {
+      background-color: var(--primary-dark);
+      color: var(--text-light);
+    }
+
+    .btn-cancel {
+      background-color: #FFEBEE;
+      color: #C62828;
+      border: 1px solid #FFCDD2;
+    }
+
+    .btn-cancel:hover {
+      background-color: #FFCDD2;
+    }
+
+    .btn-return {
+      background-color: #F3E5F5;
+      color: #6A1B9A;
+      border: 1px solid #E1BEE7;
+    }
+
+    .btn-return:hover {
+      background-color: #E1BEE7;
+    }
+
+    .btn-invoice {
+      background-color: #E8F5E9;
+      color: #2E7D32;
+      border: 1px solid #C8E6C9;
+    }
+
+    .btn-invoice:hover {
+      background-color: #C8E6C9;
     }
 
     .order-content {
@@ -121,6 +242,7 @@
       border: 1px solid #e0d6d1;
       border-radius: 10px;
       background-color: #fff;
+      position: relative;
     }
 
     .product-item img {
@@ -145,6 +267,12 @@
     .product-price {
       font-weight: 600;
       color: var(--primary-color);
+    }
+
+    .product-actions {
+      position: absolute;
+      right: 15px;
+      top: 15px;
     }
 
     .order-summary {
@@ -212,6 +340,98 @@
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(62, 39, 35, 0.2);
     }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .page-item.active .page-link {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      color: var(--text-light);
+    }
+
+    .page-link {
+      color: var(--primary-color);
+      border: 1px solid var(--primary-light);
+      margin: 0 5px;
+      border-radius: 5px;
+      padding: 8px 15px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .page-link:hover {
+      color: var(--text-light);
+      background-color: var(--primary-light);
+      border-color: var(--primary-light);
+    }
+
+    .page-item.disabled .page-link {
+      color: var(--accent-dark);
+      background-color: var(--background-light);
+      border-color: var(--accent-dark);
+    }
+
+    .page-item:first-child .page-link,
+    .page-item:last-child .page-link {
+      border-radius: 5px;
+    }
+
+    /* Modal styles */
+    .modal-content {
+      border-radius: 15px;
+      border: none;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+      background-color: var(--primary-color);
+      color: var(--text-light);
+      border-radius: 15px 15px 0 0;
+      border-bottom: 3px solid var(--gold);
+    }
+
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+    }
+
+    .modal-body {
+      padding: 25px;
+    }
+
+    .modal-footer {
+      border-top: 1px solid #e0d6d1;
+      padding: 15px 25px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+      color: var(--primary-dark);
+    }
+
+    .form-control {
+      border: 1px solid #e0d6d1;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .form-control:focus {
+      border-color: var(--primary-light);
+      box-shadow: 0 0 0 0.2rem rgba(93, 64, 55, 0.25);
+    }
   </style>
 </head>
 <body>
@@ -219,66 +439,99 @@
 
   <div class="orders-container">
     <div class="orders-header">
-      <p class="section-subtitle">Your Purchase History</p>
-      <h2 class="section-title">My Orders</h2>
+      <div class="header-content">
+        <p class="section-subtitle">Your Purchase History</p>
+        <h2 class="section-title">My Orders</h2>
+      </div>
     </div>
+
+    <!-- Search Form -->
+    <form action="/orders/search" method="GET" class="search-container">
+      <input type="text" name="query" placeholder="Search by Order ID or Product" class="search-input" value="<%= searchQuery || '' %>">
+      <button type="submit" class="search-btn">
+        <i class="fas fa-search"></i>
+      </button>
+    </form>
 
     <% if (orders && orders.length > 0) { %>
       <% orders.forEach(order => { %>
-        <div class="order-card">
-          <div class="order-header">
-            <div>
-              <span class="order-id">Order #<%= order.orderId %></span>
-              <span class="order-date">Placed on <%= new Date(order.createdAt).toLocaleDateString() %></span>
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title mb-0">Order #<%= order._id %></h5>
+              <span class="badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' ? 'danger' : 'warning' %>">
+                <%= order.status %>
+              </span>
             </div>
-            <span class="order-status status-<%= order.status.toLowerCase() %>"><%= order.status %></span>
-          </div>
-          
-          <div class="order-content">
-            <% order.orderedItems.forEach(item => { %>
-              <div class="product-item">
-                <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
-                  <img src="/uploads/product-images/<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>">
-                <% } else { %>
-                  <img src="/images/default-product.jpg" alt="Product Image">
+            <div class="row">
+              <div class="col-md-6">
+                <p class="mb-1"><strong>Order Date:</strong> <%= new Date(order.createdAt).toLocaleDateString() %></p>
+                <p class="mb-1"><strong>Total Amount:</strong> ₹<%= order.totalPrice.toFixed(2) %></p>
+              </div>
+              <div class="col-md-6 text-md-end">
+                <a href="/user/orders/<%= order._id %>" class="btn btn-sm btn-primary">View Details</a>
+                <% if (['Processing', 'Pending'].includes(order.status)) { %>
+                  <button type="button" class="btn btn-sm btn-danger" onclick="showCancelOrderModal('<%= order._id %>')">
+                    <i class="fas fa-times"></i> Cancel Order
+                  </button>
                 <% } %>
-                <div class="product-info">
-                  <h6 class="product-name"><%= item.product.productName %></h6>
-                  <p class="text-muted mb-1">Quantity: <%= item.quantity %></p>
-                  <p class="product-price">₹<%= (item.price * item.quantity).toFixed(2) %></p>
-                </div>
-              </div>
-            <% }) %>
-
-            <div class="order-summary">
-              <div class="summary-line">
-                <span>Subtotal</span>
-                <span>₹<%= order.totalPrice.toFixed(2) %></span>
-              </div>
-              <div class="summary-line">
-                <span>Taxes</span>
-                <span>₹<%= (order.totalPrice * 0.18).toFixed(2) %></span>
-              </div>
-              <% if (order.discount > 0) { %>
-                <div class="summary-line">
-                  <span>Discount</span>
-                  <span>- ₹<%= order.discount.toFixed(2) %></span>
-                </div>
-              <% } %>
-              <div class="summary-total">
-                <span>Total</span>
-                <span>₹<%= order.finalAmount.toFixed(2) %></span>
               </div>
             </div>
           </div>
         </div>
       <% }) %>
+
+      <!-- Pagination -->
+      <% if (totalPages > 1) { %>
+        <div class="pagination">
+          <ul class="pagination">
+            <% if (currentPage > 1) { %>
+              <li class="page-item">
+                <a class="page-link" href="/user/orders?page=<%= currentPage - 1 %><%= searchQuery ? '&query=' + searchQuery : '' %>">
+                  <i class="fas fa-chevron-left"></i> Previous
+                </a>
+              </li>
+            <% } %>
+            
+            <% for(let i = 1; i <= totalPages; i++) { %>
+              <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+                <li class="page-item <%= currentPage == i ? 'active' : '' %>">
+                  <a class="page-link" href="/user/orders?page=<%= i %><%= searchQuery ? '&query=' + searchQuery : '' %>"><%= i %></a>
+                </li>
+              <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+                <li class="page-item disabled">
+                  <span class="page-link">...</span>
+                </li>
+              <% } %>
+            <% } %>
+            
+            <% if (currentPage < totalPages) { %>
+              <li class="page-item">
+                <a class="page-link" href="/user/orders?page=<%= currentPage + 1 %><%= searchQuery ? '&query=' + searchQuery : '' %>">
+                  Next <i class="fas fa-chevron-right"></i>
+                </a>
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      <% } %>
     <% } else { %>
       <div class="empty-orders">
         <div class="empty-orders-icon">
           <i class="fas fa-shopping-bag"></i>
         </div>
-        <h3 class="empty-orders-text">You haven't placed any orders yet</h3>
+        <h3 class="empty-orders-text">
+          <% if (searchQuery) { %>
+            No orders found matching your search
+          <% } else { %>
+            You haven't placed any orders yet
+          <% } %>
+        </h3>
+        <% if (searchQuery) { %>
+          <a href="/orders" class="btn btn-brown me-2">
+            <i class="fas fa-arrow-left"></i> Back to All Orders
+          </a>
+        <% } %>
         <a href="/shop" class="btn btn-brown">
           <i class="fas fa-shopping-bag"></i> Start Shopping
         </a>
@@ -286,7 +539,92 @@
     <% } %>
   </div>
 
+  <!-- Cancel Order Modal -->
+  <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cancelOrderModalLabel">Cancel Order</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="cancelOrderForm">
+            <input type="hidden" id="cancelOrderId" name="orderId">
+            <div class="mb-3">
+              <label for="cancelReason" class="form-label">Reason for Cancellation (Optional)</label>
+              <textarea class="form-control" id="cancelReason" name="reason" rows="3"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-danger" onclick="submitCancelOrder()">Cancel Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+  <script>
+  function showCancelOrderModal(orderId) {
+    document.getElementById('cancelOrderId').value = orderId;
+    new bootstrap.Modal(document.getElementById('cancelOrderModal')).show();
+  }
+
+  async function submitCancelOrder() {
+    const orderId = document.getElementById('cancelOrderId').value;
+    const reason = document.getElementById('cancelReason').value;
+    
+    try {
+      const response = await fetch(`/user/orders/${orderId}/cancel`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({ reason })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast('Order cancelled successfully', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        showToast(data.message || 'Error cancelling order', 'error');
+      }
+    } catch (error) {
+      console.error('Error cancelling order:', error);
+      showToast('Error cancelling order', 'error');
+    }
+    
+    bootstrap.Modal.getInstance(document.getElementById('cancelOrderModal')).hide();
+  }
+
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">
+          ${message}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    `;
+    
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    toast.addEventListener('hidden.bs.toast', () => {
+      document.body.removeChild(toast);
+    });
+  }
+  </script>
 </body>
-</html> 
+</html>

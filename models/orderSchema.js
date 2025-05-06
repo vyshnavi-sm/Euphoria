@@ -3,6 +3,11 @@ const {Schema} = mongoose;
 const {v4:uuidv4} = require("uuid");
 
 const orderSchema = new Schema({
+    userId: {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+        required: true
+    },
     orderId:{
         type: String,
         default: uuidv4,  // Remove the function call - just pass the function reference
@@ -21,7 +26,14 @@ const orderSchema = new Schema({
         price:{
             type: Number,
             default: 0
-        }
+        },
+        status: {
+            type: String,
+            enum: ["Processing", "Shipped", "Delivered", "Cancelled", "Returned"],
+            default: "Processing"
+        },
+        cancellationReason: String,
+        returnReason: String
     }],
     totalPrice:{
         type: Number,
@@ -68,7 +80,9 @@ const orderSchema = new Schema({
     paymentMethod: {
         type: String,
         required: true
-    }
+    },
+    cancellationReason: String,
+    returnReason: String
 });
 
 // Add a pre-save hook to ensure orderId is always set

@@ -1,0 +1,947 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+    /* Custom CSS for Orders Page */
+    :root {
+        --primary-brown: #8B4513;
+        --light-brown: #D2B48C;
+        --dark-brown: #654321;
+        --accent-brown: #A0522D;
+        --background-light: #F5F5DC;
+    }
+
+    .container-fluid {
+        background-color: var(--background-light);
+        min-height: 100vh;
+        padding: 2rem;
+    }
+    
+
+    .page-title {
+        color: var(--primary-brown);
+        font-weight: 600;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--light-brown);
+        margin-top: 10px;
+        margin-left: 250px;
+    }
+
+    .card {
+        border: none;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+        margin-top: 20px;
+        margin-left: 200px;
+    }
+
+    /* Search and Filter Section */
+    #searchForm {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid var(--light-brown);
+        border-radius: 5px;
+        padding: 0.75rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-brown);
+        box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+    }
+
+    .btn-primary {
+        background-color: var(--primary-brown);
+        border-color: var(--primary-brown);
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--dark-brown);
+        border-color: var(--dark-brown);
+    }
+
+    /* Table Styling */
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table thead th {
+        background-color: var(--primary-brown);
+        color: white;
+        font-weight: 500;
+        border: none;
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--light-brown);
+    }
+
+    .table tbody tr:hover {
+        background-color: rgba(210, 180, 140, 0.1);
+    }
+
+    /* Status Select Styling */
+    .status-select {
+        min-width: 150px;
+        background-color: white;
+    }
+
+    /* Action Buttons */
+    .btn-info {
+        background-color: var(--accent-brown);
+        border-color: var(--accent-brown);
+        color: white;
+    }
+
+    .btn-info:hover {
+        background-color: var(--dark-brown);
+        border-color: var(--dark-brown);
+        color: white;
+    }
+
+    .btn-warning {
+        background-color: var(--light-brown);
+        border-color: var(--light-brown);
+        color: var(--dark-brown);
+    }
+
+    .btn-warning:hover {
+        background-color: var(--accent-brown);
+        border-color: var(--accent-brown);
+        color: white;
+    }
+
+    /* Enhanced Pagination Styling */
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2rem;
+        padding: 1rem;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .pagination-info {
+        color: var(--dark-brown);
+        font-size: 0.9rem;
+    }
+
+    .pagination {
+        margin: 0;
+    }
+
+    .page-link {
+        color: var(--primary-brown);
+        border: 1px solid var(--light-brown);
+        padding: 0.5rem 1rem;
+        margin: 0 2px;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .page-item.active .page-link {
+        background-color: var(--primary-brown);
+        border-color: var(--primary-brown);
+        color: white;
+    }
+
+    .page-link:hover {
+        color: var(--dark-brown);
+        background-color: var(--light-brown);
+        border-color: var(--light-brown);
+    }
+
+    .page-item.disabled .page-link {
+        color: #6c757d;
+        pointer-events: none;
+        background-color: #fff;
+        border-color: #dee2e6;
+    }
+
+    .page-size-selector {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .page-size-selector select {
+        border: 1px solid var(--light-brown);
+        border-radius: 5px;
+        padding: 0.25rem 0.5rem;
+        color: var(--dark-brown);
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        border-radius: 10px;
+        border: none;
+    }
+
+    .modal-header {
+        background-color: var(--primary-brown);
+        color: white;
+        border-radius: 10px 10px 0 0;
+    }
+
+    .modal-title {
+        font-weight: 500;
+    }
+
+    .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    /* Order Details Styling */
+    .order-details-section {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .order-details-section h6 {
+        color: var(--primary-brown);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .order-details-section p {
+        margin-bottom: 0.5rem;
+    }
+
+    .order-details-section strong {
+        color: var(--dark-brown);
+    }
+
+    /* Return Request Modal */
+    #returnRequestForm .form-label {
+        color: var(--dark-brown);
+        font-weight: 500;
+    }
+
+    #returnRequestForm .form-control,
+    #returnRequestForm .form-select {
+        margin-bottom: 1rem;
+    }
+
+    /* Notifications */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 2000;
+    }
+    
+    .toast {
+        min-width: 250px;
+    }
+    
+    .toast-success {
+        background-color: var(--light-brown);
+        color: var(--dark-brown);
+    }
+    
+    .toast-error {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+</style>
+
+<div class="container-fluid px-4">
+    <h1 class="page-title">Order Management</h1>
+    
+    <!-- Toast notifications -->
+    <div class="toast-container"></div>
+    
+    <!-- Search and Filter Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="searchForm" class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search by Order ID, Customer Name or Phone">
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Out for Delivery">Out for Delivery</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Return Request">Return Request</option>
+                        <option value="Returned">Returned</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="sortBy">
+                        <option value="createdAt">Sort by Date</option>
+                        <option value="totalPrice">Sort by Amount</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <!-- Orders will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination section -->
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalRecords">0</span> orders
+                </div>
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center" id="pagination">
+                        <!-- Pagination will be populated here -->
+                    </ul>
+                </nav>
+                <div class="page-size-selector">
+                    <label for="pageSize">Show:</label>
+                    <select class="form-select form-select-sm" id="pageSize">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Details Modal -->
+<div class="modal fade" id="orderDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="orderDetailsContent">
+                <!-- Order details will be populated here -->
+            </div>
+            <div class="modal-footer" id="orderDetailsFooter">
+                <!-- Action buttons will be populated here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Return Request Modal -->
+<div class="modal fade" id="returnRequestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Handle Return Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="returnRequestForm">
+                    <div class="mb-3">
+                        <label class="form-label">Action</label>
+                        <select class="form-select" id="returnAction" required>
+                            <option value="accept">Accept Return</option>
+                            <option value="reject">Reject Return</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason</label>
+                        <textarea class="form-control" id="returnReason" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3" id="refundAmountSection" style="display: none;">
+                        <label class="form-label">Refund Amount (₹)</label>
+                        <input type="number" class="form-control" id="refundAmount" step="0.01" required>
+                        <small class="text-muted">This amount will be credited to the user's wallet</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables to track state
+let currentPage = 1;
+let currentOrderId = null;
+let pageSize = 10;
+let statusFilter = '';
+let searchQuery = '';
+let sortBy = 'createdAt';
+let isUpdating = false;
+
+// Function to show toast notifications
+function showToast(message, type = 'success') {
+    const toastContainer = document.querySelector('.toast-container');
+    const toast = document.createElement('div');
+    toast.classList.add('toast', 'show', `toast-${type}`);
+    toast.innerHTML = `
+        <div class="toast-header">
+            <strong class="me-auto">${type === 'success' ? 'Success' : 'Error'}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">${message}</div>
+    `;
+    toastContainer.appendChild(toast);
+    
+    // Auto-remove toast after 5 seconds
+    setTimeout(() => {
+        toast.remove();
+    }, 5000);
+    
+    // Add click listener to close button
+    toast.querySelector('.btn-close').addEventListener('click', () => {
+        toast.remove();
+    });
+}
+
+// Function to load orders
+async function loadOrders(page = 1) {
+    try {
+        // Update current page
+        currentPage = page;
+        
+        // Get filter values
+        searchQuery = document.getElementById('searchInput').value;
+        statusFilter = document.getElementById('statusFilter').value;
+        sortBy = document.getElementById('sortBy').value;
+        pageSize = document.getElementById('pageSize').value;
+        
+        // Show loading indicator
+        document.getElementById('ordersTableBody').innerHTML = '<tr><td colspan="6" class="text-center">Loading orders...</td></tr>';
+        
+        // Construct query parameters
+        const queryParams = new URLSearchParams({
+            page: page,
+            limit: pageSize,
+            search: searchQuery,
+            status: statusFilter,
+            sortBy: sortBy
+        });
+        
+        const response = await fetch(`/admin/api/orders?${queryParams.toString()}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to load orders');
+        }
+        
+        const data = await response.json();
+        
+        // Update pagination info
+        const startRecord = ((data.pagination.currentPage - 1) * data.pagination.limit) + 1;
+        const endRecord = Math.min(startRecord + data.pagination.limit - 1, data.pagination.totalOrders);
+        
+        document.getElementById('startRecord').textContent = data.pagination.totalOrders > 0 ? startRecord : 0;
+        document.getElementById('endRecord').textContent = endRecord;
+        document.getElementById('totalRecords').textContent = data.pagination.totalOrders;
+        
+        // Populate orders table
+        const tableBody = document.getElementById('ordersTableBody');
+        tableBody.innerHTML = '';
+        
+        if (!data.orders || data.orders.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No orders found</td></tr>';
+            return;
+        }
+        
+        data.orders.forEach(order => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${order._id}</td>
+                <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                <td>${order.userId ? order.userId.name : 'N/A'}<br><small>${order.userId ? order.userId.email : 'N/A'}</small></td>
+                <td>₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</td>
+                <td>
+                    <select class="form-select form-select-sm status-select" data-order-id="${order._id}">
+                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                        <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                        <option value="Out for Delivery" ${order.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
+                        <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        <option value="Return Request" ${order.status === 'Return Request' ? 'selected' : ''}>Return Request</option>
+                        <option value="Returned" ${order.status === 'Returned' ? 'selected' : ''}>Returned</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-info view-details" data-order-id="${order._id}">View</button>
+                    ${order.status === 'Return Request' ? 
+                        `<button class="btn btn-sm btn-warning handle-return" data-order-id="${order._id}">Handle Return</button>` : 
+                        ''}
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+        
+        // Update pagination
+        updatePagination(data.pagination);
+        
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        document.getElementById('ordersTableBody').innerHTML = 
+            '<tr><td colspan="6" class="text-center text-danger">Error loading orders. Please try again.</td></tr>';
+        showToast('Error loading orders. Please try again.', 'error');
+    }
+}
+
+// Function to update pagination
+function updatePagination(pagination) {
+    const paginationElement = document.getElementById('pagination');
+    paginationElement.innerHTML = '';
+    
+    // No pagination needed if there's only one page
+    if (pagination.totalPages <= 1) {
+        return;
+    }
+    
+    // Previous button
+    paginationElement.innerHTML += `
+        <li class="page-item ${!pagination.hasPrevPage ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${pagination.prevPage || 1}">Previous</a>
+        </li>
+    `;
+    
+    // Calculate range of page numbers to show
+    let startPage = Math.max(1, pagination.currentPage - 2);
+    let endPage = Math.min(pagination.totalPages, startPage + 4);
+    
+    if (endPage - startPage < 4) {
+        startPage = Math.max(1, endPage - 4);
+    }
+    
+    // First page
+    if (startPage > 1) {
+        paginationElement.innerHTML += `
+            <li class="page-item">
+                <a class="page-link" href="#" data-page="1">1</a>
+            </li>
+        `;
+        if (startPage > 2) {
+            paginationElement.innerHTML += `
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            `;
+        }
+    }
+    
+    // Page numbers
+    for (let i = startPage; i <= endPage; i++) {
+        paginationElement.innerHTML += `
+            <li class="page-item ${pagination.currentPage === i ? 'active' : ''}">
+                <a class="page-link" href="#" data-page="${i}">${i}</a>
+            </li>
+        `;
+    }
+    
+    // Last page
+    if (endPage < pagination.totalPages) {
+        if (endPage < pagination.totalPages - 1) {
+            paginationElement.innerHTML += `
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+            `;
+        }
+        paginationElement.innerHTML += `
+            <li class="page-item">
+                <a class="page-link" href="#" data-page="${pagination.totalPages}">${pagination.totalPages}</a>
+            </li>
+        `;
+    }
+    
+    // Next button
+    paginationElement.innerHTML += `
+        <li class="page-item ${!pagination.hasNextPage ? 'disabled' : ''}">
+            <a class="page-link" href="#" data-page="${pagination.nextPage || pagination.totalPages}">Next</a>
+        </li>
+    `;
+}
+
+// Function to update order status
+async function updateOrderStatus(orderId, newStatus) {
+    if (isUpdating) return; // Prevent concurrent updates
+    
+    isUpdating = true;
+    
+    try {
+        const response = await fetch(`/admin/api/orders/${orderId}/status`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update status');
+        }
+        
+        // Show success notification
+        showToast('Order status updated successfully');
+        
+        // Refresh the current page
+        await loadOrders(currentPage);
+        
+    } catch (error) {
+        console.error('Error updating status:', error);
+        showToast(error.message || 'Error updating order status', 'error');
+        
+        // Reload to reset any invalid states
+        await loadOrders(currentPage);
+    } finally {
+        isUpdating = false;
+    }
+}
+
+// Function to handle return request
+async function handleReturnRequest(orderId, action) {
+    if (isUpdating) return;
+    
+    isUpdating = true;
+    
+    try {
+        // Show the return request modal
+        const modal = new bootstrap.Modal(document.getElementById('returnRequestModal'));
+        currentOrderId = orderId;
+        
+        // Set default values
+        document.getElementById('returnAction').value = action;
+        document.getElementById('returnReason').value = '';
+        
+        // Show/hide refund amount section based on action
+        const refundSection = document.getElementById('refundAmountSection');
+        const refundInput = document.getElementById('refundAmount');
+        
+        if (action === 'accept') {
+            refundSection.style.display = 'block';
+            // Fetch order details to set default refund amount
+            const response = await fetch(`/admin/api/orders/${orderId}`);
+            if (response.ok) {
+                const order = await response.json();
+                refundInput.value = order.totalPrice || 0;
+            }
+        } else {
+            refundSection.style.display = 'none';
+            refundInput.value = '';
+        }
+        
+        modal.show();
+        
+    } catch (error) {
+        console.error('Error preparing return request:', error);
+        showToast('Error preparing return request. Please try again.', 'error');
+    } finally {
+        isUpdating = false;
+    }
+}
+
+// Function to load order details
+async function loadOrderDetails(orderId) {
+    try {
+        const response = await fetch(`/admin/api/orders/${orderId}`);
+        if (!response.ok) {
+            throw new Error('Failed to load order details');
+        }
+        
+        const order = await response.json();
+        
+        const modalContent = document.getElementById('orderDetailsContent');
+        const modalFooter = document.getElementById('orderDetailsFooter');
+        
+        modalContent.innerHTML = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Order Information</h6>
+                    <p><strong>Order ID:</strong> ${order._id}</p>
+                    <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                    <p><strong>Status:</strong> ${order.status}</p>
+                    <p><strong>Total Amount:</strong> ₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</p>
+                </div>
+                <div class="col-md-6">
+                    <h6>Customer Information</h6>
+                    <p><strong>Name:</strong> ${order.userId ? order.userId.name : 'N/A'}</p>
+                    <p><strong>Email:</strong> ${order.userId ? order.userId.email : 'N/A'}</p>
+                    <p><strong>Phone:</strong> ${order.userId ? order.userId.phone : 'N/A'}</p>
+                </div>
+            </div>
+            <hr>
+            <h6>Order Items</h6>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${order.orderedItems && order.orderedItems.map(item => `
+                            <tr>
+                                <td>${item.product ? item.product.productName : 'Product not found'}</td>
+                                <td>${item.quantity || 0}</td>
+                                <td>₹${item.price ? item.price.toFixed(2) : '0.00'}</td>
+                                <td>₹${(item.price * item.quantity).toFixed(2)}</td>
+                            </tr>
+                        `).join('') || '<tr><td colspan="4" class="text-center">No items found</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+            <hr>
+            <h6>Shipping Address</h6>
+            <p>
+                ${order.addressDetails ? `
+                    ${order.addressDetails.name}<br>
+                    ${order.addressDetails.address}<br>
+                    ${order.addressDetails.city}, ${order.addressDetails.state} - ${order.addressDetails.pincode}<br>
+                    Phone: ${order.addressDetails.phone}
+                ` : 'No address details available'}
+            </p>
+            ${order.status === 'Return Request' ? `
+                <hr>
+                <h6>Return Request Details</h6>
+                <p><strong>Reason:</strong> ${order.returnReason || 'Not specified'}</p>
+                <p><strong>Requested On:</strong> ${new Date(order.returnRequestDate).toLocaleString()}</p>
+            ` : ''}
+            ${order.status === 'Cancelled' ? `
+                <hr>
+                <h6>Cancellation</h6>
+                <p><strong>Reason:</strong> ${order.cancellationReason || 'Not specified'}</p>
+            ` : ''}
+        `;
+
+        // Update footer based on order status
+        modalFooter.innerHTML = '';
+        if (order.status === 'Return Request') {
+            modalFooter.innerHTML = `
+                <button type="button" class="btn btn-success" onclick="handleReturnRequest('${order._id}', 'accept')">
+                    Accept Return
+                </button>
+                <button type="button" class="btn btn-danger" onclick="handleReturnRequest('${order._id}', 'reject')">
+                    Reject Return
+                </button>
+            `;
+        } else if (order.status === 'Processing' || order.status === 'Pending') {
+            modalFooter.innerHTML = `
+                <button type="button" class="btn btn-primary" onclick="updateOrderStatus('${order._id}', 'Shipped')">
+                    Mark as Shipped
+                </button>
+            `;
+        } else if (order.status === 'Shipped') {
+            modalFooter.innerHTML = `
+                <button type="button" class="btn btn-primary" onclick="updateOrderStatus('${order._id}', 'Out for Delivery')">
+                    Mark as Out for Delivery
+                </button>
+            `;
+        } else if (order.status === 'Out for Delivery') {
+            modalFooter.innerHTML = `
+                <button type="button" class="btn btn-success" onclick="updateOrderStatus('${order._id}', 'Delivered')">
+                    Mark as Delivered
+                </button>
+            `;
+        }
+        
+        new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+    } catch (error) {
+        console.error('Error loading order details:', error);
+        showToast('Error loading order details. Please try again.', 'error');
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', () => {
+    // Load initial page
+    loadOrders();
+    
+    // Get initial values from URL if present
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('page')) {
+        currentPage = parseInt(urlParams.get('page'));
+    }
+    if (urlParams.has('status')) {
+        statusFilter = urlParams.get('status');
+        document.getElementById('statusFilter').value = statusFilter;
+    }
+    if (urlParams.has('search')) {
+        searchQuery = urlParams.get('search');
+        document.getElementById('searchInput').value = searchQuery;
+    }
+    if (urlParams.has('sortBy')) {
+        sortBy = urlParams.get('sortBy');
+        document.getElementById('sortBy').value = sortBy;
+    }
+    if (urlParams.has('limit')) {
+        pageSize = urlParams.get('limit');
+        document.getElementById('pageSize').value = pageSize;
+    }
+    
+    // Update URL with current filters
+    function updateURL() {
+        const url = new URL(window.location);
+        url.searchParams.set('page', currentPage);
+        url.searchParams.set('status', statusFilter);
+        url.searchParams.set('search', searchQuery);
+        url.searchParams.set('sortBy', sortBy);
+        url.searchParams.set('limit', pageSize);
+        window.history.replaceState({}, '', url);
+    }
+    
+    // Add event listener for search form
+    document.getElementById('searchForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        loadOrders(1); // Reset to first page on new search
+    });
+    
+    // Add event listener for status filter change
+    document.getElementById('statusFilter').addEventListener('change', () => {
+        loadOrders(1); // Reset to first page on filter change
+    });
+    
+    // Add event listener for sort by change
+    document.getElementById('sortBy').addEventListener('change', () => {
+        loadOrders(1);
+    });
+    
+    // Add event listener for page size change
+    document.getElementById('pageSize').addEventListener('change', () => {
+        loadOrders(1); // Reset to first page when changing page size
+    });
+    
+    // Add event listener for pagination
+    document.getElementById('pagination').addEventListener('click', (e) => {
+        e.preventDefault();
+        if (e.target.classList.contains('page-link') && !e.target.parentElement.classList.contains('disabled')) {
+            const page = parseInt(e.target.dataset.page);
+            if (!isNaN(page)) {
+                loadOrders(page);
+            }
+        }
+    });
+    
+    // Add event listener for status change
+    document.getElementById('ordersTableBody').addEventListener('change', (e) => {
+        if (e.target.classList.contains('status-select')) {
+            const orderId = e.target.dataset.orderId;
+            const newStatus = e.target.value;
+            updateOrderStatus(orderId, newStatus);
+        }
+    });
+    
+    // Add event listener for view details button
+    document.getElementById('ordersTableBody').addEventListener('click', (e) => {
+        if (e.target.classList.contains('view-details')) {
+            const orderId = e.target.dataset.orderId;
+            loadOrderDetails(orderId);
+        }
+        
+        // Handle return request button
+        if (e.target.classList.contains('handle-return')) {
+            currentOrderId = e.target.dataset.orderId;
+            document.getElementById('returnReason').value = '';
+            document.getElementById('returnAction').value = 'accept';
+            new bootstrap.Modal(document.getElementById('returnRequestModal')).show();
+        }
+    });
+    
+    // Add event listener for return request form
+    document.getElementById('returnRequestForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const action = document.getElementById('returnAction').value;
+        const reason = document.getElementById('returnReason').value;
+        const refundAmount = document.getElementById('refundAmount').value;
+        
+        if (!reason.trim()) {
+            showToast('Please provide a reason', 'error');
+            return;
+        }
+        
+        if (action === 'accept' && (!refundAmount || refundAmount <= 0)) {
+            showToast('Please enter a valid refund amount', 'error');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/admin/api/orders/${currentOrderId}/return`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    action, 
+                    reason,
+                    refundAmount: action === 'accept' ? parseFloat(refundAmount) : 0
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to process return request');
+            }
+            
+            // Close modal and show success message
+            bootstrap.Modal.getInstance(document.getElementById('returnRequestModal')).hide();
+            showToast('Return request processed successfully');
+            
+            // Refresh the current page
+            await loadOrders(currentPage);
+            
+        } catch (error) {
+            console.error('Error processing return request:', error);
+            showToast(error.message || 'Error processing return request', 'error');
+        }
+    });
+    
+    // Update URL when page loads
+    updateURL();
+});
+</script>
+
+<%- include("../../views/partials/admin/footer") %>
+
+<!-- Add this just before the closing body tag -->
+<div class="toast-container" style="position: fixed; top: 20px; right: 20px; z-index: 9999;"></div>

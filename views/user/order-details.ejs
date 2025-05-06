@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - Euphoria</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #5D4037;
+            --primary-light: #8B6B61;
+            --primary-dark: #321911;
+            --accent-color: #D7CCC8;
+            --accent-dark: #A1887F;
+            --text-light: #F5F5F5;
+            --text-dark: #3E2723;
+            --background-light: #EFEBE9;
+            --gold: #D4AF37;
+        }
+
+        body {
+            background-color: var(--background-light);
+            font-family: 'Cormorant Garamond', serif;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .order-details-container {
+            max-width: 1200px;
+            margin: 80px auto 50px;
+            padding: 0 20px;
+        }
+
+        .order-header {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            padding: 20px 30px;
+            border-radius: 15px 15px 0 0;
+            margin-bottom: 20px;
+        }
+
+        .order-header h2 {
+            font-family: 'Playfair Display', serif;
+            margin-bottom: 10px;
+        }
+
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .order-status {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 14px;
+        }
+
+        .status-pending {
+            background-color: #FFF3E0;
+            color: #E65100;
+        }
+
+        .status-processing {
+            background-color: #E3F2FD;
+            color: #1565C0;
+        }
+
+        .status-shipped {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .status-delivered {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .status-cancelled {
+            background-color: #FFEBEE;
+            color: #C62828;
+        }
+
+        .status-returned {
+            background-color: #F3E5F5;
+            color: #6A1B9A;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(50, 25, 17, 0.1);
+            margin-bottom: 20px;
+            border: none;
+        }
+
+        .card-header {
+            background-color: var(--primary-light);
+            color: var(--text-light);
+            border-radius: 10px 10px 0 0;
+            padding: 15px 20px;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .product-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #e8d9c5;
+        }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 20px;
+            border: 1px solid #e8d9c5;
+        }
+
+        .product-info {
+            flex-grow: 1;
+        }
+
+        .product-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .product-price {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .order-summary {
+            background-color: var(--background-light);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .summary-total {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #e8d9c5;
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 20px;
+        }
+
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 2px;
+            height: 100%;
+            background-color: var(--primary-light);
+        }
+
+        .timeline-item:after {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+        }
+
+        .timeline-date {
+            font-weight: 500;
+            color: var(--primary-dark);
+        }
+
+        .timeline-content {
+            margin-top: 5px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        .btn-danger {
+            background-color: #FFEBEE;
+            border-color: #FFCDD2;
+            color: #C62828;
+        }
+
+        .btn-danger:hover {
+            background-color: #FFCDD2;
+        }
+
+        .btn-warning {
+            background-color: #F3E5F5;
+            border-color: #E1BEE7;
+            color: #6A1B9A;
+        }
+
+        .btn-warning:hover {
+            background-color: #E1BEE7;
+        }
+    </style>
+</head>
+<body>
+    <%- include("../../views/partials/user/header") %>
+
+    <div class="order-details-container">
+        <div class="order-header">
+            <h2>Order Details</h2>
+            <div class="order-info">
+                <div>
+                    <p><strong>Order ID:</strong> <%= order.orderId %></p>
+                    <p><strong>Order Date:</strong> <%= new Date(order.createdOn).toLocaleDateString() %></p>
+                    <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+                </div>
+                <div>
+                    <p><strong>Status:</strong> <span class="order-status status-<%= order.status.toLowerCase() %>"><%= order.status %></span></p>
+                    <% if (order.status === 'Delivered') { %>
+                        <p><strong>Delivered On:</strong> <%= new Date(order.updatedAt).toLocaleDateString() %></p>
+                    <% } else if (order.status === 'Shipped') { %>
+                        <p><strong>Estimated Delivery:</strong> <%= new Date(new Date(order.updatedAt).setDate(new Date(order.updatedAt).getDate() + 3)).toLocaleDateString() %></p>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Ordered Items</h5>
+                    </div>
+                    <div class="card-body">
+                        <% order.orderedItems.forEach(item => { %>
+                            <div class="product-item">
+                                <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
+                                    <img src="/uploads/product-images/<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" class="product-image">
+                                <% } else { %>
+                                    <img src="/images/default-product.jpg" alt="Product Image" class="product-image">
+                                <% } %>
+                                <div class="product-info">
+                                    <h6 class="product-name">
+                                        <%= item.product.productName %>
+                                        <% if (item.status === 'Cancelled') { %>
+                                            <span class="order-status status-cancelled ms-2">Cancelled</span>
+                                        <% } %>
+                                    </h6>
+                                    <p class="text-muted mb-1">Quantity: <%= item.quantity %></p>
+                                    <p class="product-price">₹<%= item.status === 'Cancelled' ? '0.00' : (item.price * item.quantity).toFixed(2) %></p>
+                                    <% if (item.status === 'Cancelled' && item.cancellationReason) { %>
+                                        <p class="text-muted fst-italic small">Reason: <%= item.cancellationReason %></p>
+                                    <% } %>
+                                </div>
+                                <% if (item.status !== 'Cancelled' && ['Processing', 'Pending'].includes(order.status)) { %>
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="showCancelItemModal('<%= order._id %>', '<%= item._id %>')">
+                                        <i class="fas fa-times"></i> Cancel Item
+                                    </button>
+                                <% } %>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Order Timeline</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-date"><%= new Date(order.createdOn).toLocaleDateString() %></div>
+                                <div class="timeline-content">Order Placed</div>
+                            </div>
+                            <% if (order.status !== 'Pending') { %>
+                                <div class="timeline-item">
+                                    <div class="timeline-date"><%= new Date(order.updatedAt).toLocaleDateString() %></div>
+                                    <div class="timeline-content">Order <%= order.status %></div>
+                                </div>
+                            <% } %>
+                            <% if (order.status === 'Delivered') { %>
+                                <div class="timeline-item">
+                                    <div class="timeline-date"><%= new Date(order.updatedAt).toLocaleDateString() %></div>
+                                    <div class="timeline-content">Order Delivered</div>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Order Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="order-summary">
+                            <div class="summary-line">
+                                <span>Subtotal:</span>
+                                <span>₹<%= order.totalPrice.toFixed(2) %></span>
+                            </div>
+                            <div class="summary-line">
+                                <span>Tax (18%):</span>
+                                <span>₹<%= (order.totalPrice * 0.18).toFixed(2) %></span>
+                            </div>
+                            <% if (order.discount > 0) { %>
+                                <div class="summary-line">
+                                    <span>Discount:</span>
+                                    <span>-₹<%= order.discount.toFixed(2) %></span>
+                                </div>
+                            <% } %>
+                            <div class="summary-line summary-total">
+                                <span>Total:</span>
+                                <span>₹<%= order.finalAmount.toFixed(2) %></span>
+                            </div>
+                        </div>
+
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5 class="mb-0">Shipping Address</h5>
+                            </div>
+                            <div class="card-body">
+                                <address>
+                                    <strong><%= order.addressDetails.name %></strong><br>
+                                    <%= order.addressDetails.address %><br>
+                                    <%= order.addressDetails.city %>, <%= order.addressDetails.state %> <%= order.addressDetails.pincode %><br>
+                                    Phone: <%= order.addressDetails.phone %>
+                                </address>
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <% if (order.status === 'Delivered') { %>
+                                <button type="button" class="btn btn-warning" onclick="showReturnOrderModal('<%= order._id %>')">
+                                    <i class="fas fa-undo"></i> Return Order
+                                </button>
+                            <% } else if (['Processing', 'Pending'].includes(order.status)) { %>
+                                <button type="button" class="btn btn-danger" onclick="showCancelOrderModal('<%= order._id %>')">
+                                    <i class="fas fa-times"></i> Cancel Order
+                                </button>
+                            <% } %>
+                            <a href="/user/orders/<%= order._id %>/invoice" class="btn btn-primary">
+                                <i class="fas fa-file-invoice"></i> Download Invoice
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Order Modal -->
+    <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelOrderModalLabel">Cancel Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="cancelOrderForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="cancelReason" class="form-label">Reason for Cancellation <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="cancelReason" name="reason" rows="3" required></textarea>
+                            <div class="invalid-feedback">Please provide a reason for cancellation.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Cancel Order</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Return Order Modal -->
+    <div class="modal fade" id="returnOrderModal" tabindex="-1" aria-labelledby="returnOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnOrderModalLabel">Return Order</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="returnOrderForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="returnReason" class="form-label">Reason for Return (Required)</label>
+                            <textarea class="form-control" id="returnReason" name="reason" rows="3" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-warning">Submit Return</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Item Modal -->
+    <div class="modal fade" id="cancelItemModal" tabindex="-1" aria-labelledby="cancelItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelItemModalLabel">Cancel Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="cancelItemForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="cancelItemReason" class="form-label">Reason for Cancellation <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="cancelItemReason" name="reason" rows="3" required></textarea>
+                            <div class="invalid-feedback">Please provide a reason for cancellation.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-danger">Cancel Item</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showCancelOrderModal(orderId) {
+            const modal = new bootstrap.Modal(document.getElementById('cancelOrderModal'));
+            const form = document.getElementById('cancelOrderForm');
+            form.action = `/user/orders/${orderId}/cancel`;
+            modal.show();
+        }
+
+        function showReturnOrderModal(orderId) {
+            const modal = new bootstrap.Modal(document.getElementById('returnOrderModal'));
+            const form = document.getElementById('returnOrderForm');
+            form.action = `/user/orders/${orderId}/return`;
+            modal.show();
+        }
+
+        function showCancelItemModal(orderId, itemId) {
+            const modal = new bootstrap.Modal(document.getElementById('cancelItemModal'));
+            const form = document.getElementById('cancelItemForm');
+            form.action = `/user/orders/${orderId}/items/${itemId}/cancel`;
+            modal.show();
+        }
+
+        // Handle cancel order form submission via AJAX
+        document.getElementById('cancelOrderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const action = form.action;
+            const reason = document.getElementById('cancelReason').value.trim();
+            
+            if (!reason) {
+                showToast('Please provide a reason for cancellation', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(action, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Order cancelled successfully', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showToast(data.message || 'Error cancelling order', 'error');
+                }
+            } catch (error) {
+                showToast('Error cancelling order', 'error');
+            }
+            bootstrap.Modal.getInstance(document.getElementById('cancelOrderModal')).hide();
+        });
+
+        // Handle return order form submission via AJAX
+        document.getElementById('returnOrderForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const action = form.action;
+            const reason = document.getElementById('returnReason').value.trim();
+            if (!reason) {
+                showToast('Please provide a reason for return', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(action, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Return request submitted successfully', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showToast(data.message || 'Error submitting return request', 'error');
+                }
+            } catch (error) {
+                showToast('Error submitting return request', 'error');
+            }
+            bootstrap.Modal.getInstance(document.getElementById('returnOrderModal')).hide();
+        });
+
+      // Handle cancel item form submission via AJAX
+      document.getElementById('cancelItemForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const action = form.action;
+    const reason = document.getElementById('cancelItemReason').value.trim();
+    
+    if (!reason) {
+        showToast('Please provide a reason for cancellation', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            // Update the order totals in the UI
+            if (data.updatedOrder) {
+                // Update the cancelled item display
+                if (data.updatedOrder.itemId) {
+                    // Find all product items
+                    const productItems = document.querySelectorAll('.product-item');
+                    
+                    // Loop through them to find the cancelled item
+                    productItems.forEach(item => {
+                        // Check if this item contains the cancel button with the correct item ID
+                        const cancelButton = item.querySelector(`button[onclick*="${data.updatedOrder.itemId}"]`);
+                        if (cancelButton) {
+                            // Update the price display to 0.00
+                            const priceElement = item.querySelector('.product-price');
+                            if (priceElement) {
+                                priceElement.textContent = '₹0.00';
+                            }
+                            
+                            // Remove the cancel button since the item is now cancelled
+                            cancelButton.remove();
+                            
+                            // Add a cancelled label to the product name
+                            const productNameElement = item.querySelector('.product-name');
+                            if (productNameElement) {
+                                // Check if status label already exists to avoid duplicates
+                                if (!productNameElement.querySelector('.status-cancelled')) {
+                                    const statusLabel = document.createElement('span');
+                                    statusLabel.className = 'order-status status-cancelled ms-2';
+                                    statusLabel.textContent = 'Cancelled';
+                                    productNameElement.appendChild(statusLabel);
+                                }
+                            }
+                            
+                            // Add reason text if applicable
+                            const productInfo = item.querySelector('.product-info');
+                            if (productInfo && reason) {
+                                // Check if reason text already exists
+                                let reasonElement = productInfo.querySelector('.fst-italic');
+                                if (!reasonElement) {
+                                    reasonElement = document.createElement('p');
+                                    reasonElement.className = 'text-muted fst-italic small';
+                                    reasonElement.textContent = `Reason: ${reason}`;
+                                    productInfo.appendChild(reasonElement);
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                // Update subtotal - use the value from the server response
+                const subtotalElement = document.querySelector('.summary-line:first-child span:last-child');
+                if (subtotalElement) {
+                    subtotalElement.textContent = `₹${data.updatedOrder.totalPrice.toFixed(2)}`;
+                }
+
+                // Update tax - use the value from the server response
+                const taxElement = document.querySelector('.summary-line:nth-child(2) span:last-child');
+                if (taxElement) {
+                    taxElement.textContent = `₹${data.updatedOrder.tax.toFixed(2)}`;
+                }
+
+                // Update total - use the value from the server response
+                const totalElement = document.querySelector('.summary-total span:last-child');
+                if (totalElement) {
+                    totalElement.textContent = `₹${data.updatedOrder.finalAmount.toFixed(2)}`;
+                }
+                
+                // Check if all items are cancelled, and if so, disable the "Cancel Order" button
+                const allItemsCancelled = Array.from(document.querySelectorAll('.product-item')).every(item => 
+                    item.querySelector('.status-cancelled') || !item.querySelector('button[onclick*="showCancelItemModal"]')
+                );
+                
+                if (allItemsCancelled) {
+                    const cancelOrderButton = document.querySelector('button[onclick*="showCancelOrderModal"]');
+                    if (cancelOrderButton) {
+                        cancelOrderButton.disabled = true;
+                        cancelOrderButton.title = "All items are already cancelled";
+                    }
+                }
+            }
+
+            showToast('Item cancelled successfully', 'success');
+        } else {
+            showToast(data.message || 'Error cancelling item', 'error');
+        }
+    } catch (error) {
+        console.error('Error cancelling item:', error);
+        showToast('Error cancelling item', 'error');
+    }
+    
+    bootstrap.Modal.getInstance(document.getElementById('cancelItemModal')).hide();
+});
+
+        // Toast function
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            toast.style.position = 'fixed';
+            toast.style.bottom = '20px';
+            toast.style.right = '20px';
+            toast.innerHTML = `
+              <div class="d-flex">
+                <div class="toast-body">
+                  ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+              </div>
+            `;
+            document.body.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            toast.addEventListener('hidden.bs.toast', () => {
+              document.body.removeChild(toast);
+            });
+        }
+    </script>
+</body>
+</html> 

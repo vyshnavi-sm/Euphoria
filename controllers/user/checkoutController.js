@@ -51,13 +51,13 @@ const getCheckoutPage = async (req, res) => {
             total,
             user: userData,
             addresses: addressData ? addressData.address : []
-        });
-        
-    } catch (error) {
+            });
+      } catch (error) {
         console.error('Error loading checkout page:', error);
         res.status(500).render('error', { message: 'Internal server error' });
     }
 };
+
 const placeOrder = async (req, res) => {
     try {
         const userId = req.session.user;
@@ -73,20 +73,53 @@ const placeOrder = async (req, res) => {
             return res.json({ success: false, message: 'Your cart is empty.' });
         }
 
-        // 2. Prepare order items
+        // 2. Check product availability and reduce quantities
+        for (const item of cart.items) {
+            const product = item.productId;
+            
+            // Check if product exists and is available
+            if (!product) {
+                return res.json({ success: false, message: `Product ${item.productId} not found` });
+            }
+
+            // Check if product is in stock
+            if (product.quantity <= 0) {
+                return res.json({ success: false, message: `Product ${product.productName} is out of stock` });
+            }
+
+            // Check if requested quantity is available
+            if (item.quantity > product.quantity) {
+                return res.json({ 
+                    success: false, 
+                    message: `Only ${product.quantity} units of ${product.productName} are available` 
+                });
+            }
+
+            // Reduce product quantity
+            product.quantity -= item.quantity;
+            
+            // Update product status if it becomes out of stock
+            if (product.quantity === 0) {
+                product.status = 'out of stock';
+            }
+            
+            await product.save();
+        }
+
+        // 3. Prepare order items
         const orderedItems = cart.items.map(item => ({
             product: item.productId._id,
             quantity: item.quantity,
             price: item.productId.price
         }));
 
-        // 3. Calculate totals
+        // 4. Calculate totals
         const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
         const taxes = Math.round(subtotal * 0.18);
         const discount = 0;
         const total = subtotal + taxes - discount;
 
-        // 4. Create the order - using the schema fields correctly
+        // 5. Create the order
         const order = await Order.create({
             userId,
             orderedItems,
@@ -103,18 +136,15 @@ const placeOrder = async (req, res) => {
             discount,
             totalPrice: subtotal,
             finalAmount: total,
-            status: 'Processing', // Using valid enum from schema
+            status: 'Processing',
             createdOn: new Date()
         });
 
-        console.log('Order created with ID:', order._id);
-        console.log('Order details:', JSON.stringify(order, null, 2));
-
-        // 5. Clear the user's cart
+        // 6. Clear the user's cart
         cart.items = [];
         await cart.save();
 
-        // 6. Respond with the MongoDB _id (which is what we're actually using in routes)
+        // 7. Respond with success
         res.json({ 
             success: true, 
             orderId: order._id,
@@ -192,32 +222,9 @@ const getOrderSuccess = async (req, res) => {
         res.redirect('/user/orders');
     }
 };
-const getOrders = async (req, res) => {
-    try {
-        const userId = req.session.user;
-
-        if (!userId) {
-            return res.redirect('/login');
-        }
-
-        // Get all orders for the user
-        const orders = await Order.find({ userId })
-            .populate('orderedItems.product')
-            .sort({ createdAt: -1 });
-
-        res.render('user/orders', { 
-            orders
-        });
-
-    } catch (error) {
-        console.error('Error loading orders page:', error);
-        res.status(500).send('Error loading orders');
-    }
-};
 
 module.exports = {
     getCheckoutPage,
     placeOrder,
-    getOrderSuccess,
-    getOrders
+    getOrderSuccess
 };

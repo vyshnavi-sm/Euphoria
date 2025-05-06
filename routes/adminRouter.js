@@ -6,6 +6,7 @@ const{userAuth,adminAuth} = require("../middlewares/auth")
 const categoryController = require("../controllers/admin/categoryController");
 const brandController = require("../controllers/admin/brandController")
 const productController = require("../controllers/admin/productController");
+const orderController = require("../controllers/admin/orderController");
 const multer = require("multer");
 const uploads = require('../helpers/multer');
 
@@ -53,6 +54,11 @@ router.get("/editProduct",adminAuth,productController.getEditProduct);
 router.post("/editProduct/:id",adminAuth,uploads.array("images",4),productController.editProduct);
 router.post("/deleteImage",adminAuth,productController.deleteSingleImage);
 
-
+// Order Management
+router.get("/orders", adminAuth, orderController.loadOrdersPage);
+router.get("/api/orders", adminAuth, orderController.getAllOrders);
+router.get("/api/orders/:orderId", adminAuth, orderController.getOrderDetails);
+router.patch("/api/orders/:orderId/status", adminAuth, orderController.updateOrderStatus);
+router.post("/api/orders/:orderId/return", adminAuth, orderController.handleReturnRequest);
 
 module.exports = router;

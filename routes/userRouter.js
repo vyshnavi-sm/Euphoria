@@ -8,6 +8,9 @@ const productController = require("../controllers/user/productController")
 const cartController = require("../controllers/user/cartController")
 const wishlistController = require("../controllers/user/wishlistController")
 const checkoutController = require("../controllers/user/checkoutController");
+const orderController = require("../controllers/user/orderController")
+
+
 
 router.get("/pageNotFound",userController.pageNotFound);
 router.get("/",userController.loadHomepage)
@@ -52,7 +55,7 @@ router.get("/reset-password",profileController.getResetPassPage);
 router.post("/reset-password",profileController.postNewPassword);
 router.post("/resend-forgot-otp",profileController.resendOtp);
 router.post("/resend-change-email-otp",profileController.resendOtp);
-router.get("/userProfile",userAuth,profileController.userProfile);
+router.get("/userProfile", userAuth, profileController.userProfile);
 router.get("/change-email",profileController.changeEmail )
 router.post("/change-email",profileController.changeEmailValid)
 router.post("/verify-email-otp",profileController.verifyEmailOtp)
@@ -86,14 +89,15 @@ router.get("/user/wishlist/status/:productId", userAuth, wishlistController.getW
 
 // Checkout Routes
 router.get("/user/checkout", userAuth, checkoutController.getCheckoutPage);
-
-// Order Placement Route (POST)
 router.post("/user/place-order", userAuth, checkoutController.placeOrder);
-
-// Order Success Page (GET)
 router.get("/user/order-success/:orderId", userAuth, checkoutController.getOrderSuccess);
 
-// View All Orders (optional)
-router.get("/user/orders", userAuth, checkoutController.getOrders);
+// Order Routes
+router.get("/user/orders", userAuth, orderController.getUserOrders);
+router.get("/user/orders/:id", userAuth, orderController.getOrderDetails);
+router.post("/user/orders/:orderId/cancel", userAuth, orderController.cancelOrder);
+router.post("/user/orders/:orderId/return", userAuth, orderController.returnOrder);
+router.post("/user/orders/:orderId/items/:itemId/cancel", userAuth, orderController.cancelItem);
+router.get("/user/orders/:orderId/invoice", userAuth, orderController.downloadInvoice);
 
 module.exports=router;

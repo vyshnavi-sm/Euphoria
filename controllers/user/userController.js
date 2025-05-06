@@ -115,30 +115,47 @@ const pageNotFound = async(req,res) => {
 const loadHomepage = async (req, res) => {
     try {
         const categories = await Category.find({ isListed: true })
-            .sort({ createdAt: -1 }) // Sort categories by creation date
-            .limit(5); // Limit to 5 categories
+            .sort({ createdAt: -1 })
+            .limit(5);
+
+        // Fetch the latest product for each category
+        const categoryImages = {};
+        for (const category of categories) {
+            const latestProduct = await Product.findOne({
+                category: category._id,
+                isBlocked: false,
+                quantity: { $gt: 0 }
+            })
+            .sort({ createdAt: -1 });
+            if (latestProduct && latestProduct.productImage && latestProduct.productImage.length > 0) {
+                categoryImages[category._id] = latestProduct.productImage[0];
+            } else {
+                categoryImages[category._id] = null;
+            }
+        }
 
         // Fetch 4 products for best seller section
         const bestSellerProducts = await Product.find({
             isBlocked: false,
             quantity: { $gt: 0 }
         })
-        .sort({ createdAt: -1 }) // Sort by creation date, newest first
-        .limit(4); // Limit to 4 products
+        .sort({ createdAt: -1 })
+        .limit(4);
 
         if (req.session.user) {
-            // Fetch the complete user data including name
             const userData = await User.findById(req.session.user);
-            return res.render("home", { 
-                user: userData, // Pass the complete user object
+            return res.render("home", {
+                user: userData,
                 products: bestSellerProducts,
-                categories: categories
+                categories: categories,
+                categoryImages: categoryImages
             });
         } else {
-            return res.render("home", { 
+            return res.render("home", {
                 user: null,
                 products: bestSellerProducts,
-                categories: categories
+                categories: categories,
+                categoryImages: categoryImages
             });
         }
     } catch (error) {

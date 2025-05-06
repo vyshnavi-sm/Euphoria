@@ -264,7 +264,7 @@
  <div class="product-grid">
    <% if (wishlist && wishlist.items && wishlist.items.length > 0) { %>
      <% wishlist.items.forEach(item => { %>
-       <div class="product-card">
+       <div class="product-card" data-product-id="<%= item.productId._id %>">
          <button class="remove-wishlist-btn" onclick="removeFromWishlist('<%= item.productId._id %>')">
            <i class="fas fa-heart"></i>
          </button>
@@ -335,7 +335,7 @@ async function removeFromWishlist(productId) {
 
 async function addToCart(productId) {
   try {
-    const response = await fetch('/cart/add', {
+    const response = await fetch('/user/cart/add', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -349,8 +349,30 @@ async function addToCart(productId) {
     const data = await response.json();
     if (response.ok) {
       showToast('Product added to cart successfully');
-      // Optionally remove from wishlist after adding to cart
+      // Remove from wishlist after adding to cart
       await removeFromWishlist(productId);
+      // Remove the product card from the wishlist
+      const productCard = document.querySelector(`[data-product-id="${productId}"]`);
+      if (productCard) {
+        productCard.remove();
+      }
+      // Check if wishlist is empty and update UI
+      const productGrid = document.querySelector('.product-grid');
+      if (!productGrid.querySelector('.product-card')) {
+        productGrid.innerHTML = `
+          <div class="empty-wishlist">
+            <i class="fas fa-heart empty-wishlist-icon"></i>
+            <h2>Your wishlist is empty</h2>
+            <p>Add items that you like to your wishlist</p>
+            <a href="/shop" class="shop-btn">Start Shopping</a>
+          </div>
+        `;
+      }
+    } else if (response.status === 401) {
+      showToast('Please login to add items to cart', 'error');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 2000);
     } else {
       showToast(data.message || 'Error adding to cart', 'error');
     }

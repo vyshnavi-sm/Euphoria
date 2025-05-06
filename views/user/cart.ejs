@@ -447,6 +447,53 @@
                 gap: 20px;
             }
         }
+
+        .cart-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .continue-shopping {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .continue-shopping:hover {
+            background-color: var(--primary-dark);
+            color: var(--text-light);
+        }
+
+        .checkout-btn {
+            background-color: #2E7D32;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.3s ease;
+        }
+
+        .checkout-btn:hover {
+            background-color: #1B5E20;
+            color: white;
+        }
+
+        .checkout-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -558,9 +605,14 @@
                             <span>Total</span>
                             <span id="total">₹<%= cart.items ? (cart.items.reduce((sum, item) => sum + item.totalPrice, 0) + (cart.items.length > 0 ? 50 : 0)).toFixed(2) : '0.00' %></span>
                         </div>
-                        <button class="continue-btn" onclick="proceedToCheckout()" <%= (!cart.items || cart.items.length === 0) ? 'disabled' : '' %>>
-                            Proceed to Checkout
-                        </button>
+                        <div class="cart-actions">
+                            <a href="/shop" class="btn btn-primary continue-shopping">
+                                <i class="fas fa-arrow-left"></i> Continue Shopping
+                            </a>
+                            <a href="/user/checkout" class="btn btn-success checkout-btn">
+                                Proceed to Checkout <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -782,11 +834,15 @@
     }
 
     function updateOrderSummary() {
-        const subtotal = Array.from(document.querySelectorAll('.cart-item')).reduce((sum, item) => {
+        const cartItems = document.querySelectorAll('.cart-item');
+        let subtotal = 0;
+        
+        cartItems.forEach(item => {
             const price = parseFloat(item.dataset.price);
             const quantity = parseInt(item.querySelector('.quantity').textContent);
-            return sum + (price * quantity);
-        }, 0);
+            const itemTotal = price * quantity;
+            subtotal += itemTotal;
+        });
         
         const shipping = subtotal > 0 ? 50 : 0;
         const total = subtotal + shipping;
@@ -796,8 +852,10 @@
         document.getElementById('total').textContent = `₹${total.toFixed(2)}`;
         
         // Update checkout button state
-        const checkoutButton = document.querySelector('.continue-btn');
-        checkoutButton.disabled = subtotal <= 0;
+        const checkoutButton = document.querySelector('.checkout-btn');
+        if (checkoutButton) {
+            checkoutButton.disabled = subtotal <= 0;
+        }
     }
 
     function proceedToCheckout() {

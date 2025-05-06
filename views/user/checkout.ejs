@@ -332,6 +332,24 @@
     
     .address-actions {
       margin-top: 12px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-edit {
+      background-color: var(--primary-light);
+      color: var(--text-light);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: 'Montserrat', sans-serif;
+      transition: all 0.3s ease;
+    }
+
+    .btn-edit:hover {
+      background-color: var(--primary-dark);
+      color: var(--text-light);
     }
   </style>
 </head>
@@ -363,6 +381,9 @@
                                 <% if (address.isDefault) { %>
                                     <span class="badge-gold">Default Address</span>
                                 <% } %>
+                                <button class="btn-edit" onclick="editAddress('<%= address._id %>')">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -563,6 +584,10 @@
       const initialPayment = document.querySelector('input[name="paymentMethod"]:checked').value;
       selectPayment(initialPayment);
     });
+
+    function editAddress(addressId) {
+      window.location.href = `/edit-address/${addressId}?redirect=checkout`;
+    }
   </script>
 </body>
 </html>

@@ -4,6 +4,7 @@ const nodemailer = require("nodemailer");
 const bcrypt = require("bcrypt");
 const env = require('dotenv').config();
 const session = require("express-session");
+const Order = require("../../models/orderSchema");
 
 function generateOtp(){
     const digits = "1234567890";
@@ -217,8 +218,7 @@ const postNewPassword = async (req,res)=>{
     }
 }
 
-
-const userProfile = async (req,res)=>{
+const userProfile = async (req, res) => {
     try {
         const userId = req.session.user;
         if (!userId) {
@@ -228,15 +228,35 @@ const userProfile = async (req,res)=>{
         const userData = await User.findById(userId);
         const addressData = await Address.findOne({userId: userId});
         
-        console.log("User ID:", userId);
-        console.log("Address Data:", addressData);
+        // Fetch user's orders with pagination
+        const page = parseInt(req.query.page) || 1;
+        const limit = 5; // Number of orders per page
+        const skip = (page - 1) * limit;
+
+        // Get total count for pagination
+        const totalOrders = await Order.countDocuments({ userId });
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        // Get orders for the current page with populated product details
+        const orders = await Order.find({ userId })
+            .populate({
+                path: 'orderedItems.product',
+                select: 'productName productImage price'  // Select only needed fields
+            })
+            .sort({ createdOn: -1 })
+            .skip(skip)
+            .limit(limit);
         
         // Ensure addressData is properly structured
         const formattedAddressData = addressData || { address: [] };
         
         res.render("profile", {
             user: userData,
-            userAddress: formattedAddressData
+            userAddress: formattedAddressData,
+            orders,
+            currentPage: page,
+            totalPages,
+            searchQuery: req.query.query || ''
         });
         
     } catch (error) {
@@ -531,6 +551,7 @@ const editAddress = async(req,res)=>{
     try {
         const addressId = req.params.id;
         const user = req.session.user;
+        const redirect = req.query.redirect || 'profile';
         const currAddress = await Address.findOne({
             "address._id": addressId
         });
@@ -549,7 +570,8 @@ const editAddress = async(req,res)=>{
 
         res.render("edit-address", {
             address: addressData,
-            user: user
+            user: user,
+            redirect: redirect
         });
 
     } catch (error) {
@@ -562,6 +584,7 @@ const updateAddress = async(req,res)=>{
     try {
         const addressId = req.params.id;
         const userId = req.session.user;
+        const redirect = req.query.redirect || 'profile';
         const {name, mobile, addressType, addressLine1, city, state, pincode} = req.body;
 
         // Find the address document
@@ -588,7 +611,12 @@ const updateAddress = async(req,res)=>{
             throw new Error('Address not found or not modified');
         }
 
-        res.redirect("/userProfile#address");
+        // Redirect based on the redirect parameter
+        if (redirect === 'checkout') {
+            res.redirect("/user/checkout");
+        } else {
+            res.redirect("/userProfile#address");
+        }
 
     } catch (error) {
         console.error("Error updating address:", error);

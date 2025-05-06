@@ -168,6 +168,100 @@
     font-size: 14px;
   }
 }
+
+/* Pagination Styles */
+.pagination {
+  margin-top: 20px;
+}
+
+.page-link {
+  color: #a97155;
+  border: 1px solid #e8d9c5;
+  margin: 0 5px;
+  border-radius: 5px;
+  padding: 8px 15px;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.page-link:hover {
+  color: #fff;
+  background-color: #a97155;
+  border-color: #a97155;
+}
+
+.page-item.active .page-link {
+  background-color: #a97155;
+  border-color: #a97155;
+  color: #fff;
+}
+
+.page-item.disabled .page-link {
+  color: #e8d9c5;
+  background-color: #fff;
+  border-color: #e8d9c5;
+}
+
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+  border-radius: 5px;
+}
+
+/* Product List Styles */
+.product-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.product-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 8px;
+  border: 1px solid #e8d9c5;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.product-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.product-info {
+  flex-grow: 1;
+}
+
+.product-name {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.product-quantity {
+  font-size: 12px;
+  color: #666;
+}
+
+.product-price {
+  font-weight: 600;
+  color: #a97155;
+}
+
+/* Button Group Styles */
+.btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.btn-group .btn {
+  padding: 4px 8px;
+  font-size: 12px;
+}
 </style>
 
 <main class="main">
@@ -307,24 +401,101 @@
                         <table class="table">
                           <thead>
                             <tr>
-                              <th>Order</th>
+                              <th>Order ID</th>
+                              <th>Date</th>
+                              <th>Products</th>
                               <th>Status</th>
                               <th>Total</th>
                               <th>Actions</th>
                             </tr>
                           </thead>
                           <tbody>
-                            <tr>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                              <td>
-                                <a href="" class="btn-small d-block">View</a>
-                              </td>
-                            </tr>
+                            <% if (orders && orders.length > 0) { %>
+                              <% orders.forEach(order => { %>
+                                <tr>
+                                  <td><%= order.orderId %></td>
+                                  <td><%= new Date(order.createdOn).toLocaleDateString() %></td>
+                                  <td>
+                                    <div class="product-list">
+                                      <% order.orderedItems.forEach(item => { %>
+                                        <div class="product-item">
+                                          <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
+                                            <img src="/uploads/product-images/<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" class="product-image">
+                                          <% } else { %>
+                                            <img src="/images/default-product.jpg" alt="Product Image" class="product-image">
+                                          <% } %>
+                                          <div class="product-info">
+                                            <div class="product-name"><%= item.product.productName %></div>
+                                            <div class="product-quantity">Qty: <%= item.quantity %></div>
+                                            <div class="product-price">₹<%= (item.price * item.quantity).toFixed(2) %></div>
+                                          </div>
+                                        </div>
+                                      <% }) %>
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <span class="badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' ? 'danger' : 'warning' %>">
+                                      <%= order.status %>
+                                    </span>
+                                  </td>
+                                  <td>₹<%= order.finalAmount.toFixed(2) %></td>
+                                  <td>
+                                    <div class="btn-group">
+                                      <a href="/user/orders/<%= order._id %>" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye"></i> View Details
+                                      </a>
+                                      <% if (order.status === 'Delivered') { %>
+                                        <button type="button" class="btn btn-sm btn-warning" onclick="showReturnOrderModal('<%= order._id %>')">
+                                          <i class="fas fa-undo"></i> Return
+                                        </button>
+                                      <% } else if (['Processing', 'Pending'].includes(order.status)) { %>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="showCancelOrderModal('<%= order._id %>')">
+                                          <i class="fas fa-times"></i> Cancel
+                                        </button>
+                                      <% } %>
+                                    </div>
+                                  </td>
+                                </tr>
+                              <% }) %>
+                            <% } else { %>
+                              <tr>
+                                <td colspan="6" class="text-center">No orders found</td>
+                              </tr>
+                            <% } %>
                           </tbody>
                         </table>
                       </div>
+                      <% if (totalPages > 1) { %>
+                        <nav aria-label="Page navigation">
+                          <ul class="pagination justify-content-center">
+                            <% if (currentPage > 1) { %>
+                              <li class="page-item">
+                                <a class="page-link" href="/userProfile?page=<%= currentPage - 1 %><%= searchQuery ? '&query=' + searchQuery : '' %>#orders">
+                                  <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                              </li>
+                            <% } %>
+                            <% for(let i = 1; i <= totalPages; i++) { %>
+                              <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+                                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                                  <a class="page-link" href="/userProfile?page=<%= i %><%= searchQuery ? '&query=' + searchQuery : '' %>#orders"><%= i %></a>
+                                </li>
+                              <% } else if (i === currentPage - 3 || i === currentPage + 3) { %>
+                                <li class="page-item disabled">
+                                  <span class="page-link">...</span>
+                                </li>
+                              <% } %>
+                            <% } %>
+                            <% if (currentPage < totalPages) { %>
+                              <li class="page-item">
+                                <a class="page-link" href="/userProfile?page=<%= currentPage + 1 %><%= searchQuery ? '&query=' + searchQuery : '' %>#orders">
+                                  Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                              </li>
+                            <% } %>
+                          </ul>
+                        </nav>
+                      <% } %>
                     </div>
                   </div>
                 </div>
