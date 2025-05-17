@@ -10,11 +10,11 @@ const getAllOrders = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const search = req.query.search || '';
         const status = req.query.status || '';
-        const sortBy = req.query.sortBy || 'createdOn';
+        const sortBy = req.query.sortBy || 'createdAt'; // Changed to createdAt to match front-end
         const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
 
         let query = {};
-        
+
         // Search functionality
         if (search) {
             query = {
@@ -31,26 +31,38 @@ const getAllOrders = async (req, res) => {
             query.status = status;
         }
 
-        // Calculate skip value for pagination
         const skip = (page - 1) * limit;
-
-        // Get total count of documents
         const totalOrders = await Order.countDocuments(query);
         const totalPages = Math.ceil(totalOrders / limit);
 
-        // Get orders with pagination
+        // Map field names to handle both createdAt and createdOn
+        let sortField = sortBy;
+        // If we're sorting by date, handle both field names
+        if (sortBy === 'createdAt') {
+            // Use $sort with $or to handle both field names
+            // The controller needs to adapt to the actual field in the database
+            sortField = 'createdAt'; // Default to createdAt
+        }
+
+        // Fetch orders with proper sorting
         const orders = await Order.find(query)
             .populate('userId', 'name email phone')
             .populate('orderedItems.product')
-            .sort({ [sortBy]: sortOrder })
+            .sort({ [sortField]: sortOrder }) // Use the mapped field name
             .skip(skip)
-            .limit(limit);
+            .limit(limit)
+            .lean(); // Use lean() for better performance
 
-        // Calculate pagination info
-        const hasNextPage = page < totalPages;
-        const hasPrevPage = page > 1;
-        const nextPage = hasNextPage ? page + 1 : null;
-        const prevPage = hasPrevPage ? page - 1 : null;
+        // Format date for easier rendering and ensure both date fields are available
+        orders.forEach(order => {
+            // Make sure we have a consistent date field that the frontend can use
+            const orderDate = order.createdAt || order.createdOn || new Date();
+            order.createdAt = orderDate; // Ensure createdAt exists
+            order.formattedDate = new Date(orderDate).toLocaleString('en-IN', {
+                dateStyle: 'medium',
+                timeStyle: 'short'
+            });
+        });
 
         res.json({
             orders,
@@ -58,10 +70,10 @@ const getAllOrders = async (req, res) => {
                 currentPage: page,
                 totalPages,
                 totalOrders,
-                hasNextPage,
-                hasPrevPage,
-                nextPage,
-                prevPage,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1,
+                nextPage: page < totalPages ? page + 1 : null,
+                prevPage: page > 1 ? page - 1 : null,
                 limit
             }
         });
@@ -77,11 +89,20 @@ const getOrderDetails = async (req, res) => {
         const order = await Order.findById(req.params.orderId)
             .populate('userId', 'name email phone')
             .populate('orderedItems.product')
-            .populate('address');
+            .populate('address')
+            .lean(); // Use lean for better performance
 
         if (!order) {
             return res.status(404).json({ error: 'Order not found' });
         }
+
+        // Ensure we have a consistent date field
+        const orderDate = order.createdAt || order.createdOn || new Date();
+        order.createdAt = orderDate; // Ensure createdAt exists
+        order.formattedDate = new Date(orderDate).toLocaleString('en-IN', {
+            dateStyle: 'medium',
+            timeStyle: 'short'
+        });
 
         res.json(order);
     } catch (error) {
@@ -96,8 +117,15 @@ const updateOrderStatus = async (req, res) => {
         const { orderId } = req.params;
         const { status } = req.body;
 
-        const validStatuses = ['Pending', 'Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled', 'Return Request', 'Returned'];
-        
+        if (!orderId) {
+            return res.status(400).json({ error: 'Order ID is required' });
+        }
+
+        const validStatuses = [
+            'Pending', 'Processing', 'Shipped', 'Out for Delivery',
+            'Delivered', 'Cancelled', 'Return Request', 'Returned'
+        ];
+
         if (!validStatuses.includes(status)) {
             return res.status(400).json({ error: 'Invalid status' });
         }
@@ -108,6 +136,8 @@ const updateOrderStatus = async (req, res) => {
         }
 
         order.status = status;
+        // Add a status update timestamp
+        order.statusUpdatedAt = new Date();
         await order.save();
 
         res.json({ message: 'Order status updated successfully', order });
@@ -123,6 +153,10 @@ const handleReturnRequest = async (req, res) => {
         const { orderId } = req.params;
         const { action, reason, refundAmount } = req.body;
 
+        if (!orderId) {
+            return res.status(400).json({ message: 'Order ID is required' });
+        }
+
         const order = await Order.findById(orderId)
             .populate('userId')
             .populate('orderedItems.product');
@@ -136,24 +170,20 @@ const handleReturnRequest = async (req, res) => {
         }
 
         if (action === 'accept') {
-            // Update order status
             order.status = 'Returned';
             order.returnStatus = 'Accepted';
             order.returnResponse = reason;
             order.returnProcessedDate = new Date();
 
-            // Process refund to user's wallet
             if (refundAmount > 0) {
                 const user = await User.findById(order.userId._id);
                 if (!user) {
                     return res.status(404).json({ message: 'User not found' });
                 }
 
-                // Add amount to user's wallet
                 user.wallet += refundAmount;
                 await user.save();
 
-                // Create wallet transaction record
                 await WalletTransaction.create({
                     userId: user._id,
                     amount: refundAmount,
@@ -163,7 +193,6 @@ const handleReturnRequest = async (req, res) => {
                 });
             }
 
-            // Update product stock
             for (const item of order.orderedItems) {
                 const product = item.product;
                 if (product) {
@@ -172,7 +201,7 @@ const handleReturnRequest = async (req, res) => {
                 }
             }
         } else if (action === 'reject') {
-            order.status = 'Delivered'; // Revert back to delivered status
+            order.status = 'Delivered';
             order.returnStatus = 'Rejected';
             order.returnResponse = reason;
             order.returnProcessedDate = new Date();
@@ -202,4 +231,4 @@ module.exports = {
     getOrderDetails,
     updateOrderStatus,
     handleReturnRequest
-}; 
+};

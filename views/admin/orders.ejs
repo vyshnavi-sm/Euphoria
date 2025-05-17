@@ -679,6 +679,100 @@ async function handleReturnRequest(orderId, action) {
 }
 
 // Function to load order details
+// Updated loadOrders function to handle date correctly
+async function loadOrders(page = 1) {
+    try {
+        // Update current page
+        currentPage = page;
+        
+        // Get filter values
+        searchQuery = document.getElementById('searchInput').value;
+        statusFilter = document.getElementById('statusFilter').value;
+        sortBy = document.getElementById('sortBy').value;
+        pageSize = document.getElementById('pageSize').value;
+        
+        // Show loading indicator
+        document.getElementById('ordersTableBody').innerHTML = '<tr><td colspan="6" class="text-center">Loading orders...</td></tr>';
+        
+        // Construct query parameters
+        const queryParams = new URLSearchParams({
+            page: page,
+            limit: pageSize,
+            search: searchQuery,
+            status: statusFilter,
+            sortBy: sortBy
+        });
+        
+        const response = await fetch(`/admin/api/orders?${queryParams.toString()}`);
+        
+        if (!response.ok) {
+            throw new Error('Failed to load orders');
+        }
+        
+        const data = await response.json();
+        
+        // Update pagination info
+        const startRecord = ((data.pagination.currentPage - 1) * data.pagination.limit) + 1;
+        const endRecord = Math.min(startRecord + data.pagination.limit - 1, data.pagination.totalOrders);
+        
+        document.getElementById('startRecord').textContent = data.pagination.totalOrders > 0 ? startRecord : 0;
+        document.getElementById('endRecord').textContent = endRecord;
+        document.getElementById('totalRecords').textContent = data.pagination.totalOrders;
+        
+        // Populate orders table
+        const tableBody = document.getElementById('ordersTableBody');
+        tableBody.innerHTML = '';
+        
+        if (!data.orders || data.orders.length === 0) {
+            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No orders found</td></tr>';
+            return;
+        }
+        
+        data.orders.forEach(order => {
+            // Format date properly - handle both createdAt and createdOn
+            const orderDate = order.createdAt || order.createdOn;
+            const formattedDate = orderDate ? new Date(orderDate).toLocaleDateString() : 'N/A';
+            
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${order._id}</td>
+                <td>${formattedDate}</td>
+                <td>${order.userId ? order.userId.name : 'N/A'}<br><small>${order.userId ? order.userId.email : 'N/A'}</small></td>
+                <td>₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</td>
+                <td>
+                    <select class="form-select form-select-sm status-select" data-order-id="${order._id}">
+                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                        <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                        <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                        <option value="Out for Delivery" ${order.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
+                        <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        <option value="Return Request" ${order.status === 'Return Request' ? 'selected' : ''}>Return Request</option>
+                        <option value="Returned" ${order.status === 'Returned' ? 'selected' : ''}>Returned</option>
+                    </select>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-info view-details" data-order-id="${order._id}">View</button>
+                    ${order.status === 'Return Request' ? 
+                        `<button class="btn btn-sm btn-warning handle-return" data-order-id="${order._id}">Handle Return</button>` : 
+                        ''}
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+        
+        // Update pagination
+        updatePagination(data.pagination);
+        
+    } catch (error) {
+        console.error('Error loading orders:', error);
+        document.getElementById('ordersTableBody').innerHTML = 
+            '<tr><td colspan="6" class="text-center text-danger">Error loading orders. Please try again.</td></tr>';
+        showToast('Error loading orders. Please try again.', 'error');
+    }
+}
+
+// Updated loadOrderDetails function to fix the view button functionality
 async function loadOrderDetails(orderId) {
     try {
         const response = await fetch(`/admin/api/orders/${orderId}`);
@@ -691,12 +785,16 @@ async function loadOrderDetails(orderId) {
         const modalContent = document.getElementById('orderDetailsContent');
         const modalFooter = document.getElementById('orderDetailsFooter');
         
+        // Format dates properly - handle both createdAt and createdOn
+        const orderDate = order.createdAt || order.createdOn || order.formattedDate;
+        const formattedDate = orderDate ? new Date(orderDate).toLocaleString() : 'N/A';
+        
         modalContent.innerHTML = `
             <div class="row">
                 <div class="col-md-6">
                     <h6>Order Information</h6>
                     <p><strong>Order ID:</strong> ${order._id}</p>
-                    <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleString()}</p>
+                    <p><strong>Date:</strong> ${formattedDate}</p>
                     <p><strong>Status:</strong> ${order.status}</p>
                     <p><strong>Total Amount:</strong> ₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</p>
                 </div>
@@ -745,7 +843,7 @@ async function loadOrderDetails(orderId) {
                 <hr>
                 <h6>Return Request Details</h6>
                 <p><strong>Reason:</strong> ${order.returnReason || 'Not specified'}</p>
-                <p><strong>Requested On:</strong> ${new Date(order.returnRequestDate).toLocaleString()}</p>
+                <p><strong>Requested On:</strong> ${order.returnRequestDate ? new Date(order.returnRequestDate).toLocaleString() : 'N/A'}</p>
             ` : ''}
             ${order.status === 'Cancelled' ? `
                 <hr>
@@ -755,9 +853,12 @@ async function loadOrderDetails(orderId) {
         `;
 
         // Update footer based on order status
-        modalFooter.innerHTML = '';
+        modalFooter.innerHTML = `
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        `;
+        
         if (order.status === 'Return Request') {
-            modalFooter.innerHTML = `
+            modalFooter.innerHTML += `
                 <button type="button" class="btn btn-success" onclick="handleReturnRequest('${order._id}', 'accept')">
                     Accept Return
                 </button>
@@ -766,32 +867,34 @@ async function loadOrderDetails(orderId) {
                 </button>
             `;
         } else if (order.status === 'Processing' || order.status === 'Pending') {
-            modalFooter.innerHTML = `
+            modalFooter.innerHTML += `
                 <button type="button" class="btn btn-primary" onclick="updateOrderStatus('${order._id}', 'Shipped')">
                     Mark as Shipped
                 </button>
             `;
         } else if (order.status === 'Shipped') {
-            modalFooter.innerHTML = `
+            modalFooter.innerHTML += `
                 <button type="button" class="btn btn-primary" onclick="updateOrderStatus('${order._id}', 'Out for Delivery')">
                     Mark as Out for Delivery
                 </button>
             `;
         } else if (order.status === 'Out for Delivery') {
-            modalFooter.innerHTML = `
+            modalFooter.innerHTML += `
                 <button type="button" class="btn btn-success" onclick="updateOrderStatus('${order._id}', 'Delivered')">
                     Mark as Delivered
                 </button>
             `;
         }
         
-        new bootstrap.Modal(document.getElementById('orderDetailsModal')).show();
+        // Open the modal
+        const orderDetailsModal = document.getElementById('orderDetailsModal');
+        const modalInstance = new bootstrap.Modal(orderDetailsModal);
+        modalInstance.show();
     } catch (error) {
         console.error('Error loading order details:', error);
         showToast('Error loading order details. Please try again.', 'error');
     }
 }
-
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
     // Load initial page

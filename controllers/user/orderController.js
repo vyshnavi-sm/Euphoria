@@ -173,17 +173,19 @@ const cancelItem = async (req, res) => {
             return res.json({ success: false, message: 'Order not found' });
         }
 
-        // Check if order is in a cancellable state
         if (!['Processing', 'Pending'].includes(order.status)) {
             return res.json({ success: false, message: 'Cannot cancel item in current order status' });
         }
 
-        // Populate the order to access product details
         await order.populate('orderedItems.product');
 
         const item = order.orderedItems.id(itemId);
         if (!item) {
             return res.json({ success: false, message: 'Item not found in order' });
+        }
+
+        if (item.status === 'Cancelled') {
+            return res.json({ success: false, message: 'Item is already cancelled' });
         }
 
         // Update product stock
@@ -195,7 +197,6 @@ const cancelItem = async (req, res) => {
             );
         }
 
-        // Store the item's price before cancellation
         const cancelledItemTotal = item.price * item.quantity;
 
         // Mark the item as cancelled
@@ -204,14 +205,22 @@ const cancelItem = async (req, res) => {
 
         // Recalculate total price: only include non-cancelled items
         order.totalPrice = order.orderedItems.reduce((total, currentItem) => {
+            
             return currentItem.status !== 'Cancelled'
-                ? total + (currentItem.price * currentItem.quantity)
+                ? total + (currentItem.product.salePrice * currentItem.quantity)
                 : total;
         }, 0);
+        
 
         // Recalculate tax (18%) and final amount
-        const tax = order.totalPrice * 0.18;
-        order.finalAmount = order.totalPrice + tax - (order.discount || 0);
+        order.tax = order.totalPrice * 0.18;
+        order.finalAmount = order.totalPrice + order.tax - (order.discount || 0);
+
+        // If all items are cancelled, update order status
+        const allCancelled = order.orderedItems.every(item => item.status === 'Cancelled');
+        if (allCancelled) {
+            order.status = 'Cancelled';
+        }
 
         await order.save();
 
@@ -221,7 +230,7 @@ const cancelItem = async (req, res) => {
             updatedOrder: {
                 totalPrice: order.totalPrice,
                 finalAmount: order.finalAmount,
-                tax: tax,
+                tax: order.tax,
                 itemId: itemId,
                 cancelledItemTotal: cancelledItemTotal
             }
@@ -231,6 +240,7 @@ const cancelItem = async (req, res) => {
         return res.status(500).json({ success: false, message: 'Error cancelling item', error: error.message });
     }
 };
+
 
 
 const returnOrder = async (req, res) => {
@@ -340,7 +350,7 @@ const getOrderDetails = async (req, res) => {
         const order = await Order.findOne({ _id: orderId, userId })
             .populate({
                 path: 'orderedItems.product',
-                select: 'productName productImage price'
+                select: 'productName productImage salePrice'
             });
 
         if (!order) {
