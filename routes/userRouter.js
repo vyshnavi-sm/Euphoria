@@ -64,8 +64,6 @@ router.get("/change-password",profileController.changePassword);
 router.post("/change-password",profileController.postNewPassword);
 router.post("/verify-changepassword-otp",profileController.verifyChangePassOtp);
 router.get("/addresses", profileController.viewAddresses);
-router.post("/update-profile", profileController.updateProfile);
-router.post("/delete-profile-picture", profileController.deleteProfilePicture);
 
 // Product Management
 router.get("/product/:id",productController.productDetails);
