@@ -28,6 +28,74 @@
       display: flex;
       flex-direction: column;
     }
+
+    /* BLACK ICONS STYLING - Add this to make all header icons black */
+    .fa, .fas, .far, .fab, .fal, .fad {
+      color: #000 !important;
+    }
+
+    /* Specific targeting for common header icons */
+    .cart-icon,
+    .wishlist-icon,
+    .search-icon,
+    .menu-icon,
+    .user-icon,
+    .navbar-nav .nav-link i,
+    .header-icons i,
+    .top-bar i,
+    .navbar .fa,
+    .header .fa,
+    .navigation .fa,
+    .top-menu .fa {
+      color: #000 !important;
+    }
+
+    /* For SVG icons */
+    svg {
+      fill: #000 !important;
+    }
+
+    /* If using specific classes for your icons */
+    .icon-cart,
+    .icon-wishlist,
+    .icon-search,
+    .icon-user,
+    .icon-menu {
+      color: #000 !important;
+      fill: #000 !important;
+    }
+
+    /* Bootstrap icon classes */
+    .bi {
+      color: #000 !important;
+    }
+
+    /* For hover states if you want them to remain black */
+    .cart-icon:hover,
+    .wishlist-icon:hover,
+    .search-icon:hover,
+    .navbar-nav .nav-link:hover i,
+    .header-icons i:hover {
+      color: #000 !important;
+    }
+
+    /* Additional selectors for various icon implementations */
+    .navbar-brand i,
+    .nav-item i,
+    .dropdown-toggle i,
+    .btn i,
+    .link i,
+    a i {
+      color: #000 !important;
+    }
+
+    /* For icons in navigation */
+    nav i,
+    .navigation i,
+    .menu i,
+    .header-menu i {
+      color: #000 !important;
+    }
     
     .success-container {
       max-width: 800px;
@@ -116,6 +184,12 @@
       box-shadow: 0 5px 15px rgba(62, 39, 35, 0.2);
     }
 
+    /* Exception for button icons - keep them white for better contrast */
+    .btn-brown i,
+    .btn-outline-brown i {
+      color: var(--text-light) !important;
+    }
+
     .btn-outline-brown {
       background-color: transparent;
       color: var(--primary-color);
@@ -136,6 +210,15 @@
       color: var(--text-light);
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(62, 39, 35, 0.2);
+    }
+
+    /* Keep outline button icons same color as button text */
+    .btn-outline-brown i {
+      color: var(--primary-color) !important;
+    }
+
+    .btn-outline-brown:hover i {
+      color: var(--text-light) !important;
     }
 
     .illustration {
@@ -203,4 +286,4 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </body>
-</html> 
+</html>

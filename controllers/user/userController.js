@@ -212,6 +212,7 @@ const securePassword = async(password)=>{
 
 
 
+
     const resendOtp = async(req,res)=>{
         try {
             
@@ -623,3 +624,10 @@ module.exports = {
     filterProduct,
     filterByPrice,
 }
+
+
+
+
+
+
+

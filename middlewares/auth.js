@@ -5,6 +5,8 @@ const userAuth = (req, res, next) => {
         User.findById(req.session.user)
             .then(data => {
                 if (data && !data.isBlocked) {
+                    // Update last activity timestamp
+                    req.session.lastActivity = Date.now();
                     next();
                 } else {
                     if (req.xhr || req.headers.accept.includes('application/json')) {
@@ -31,21 +33,54 @@ const userAuth = (req, res, next) => {
     }
 }
 
-const adminAuth = (req, res, next) => {
-    if (!req.session.admin) {
+const adminAuth = async (req, res, next) => {
+    try {
+        if (!req.session.admin) {
+            return res.redirect('/admin/login');
+        }
+
+        // Check if session has expired (24 hours timeout)
+        const sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+        if (Date.now() - req.session.lastActivity > sessionTimeout) {
+            delete req.session.admin;
+            req.session.save((err) => {
+                if (err) {
+                    console.error("Session save error:", err);
+                }
+                return res.redirect('/admin/login');
+            });
+            return;
+        }
+
+        // Verify admin still exists and is not blocked
+        const admin = await User.findOne({ 
+            _id: req.session.admin.id, 
+            isAdmin: true 
+        });
+
+        if (!admin || admin.isBlocked) {
+            delete req.session.admin;
+            req.session.save((err) => {
+                if (err) {
+                    console.error("Session save error:", err);
+                }
+                return res.redirect('/admin/login');
+            });
+            return;
+        }
+
+        // Update last activity timestamp
+        req.session.lastActivity = Date.now();
+        req.session.save((err) => {
+            if (err) {
+                console.error("Session save error:", err);
+            }
+            next();
+        });
+    } catch (error) {
+        console.error("Admin auth error:", error);
         return res.redirect('/admin/login');
     }
-
-    // Check if session has expired (30 minutes timeout)
-    const sessionTimeout = 30 * 60 * 1000; // 30 minutes in milliseconds
-    if (Date.now() - req.session.lastActivity > sessionTimeout) {
-        req.session.destroy();
-        return res.redirect('/admin/login');
-    }
-
-    // Update last activity timestamp
-    req.session.lastActivity = Date.now();
-    next();
 }
 
 module.exports = {

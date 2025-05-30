@@ -208,21 +208,113 @@ const getAllProducts = async (req, res) => {
         let query = {};
         if (search) {
             query = {
-            $or: [
+                $or: [
                     { productName: { $regex: search, $options: 'i' } },
                     { description: { $regex: search, $options: 'i' } }
                 ]
             };
         }
 
-        const products = await Product.find(query)
-            .populate('brand')
-            .populate('category')
-            .sort({ createdAt: -1 })
-            .skip(skip)
-            .limit(limit);
+        // Aggregate pipeline to get products with their latest order date and order count
+        const aggregatePipeline = [
+            { $match: query },
+            {
+                $lookup: {
+                    from: 'orders',
+                    let: { productId: '$_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $in: ['$$productId', {
+                                        $map: {
+                                            input: '$orderedItems',
+                                            as: 'item',
+                                            in: '$$item.product'
+                                        }
+                                    }]
+                                }
+                            }
+                        },
+                        {
+                            $sort: { createdAt: -1 }
+                        },
+                        {
+                            $limit: 1
+                        }
+                    ],
+                    as: 'lastOrder'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'orders',
+                    let: { productId: '$_id' },
+                    pipeline: [
+                        {
+                            $match: {
+                                $expr: {
+                                    $in: ['$$productId', {
+                                        $map: {
+                                            input: '$orderedItems',
+                                            as: 'item',
+                                            in: '$$item.product'
+                                        }
+                                    }]
+                                }
+                            }
+                        },
+                        {
+                            $count: 'totalOrders'
+                        }
+                    ],
+                    as: 'orderCount'
+                }
+            },
+            {
+                $addFields: {
+                    lastOrderDate: {
+                        $ifNull: [
+                            { $arrayElemAt: ['$lastOrder.createdAt', 0] },
+                            new Date('1970-01-01')
+                        ]
+                    },
+                    totalOrderCount: {
+                        $ifNull: [
+                            { $arrayElemAt: ['$orderCount.totalOrders', 0] },
+                            0
+                        ]
+                    }
+                }
+            },
+            {
+                $sort: {
+                    createdAt: -1,
+                    lastOrderDate: -1,
+                    totalOrderCount: -1
+                }
+            },
+            { $skip: skip },
+            { $limit: limit }
+        ];
 
-        const totalProducts = await Product.countDocuments(query);
+        // Execute aggregation
+        const productsAggregation = await Product.aggregate(aggregatePipeline);
+
+        // Populate the brand and category fields
+        const products = await Product.populate(productsAggregation, [
+            { path: 'brand' },
+            { path: 'category' }
+        ]);
+
+        // Get total count for pagination
+        const totalCountPipeline = [
+            { $match: query },
+            { $count: 'total' }
+        ];
+        
+        const totalCountResult = await Product.aggregate(totalCountPipeline);
+        const totalProducts = totalCountResult.length > 0 ? totalCountResult[0].total : 0;
         const totalPages = Math.ceil(totalProducts / limit);
 
         res.render("product", {

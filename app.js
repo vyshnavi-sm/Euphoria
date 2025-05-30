@@ -10,6 +10,7 @@ const db = require("./config/db");
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
 const sessionMiddleware = require("./middlewares/sessionMiddleware");
+const MongoStore = require('connect-mongo');
 
 db()
 
@@ -22,15 +23,21 @@ app.use((req, res, next) => {
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 app.use(session({
-    secret:process.env.SESSION_SECRET,
-    resave:false,
-    saveUninitialized:true,
-    cookie:{
-        secure:false,
-        httpOnly:true,
-        maxAge:72*60*60*1000
+    secret: process.env.SESSION_SECRET,
+    resave: true,
+    saveUninitialized: true,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        ttl: 72 * 60 * 60, // 72 hours in seconds
+        autoRemove: 'native'
+    }),
+    cookie: {
+        secure: false,
+        httpOnly: true,
+        maxAge: 72 * 60 * 60 * 1000, // 72 hours in milliseconds
+        sameSite: 'lax'
     }
-}))
+}));
 
 // Add flash middleware
 app.use(flash());

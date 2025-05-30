@@ -34,6 +34,8 @@ const getBrandPage = async (req, res) => {
     }
 };
 
+
+
 const addBrand = async (req, res) => {
     try {
         const brand = req.body.name;

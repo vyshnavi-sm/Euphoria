@@ -155,77 +155,89 @@
 </div>
 
 <script>
-function validateForm() {
-    let isValid = true;
-    const nameRegex = /^[a-zA-Z\s]{2,50}$/;
-    const mobileRegex = /^[0-9]{10}$/;
-    const pincodeRegex = /^[0-9]{6}$/;
+// Dynamically set the form action based on the URL query parameters
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('addressForm');
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirect = urlParams.get('redirect');
 
-    // Name validation
-    const name = document.getElementById('name').value.trim();
-    if (!nameRegex.test(name)) {
-        document.getElementById('name-error').textContent = 'Please enter a valid name (2-50 characters, letters only)';
-        isValid = false;
-    } else {
-        document.getElementById('name-error').textContent = '';
+    if (redirect) {
+        form.action = `/addAddress?redirect=${redirect}`;
     }
 
-    // Mobile validation
-    const mobile = document.getElementById('mobile').value.trim();
-    if (!mobileRegex.test(mobile)) {
-        document.getElementById('mobile-error').textContent = 'Please enter a valid 10-digit mobile number';
-        isValid = false;
-    } else {
-        document.getElementById('mobile-error').textContent = '';
-    }
+    // Original validateForm function remains here...
+    function validateForm() {
+        let isValid = true;
+        const nameRegex = /^[a-zA-Z\s]{2,50}$/;
+        const mobileRegex = /^[0-9]{10}$/;
+        const pincodeRegex = /^[0-9]{6}$/;
 
-    // Address Type validation
-    const addressType = document.getElementById('addressType').value;
-    if (!addressType) {
-        document.getElementById('type-error').textContent = 'Please select an address type';
-        isValid = false;
-    } else {
-        document.getElementById('type-error').textContent = '';
-    }
+        // Name validation
+        const name = document.getElementById('name').value.trim();
+        if (!nameRegex.test(name)) {
+            document.getElementById('name-error').textContent = 'Please enter a valid name (2-50 characters, letters only)';
+            isValid = false;
+        } else {
+            document.getElementById('name-error').textContent = '';
+        }
 
-    // Address Line 1 validation
-    const addressLine1 = document.getElementById('addressLine1').value.trim();
-    if (addressLine1.length < 5) {
-        document.getElementById('address1-error').textContent = 'Please enter a valid address (minimum 5 characters)';
-        isValid = false;
-    } else {
-        document.getElementById('address1-error').textContent = '';
-    }
+        // Mobile validation
+        const mobile = document.getElementById('mobile').value.trim();
+        if (!mobileRegex.test(mobile)) {
+            document.getElementById('mobile-error').textContent = 'Please enter a valid 10-digit mobile number';
+            isValid = false;
+        } else {
+            document.getElementById('mobile-error').textContent = '';
+        }
 
-    // City validation
-    const city = document.getElementById('city').value.trim();
-    if (city.length < 2) {
-        document.getElementById('city-error').textContent = 'Please enter a valid city name';
-        isValid = false;
-    } else {
-        document.getElementById('city-error').textContent = '';
-    }
+        // Address Type validation
+        const addressType = document.getElementById('addressType').value;
+        if (!addressType) {
+            document.getElementById('type-error').textContent = 'Please select an address type';
+            isValid = false;
+        } else {
+            document.getElementById('type-error').textContent = '';
+        }
 
-    // State validation
-    const state = document.getElementById('state').value.trim();
-    if (state.length < 2) {
-        document.getElementById('state-error').textContent = 'Please enter a valid state name';
-        isValid = false;
-    } else {
-        document.getElementById('state-error').textContent = '';
-    }
+        // Address Line 1 validation
+        const addressLine1 = document.getElementById('addressLine1').value.trim();
+        if (addressLine1.length < 5) {
+            document.getElementById('address1-error').textContent = 'Please enter a valid address (minimum 5 characters)';
+            isValid = false;
+        } else {
+            document.getElementById('address1-error').textContent = '';
+        }
 
-    // Pincode validation
-    const pincode = document.getElementById('pincode').value.trim();
-    if (!pincodeRegex.test(pincode)) {
-        document.getElementById('pincode-error').textContent = 'Please enter a valid 6-digit pincode';
-        isValid = false;
-    } else {
-        document.getElementById('pincode-error').textContent = '';
-    }
+        // City validation
+        const city = document.getElementById('city').value.trim();
+        if (city.length < 2) {
+            document.getElementById('city-error').textContent = 'Please enter a valid city name';
+            isValid = false;
+        } else {
+            document.getElementById('city-error').textContent = '';
+        }
 
-    return isValid;
-}
+        // State validation
+        const state = document.getElementById('state').value.trim();
+        if (state.length < 2) {
+            document.getElementById('state-error').textContent = 'Please enter a valid state name';
+            isValid = false;
+        } else {
+            document.getElementById('state-error').textContent = '';
+        }
+
+        // Pincode validation
+        const pincode = document.getElementById('pincode').value.trim();
+        if (!pincodeRegex.test(pincode)) {
+            document.getElementById('pincode-error').textContent = 'Please enter a valid 6-digit pincode';
+            isValid = false;
+        } else {
+            document.getElementById('pincode-error').textContent = '';
+        }
+
+        return isValid;
+    }
+});
 </script>
 <%- include("../../views/partials/user/footer") %>
 

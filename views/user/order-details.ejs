@@ -90,6 +90,11 @@
             color: #6A1B9A;
         }
 
+        .status-return-requested {
+            background-color: #FFF3E0;
+            color: #E65100;
+        }
+
         .card {
             background: #fff;
             border-radius: 10px;
@@ -139,6 +144,12 @@
         .product-price {
             font-weight: 600;
             color: var(--primary-color);
+        }
+
+        .return-reason {
+            font-size: 14px;
+            color: #C62828; /* A color to indicate a reason */
+            margin-top: 5px;
         }
 
         .order-summary {
@@ -251,26 +262,151 @@
         .btn-warning:hover {
             background-color: #E1BEE7;
         }
+
+        .btn-outline-brown {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            background-color: transparent;
+        }
+
+        .btn-outline-brown:hover {
+            color: var(--text-light);
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* Timeline Status Styles */
+        .timeline-item.completed::before {
+            background-color: #2E7D32; /* Green color for completed line */
+        }
+
+        .timeline-item.completed::after {
+            background-color: #2E7D32; /* Green color for completed circle */
+            content: '\f00c'; /* Font Awesome checkmark icon */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 8px;
+        }
+
+        .timeline-item.in-progress::before {
+            background-color: #E65100; /* Orange color for in-progress line */
+        }
+
+        .timeline-item.in-progress::after {
+            background-color: #E65100; /* Orange color for in-progress circle */
+        }
+
+         .timeline-item.cancelled::before {
+            background-color: #C62828; /* Red color for cancelled line */
+        }
+
+        .timeline-item.cancelled::after {
+            background-color: #C62828; /* Red color for cancelled circle */
+             content: '\f00d'; /* Font Awesome times icon */
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 8px;
+        }
+
+        /* Add these new styles */
+        .btn-return {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .btn-return:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: var(--text-light);
+        }
+
+        .return-modal .modal-header {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .return-modal .modal-content {
+            border: 1px solid var(--primary-light);
+        }
+
+        .return-modal .form-select {
+            border-color: var(--primary-light);
+        }
+
+        .return-modal .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(93, 64, 55, 0.25);
+        }
+
+        .return-modal .btn-warning {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: var(--text-light);
+        }
+
+        .return-modal .btn-warning:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
     </style>
 </head>
 <body>
     <%- include("../../views/partials/user/header") %>
 
     <div class="order-details-container">
+        <div class="mb-3">
+            <a href="/" class="btn btn-outline-brown">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
         <div class="order-header">
             <h2>Order Details</h2>
             <div class="order-info">
                 <div>
                     <p><strong>Order ID:</strong> <%= order.orderId %></p>
-                    <p><strong>Order Date:</strong> <%= new Date(order.createdOn).toLocaleDateString() %></p>
+                    <p><strong>Order Date:</strong> <%= new Date(order.createdOn).toLocaleString('en-IN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    }) %></p>
                     <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
                 </div>
                 <div>
                     <p><strong>Status:</strong> <span class="order-status status-<%= order.status.toLowerCase() %>"><%= order.status %></span></p>
                     <% if (order.status === 'Delivered') { %>
-                        <p><strong>Delivered On:</strong> <%= new Date(order.updatedAt).toLocaleDateString() %></p>
+                        <p><strong>Delivered On:</strong> <%= new Date(order.updatedAt).toLocaleString('en-IN', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                        }) %></p>
                     <% } else if (order.status === 'Shipped') { %>
-                        <p><strong>Estimated Delivery:</strong> <%= new Date(new Date(order.updatedAt).setDate(new Date(order.updatedAt).getDate() + 3)).toLocaleDateString() %></p>
+                        <p><strong>Status:</strong> Your order has been shipped and is on its way!</p>
+                    <% } else if (order.status === 'Out for Delivery') { %>
+                        <p><strong>Status:</strong> Your order is out for delivery and will arrive soon!</p>
+                    <% } else { %>
+                        <p><strong>Estimated Delivery:</strong> <%= new Date(order.estimatedDeliveryDate).toLocaleString('en-IN', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true
+                        }) %></p>
                     <% } %>
                 </div>
             </div>
@@ -295,17 +431,32 @@
                                         <%= item.product.productName %>
                                         <% if (item.status === 'Cancelled') { %>
                                             <span class="order-status status-cancelled ms-2">Cancelled</span>
+                                        <% } else if (item.status === 'Returned') { %>
+                                            <span class="order-status status-returned ms-2">Returned</span>
                                         <% } %>
+                                        <% if (!['Cancelled', 'Returned'].includes(item.status) && ['Processing', 'Pending'].includes(order.status)) { %>
+                                             <button type="button" class="btn btn-sm btn-danger ms-2" onclick="showCancelItemModal('<%= order._id %>', '<%= item._id %>')">
+                                                 <i class="fas fa-times"></i> Cancel Item
+                                             </button>
+                                         <% } %>
                                     </h6>
                                     <p class="text-muted mb-1">Quantity: <%= item.quantity %></p>
-                                    <p class="product-price">₹<%= item.status === 'Cancelled' ? '0.00' : (item.product.salePrice * item.quantity).toFixed(2) %></p>
+                                    <p class="product-price">₹<%= item.status === 'Cancelled' || item.status === 'Returned' || item.status === 'Return Requested' ? '0.00' : (item.product.salePrice * item.quantity).toFixed(2) %></p>
                                     <% if (item.status === 'Cancelled' && item.cancellationReason) { %>
                                         <p class="text-muted fst-italic small">Reason: <%= item.cancellationReason %></p>
                                     <% } %>
+                                    <% if (item.status === 'Returned' && item.returnReason) { %>
+                                        <p class="text-muted fst-italic small">Return Reason: <%= item.returnReason %></p>
+                                    <% } %>
+                                    <% if (item.adminRejectionReason) { %>
+                                        <p class="text-muted fst-italic small text-danger">Admin Rejection Reason: <%= item.adminRejectionReason %></p>
+                                    <% } else if (item.adminReturnReason) { %>
+                                        <p class="text-muted fst-italic small text-danger">Admin Reason: <%= item.adminReturnReason %></p>
+                                    <% } %>
                                 </div>
-                                <% if (item.status !== 'Cancelled' && ['Processing', 'Pending'].includes(order.status)) { %>
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="showCancelItemModal('<%= order._id %>', '<%= item._id %>')">
-                                        <i class="fas fa-times"></i> Cancel Item
+                                <% if (item.status !== 'Cancelled' && item.status !== 'Returned' && order.status === 'Delivered') { %>
+                                    <button type="button" class="btn btn-sm btn-warning" onclick="showReturnItemModal('<%= order._id %>', '<%= item._id %>')">
+                                        <i class="fas fa-undo"></i> Return Item
                                     </button>
                                 <% } %>
                             </div>
@@ -319,22 +470,64 @@
                     </div>
                     <div class="card-body">
                         <div class="timeline">
-                            <div class="timeline-item">
-                                <div class="timeline-date"><%= new Date(order.createdOn).toLocaleDateString() %></div>
-                                <div class="timeline-content">Order Placed</div>
+                            <div class="timeline-item completed">
+                                <div class="timeline-date"><%= new Date(order.createdOn).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+                                <div class="timeline-content">Order Confirmed</div>
                             </div>
-                            <% if (order.status !== 'Pending') { %>
-                                <div class="timeline-item">
-                                    <div class="timeline-date"><%= new Date(order.updatedAt).toLocaleDateString() %></div>
-                                    <div class="timeline-content">Order <%= order.status %></div>
+
+                            <% if (['Shipped', 'Out for Delivery', 'Delivered', 'Returned', 'Refunded'].includes(order.status)) { %>
+                                <div class="timeline-item <%= ['Delivered', 'Returned', 'Refunded'].includes(order.status) ? 'completed' : 'in-progress' %>">
+                                    <% if (order.updatedAt && !isNaN(new Date(order.updatedAt).getTime())) { %>
+                                        <div class="timeline-date"><%= new Date(order.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+                                    <% } %>
+                                    <div class="timeline-content">
+                                        <% if (order.status === 'Shipped') { %>
+                                            Order Shipped - Your order is on its way!
+                                        <% } else if (order.status === 'Out for Delivery') { %>
+                                            Out for Delivery - Your order will arrive soon!
+                                        <% } else { %>
+                                            Order Shipped / Out for Delivery
+                                        <% } %>
+                                    </div>
                                 </div>
                             <% } %>
-                            <% if (order.status === 'Delivered') { %>
-                                <div class="timeline-item">
-                                    <div class="timeline-date"><%= new Date(order.updatedAt).toLocaleDateString() %></div>
+
+                            <% if (['Delivered', 'Returned', 'Refunded'].includes(order.status)) { %>
+                                <div class="timeline-item <%= ['Delivered', 'Returned', 'Refunded'].includes(order.status) ? 'completed' : '' %>">
+                                    <% if (order.updatedAt && !isNaN(new Date(order.updatedAt).getTime())) { %>
+                                        <div class="timeline-date"><%= new Date(order.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+                                    <% } %>
                                     <div class="timeline-content">Order Delivered</div>
                                 </div>
                             <% } %>
+
+                            <% if (['Returned', 'Refunded'].includes(order.status)) { %>
+                                <div class="timeline-item <%= ['Refunded'].includes(order.status) ? 'completed' : 'in-progress' %>">
+                                    <% if (order.updatedAt && !isNaN(new Date(order.updatedAt).getTime())) { %>
+                                        <div class="timeline-date"><%= new Date(order.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+                                    <% } %>
+                                    <div class="timeline-content">Returned</div>
+                                </div>
+                            <% } %>
+
+                            <% if (['Refunded'].includes(order.status)) { %>
+                                <div class="timeline-item completed">
+                                    <% if (order.updatedAt && !isNaN(new Date(order.updatedAt).getTime())) { %>
+                                        <div class="timeline-date"><%= new Date(order.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+                                    <% } %>
+                                    <div class="timeline-content">Refund Processed</div>
+                                </div>
+                            <% } %>
+
+                            <% if (order.status === 'Cancelled') { %>
+                                <div class="timeline-item cancelled">
+                                    <% if (order.updatedAt && !isNaN(new Date(order.updatedAt).getTime())) { %>
+                                        <div class="timeline-date"><%= new Date(order.updatedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+                                    <% } %>
+                                    <div class="timeline-content">Order Cancelled</div>
+                                </div>
+                            <% } %>
+
                         </div>
                     </div>
                 </div>
@@ -450,6 +643,31 @@
         </div>
     </div>
 
+    <!-- Return Item Modal -->
+    <div class="modal fade" id="returnItemModal" tabindex="-1" aria-labelledby="returnItemModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="returnItemModalLabel">Return Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="returnItemForm">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="itemReturnReason" class="form-label">Reason for Return <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="itemReturnReason" name="reason" rows="3" required></textarea>
+                            <div class="invalid-feedback">Please provide a reason for return.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-warning">Return Item</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Cancel Item Modal -->
     <div class="modal fade" id="cancelItemModal" tabindex="-1" aria-labelledby="cancelItemModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -461,8 +679,8 @@
                 <form id="cancelItemForm">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="cancelItemReason" class="form-label">Reason for Cancellation <span class="text-danger">*</span></label>
-                            <textarea class="form-control" id="cancelItemReason" name="reason" rows="3" required></textarea>
+                            <label for="itemCancelReason" class="form-label">Reason for Cancellation <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="itemCancelReason" name="reason" rows="3" required></textarea>
                             <div class="invalid-feedback">Please provide a reason for cancellation.</div>
                         </div>
                     </div>
@@ -488,6 +706,13 @@
             const modal = new bootstrap.Modal(document.getElementById('returnOrderModal'));
             const form = document.getElementById('returnOrderForm');
             form.action = `/user/orders/${orderId}/return`;
+            modal.show();
+        }
+
+        function showReturnItemModal(orderId, itemId) {
+            const modal = new bootstrap.Modal(document.getElementById('returnItemModal'));
+            const form = document.getElementById('returnItemForm');
+            form.action = `/user/orders/${orderId}/items/${itemId}/return`;
             modal.show();
         }
 
@@ -548,7 +773,6 @@
                 const data = await response.json();
                 if (data.success) {
                     showToast('Return request submitted successfully', 'success');
-                    setTimeout(() => window.location.reload(), 1500);
                 } else {
                     showToast(data.message || 'Error submitting return request', 'error');
                 }
@@ -558,119 +782,146 @@
             bootstrap.Modal.getInstance(document.getElementById('returnOrderModal')).hide();
         });
 
-      // Handle cancel item form submission via AJAX
-      document.getElementById('cancelItemForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const form = e.target;
-    const action = form.action;
-    const reason = document.getElementById('cancelItemReason').value.trim();
-    
-    if (!reason) {
-        showToast('Please provide a reason for cancellation', 'error');
-        return;
-    }
-    
-    try {
-        const response = await fetch(action, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reason })
-        });
-        
-        const data = await response.json();
-        if (data.success) {
-            // Update the order totals in the UI
-            if (data.updatedOrder) {
-                // Update the cancelled item display
-                if (data.updatedOrder.itemId) {
-                    // Find all product items
-                    const productItems = document.querySelectorAll('.product-item');
-                    
-                    // Loop through them to find the cancelled item
-                    productItems.forEach(item => {
-                        // Check if this item contains the cancel button with the correct item ID
-                        const cancelButton = item.querySelector(`button[onclick*="${data.updatedOrder.itemId}"]`);
-                        if (cancelButton) {
-                            // Update the price display to 0.00
-                            const priceElement = item.querySelector('.product-price');
-                            if (priceElement) {
-                                priceElement.textContent = '₹0.00';
-                            }
-                            
-                            // Remove the cancel button since the item is now cancelled
-                            cancelButton.remove();
-                            
-                            // Add a cancelled label to the product name
-                            const productNameElement = item.querySelector('.product-name');
-                            if (productNameElement) {
-                                // Check if status label already exists to avoid duplicates
-                                if (!productNameElement.querySelector('.status-cancelled')) {
-                                    const statusLabel = document.createElement('span');
-                                    statusLabel.className = 'order-status status-cancelled ms-2';
-                                    statusLabel.textContent = 'Cancelled';
-                                    productNameElement.appendChild(statusLabel);
-                                }
-                            }
-                            
-                            // Add reason text if applicable
-                            const productInfo = item.querySelector('.product-info');
-                            if (productInfo && reason) {
-                                // Check if reason text already exists
-                                let reasonElement = productInfo.querySelector('.fst-italic');
-                                if (!reasonElement) {
-                                    reasonElement = document.createElement('p');
-                                    reasonElement.className = 'text-muted fst-italic small';
-                                    reasonElement.textContent = `Reason: ${reason}`;
-                                    productInfo.appendChild(reasonElement);
-                                }
-                            }
-                        }
-                    });
-                }
-                
-                // Update subtotal - use the value from the server response
-                const subtotalElement = document.querySelector('.summary-line:first-child span:last-child');
-                if (subtotalElement) {
-                    subtotalElement.textContent = `₹${data.updatedOrder.totalPrice.toFixed(2)}`;
-                }
+        // Update the return item form submission
+        document.getElementById('returnItemForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const action = form.action;
+            const reason = document.getElementById('itemReturnReason').value.trim(); // Get reason from textarea
 
-                // Update tax - use the value from the server response
-                const taxElement = document.querySelector('.summary-line:nth-child(2) span:last-child');
-                if (taxElement) {
-                    taxElement.textContent = `₹${data.updatedOrder.tax.toFixed(2)}`;
-                }
-
-                // Update total - use the value from the server response
-                const totalElement = document.querySelector('.summary-total span:last-child');
-                if (totalElement) {
-                    totalElement.textContent = `₹${data.updatedOrder.finalAmount.toFixed(2)}`;
-                }
-                
-                // Check if all items are cancelled, and if so, disable the "Cancel Order" button
-                const allItemsCancelled = Array.from(document.querySelectorAll('.product-item')).every(item => 
-                    item.querySelector('.status-cancelled') || !item.querySelector('button[onclick*="showCancelItemModal"]')
-                );
-                
-                if (allItemsCancelled) {
-                    const cancelOrderButton = document.querySelector('button[onclick*="showCancelOrderModal"]');
-                    if (cancelOrderButton) {
-                        cancelOrderButton.disabled = true;
-                        cancelOrderButton.title = "All items are already cancelled";
-                    }
-                }
+            if (!reason) {
+                showToast('Please provide a reason for return', 'error');
+                return;
             }
 
-            showToast('Item cancelled successfully', 'success');
-        } else {
-            showToast(data.message || 'Error cancelling item', 'error');
-        }
-    } catch (error) {
-        console.error('Error cancelling item:', error);
-        showToast('Error cancelling item', 'error');
-    }
-    
-    bootstrap.Modal.getInstance(document.getElementById('cancelItemModal')).hide();
-});
+            try {
+                const response = await fetch(action, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: reason })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    // Update the UI to show the returned status
+                    const urlParts = action.split('/');
+                    const itemId = urlParts[urlParts.length - 2];
+                    const productItem = document.querySelector(`.product-item[data-item-id="${itemId}"]`);
+
+                    if (productItem) {
+                        // Update the status badge
+                        const productNameElement = productItem.querySelector('.product-name');
+                        if (productNameElement) {
+                            let statusBadge = productNameElement.querySelector('.order-status');
+                             if (!statusBadge) {
+                                 statusBadge = document.createElement('span');
+                                 statusBadge.className = 'order-status ms-2';
+                                 productNameElement.appendChild(statusBadge);
+                             }
+                            statusBadge.classList.remove('status-cancelled', 'status-returned', 'status-delivered'); // Remove relevant existing status classes
+                            statusBadge.classList.add('status-return-requested'); // Add return requested status class
+                            statusBadge.textContent = 'Return Requested';
+                        }
+
+                        // Update the price to 0.00 (or handle refund display if applicable)
+                        const priceElement = productItem.querySelector('.product-price');
+                        if (priceElement) {
+                            // You might want to show the original price crossed out or a refund amount instead
+                            priceElement.textContent = '₹0.00'; // Placeholder
+                        }
+
+                        // Add or update the return reason
+                        const productInfo = productItem.querySelector('.product-info');
+                        if (productInfo) {
+                             let reasonElement = productInfo.querySelector('.text-muted.fst-italic.small');
+                             if (!reasonElement) {
+                                 reasonElement = document.createElement('p');
+                                 reasonElement.className = 'text-muted fst-italic small';
+                                 productInfo.appendChild(reasonElement);
+                             }
+                             reasonElement.textContent = `Reason: ${reason}`;
+                        }
+
+                        // Remove the return button and potentially the cancel button if applicable
+                        const returnButton = productItem.querySelector('button[onclick*="showReturnItemModal"]');
+                        if (returnButton) {
+                            returnButton.remove();
+                        }
+                         const cancelButton = productItem.querySelector('button[onclick*="showCancelItemModal"]');
+                         if (cancelButton) {
+                             cancelButton.remove();
+                         }
+                    }
+
+                    showToast('Return request submitted successfully', 'success');
+                    // Optionally update the order summary totals here if needed
+                } else {
+                    showToast(data.message || 'Error submitting return request', 'error');
+                }
+            } catch (error) {
+                console.error('Error submitting return request:', error);
+                showToast('Error submitting return request', 'error');
+            }
+
+            bootstrap.Modal.getInstance(document.getElementById('returnItemModal')).hide();
+        });
+
+        // Add data-item-id attribute to product items
+        document.addEventListener('DOMContentLoaded', function() {
+            const productItems = document.querySelectorAll('.product-item');
+            productItems.forEach(item => {
+                const returnButton = item.querySelector('button[onclick*="showReturnItemModal"]');
+                // Check for both cancel and return buttons to get item ID
+                const cancelButton = item.querySelector('button[onclick*="showCancelItemModal"]');
+                
+                if (returnButton) {
+                    const onclickAttr = returnButton.getAttribute('onclick');
+                    const match = onclickAttr.match(/\'([^\']+)\'\s*,\s*\'([^\']+)\'/);
+                     if (match && match[2]) {
+                        const itemId = match[2];
+                         item.setAttribute('data-item-id', itemId);
+                     }
+                } else if (cancelButton) {
+                     const onclickAttr = cancelButton.getAttribute('onclick');
+                     const match = onclickAttr.match(/\'([^\']+)\'\s*,\s*\'([^\']+)\'/);
+                      if (match && match[2]) {
+                         const itemId = match[2];
+                          item.setAttribute('data-item-id', itemId);
+                      }
+                }
+            });
+        });
+
+        // Handle cancel item form submission
+        document.getElementById('cancelItemForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = e.target;
+            const action = form.action;
+            const reason = document.getElementById('itemCancelReason').value.trim();
+            
+            if (!reason) {
+                showToast('Please provide a reason for cancellation', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(action, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showToast('Item cancelled successfully', 'success');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showToast(data.message || 'Error cancelling item', 'error');
+                }
+            } catch (error) {
+                showToast('Error cancelling item', 'error');
+            }
+            bootstrap.Modal.getInstance(document.getElementById('cancelItemModal')).hide();
+        });
 
         // Toast function
         function showToast(message, type = 'success') {

@@ -10,7 +10,7 @@ const orderSchema = new Schema({
     },
     orderId:{
         type: String,
-        default: uuidv4,  // Remove the function call - just pass the function reference
+        default: uuidv4,
         unique: true
     },
     orderedItems:[{
@@ -29,7 +29,7 @@ const orderSchema = new Schema({
         },
         status: {
             type: String,
-            enum: ["Processing", "Shipped", "Delivered", "Cancelled", "Returned"],
+            enum: ["Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Returned", "Return Requested"],
             default: "Processing"
         },
         cancellationReason: String,
@@ -66,12 +66,23 @@ const orderSchema = new Schema({
     status:{
         type: String,
         required: true,
-        enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Return Request", "Returned"]
+        enum: ["Pending", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Return Request", "Returned"]
     },
     createdOn:{
         type: Date,
         default: Date.now,
         required: true
+    },
+    estimatedDeliveryDate: {
+        type: Date,
+        default: function() {
+            // Set default delivery date to 4 days from order creation
+            const date = new Date();
+            date.setDate(date.getDate() + 4);
+            // Set time to end of day (23:59:59)
+            date.setHours(23, 59, 59, 999);
+            return date;
+        }
     },
     couponApplied:{
         type: Boolean,

@@ -78,6 +78,10 @@ const addToCart = async (req, res) => {
     }
 };
 
+
+
+
+
 // Remove from cart
 const removeFromCart = async (req, res) => {
     try {

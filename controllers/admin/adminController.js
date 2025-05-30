@@ -43,37 +43,50 @@ const login = async (req, res) => {
             return res.redirect("/admin/login");
         }
 
-        // First regenerate the session
-        req.session.regenerate((err) => {
+        // Set admin session with more details
+        req.session.admin = {
+            id: admin._id,
+            email: admin.email,
+            name: admin.name,
+            lastActivity: Date.now()
+        };
+
+        // Save session explicitly
+        req.session.save((err) => {
             if (err) {
-                console.error("Session regeneration error:", err);
+                console.error("Session save error:", err);
                 return res.redirect("/pageerror");
             }
-            
-            // Then set the admin data in the new session
-            req.session.admin = { 
-                id: admin._id, 
-                email: admin.email,
-                lastActivity: Date.now()
-            };
-            
             console.log(" Admin Logged In:", req.session.admin);
             return res.redirect("/admin/dashboard");
         });
+
     } catch (error) {
         console.error(" Login Error:", error);
         return res.redirect("/pageerror");
     }
 };
 
+
+
+
 //  Load Admin Dashboard
 const loadDashboard = async (req, res) => {
-    if (!req.session.admin) {
-        console.log(" No Admin Session. Redirecting to login.");
-        return res.redirect("/admin/login");
-    }
     try {
-        res.render("adminDashboard");
+        if (!req.session.admin) {
+            console.log(" No Admin Session. Redirecting to login.");
+            return res.redirect("/admin/login");
+        }
+
+        // Update last activity
+        req.session.lastActivity = Date.now();
+        req.session.save((err) => {
+            if (err) {
+                console.error("Session save error:", err);
+                return res.redirect("/pageerror");
+            }
+            res.render("adminDashboard");
+        });
     } catch (error) {
         console.error(" Error Rendering Dashboard:", error);
         return res.redirect("/pageerror");
@@ -83,14 +96,13 @@ const loadDashboard = async (req, res) => {
 const logout = async (req, res) => {
     try {
         if (req.session) {
-            // Clear all session data
-            req.session.destroy((err) => {
+            // Clear only admin session data
+            delete req.session.admin;
+            req.session.save((err) => {
                 if (err) {
-                    console.error("Error destroying session:", err);
+                    console.error("Error saving session:", err);
                     return res.redirect("/pageerror");
                 }
-                // Clear the session cookie
-                res.clearCookie('connect.sid');
                 res.redirect("/admin/login");
             });
         } else {

@@ -3,15 +3,18 @@
 <style>
     /* Custom CSS for Orders Page */
     :root {
-        --primary-brown: #8B4513;
-        --light-brown: #D2B48C;
-        --dark-brown: #654321;
-        --accent-brown: #A0522D;
-        --background-light: #F5F5DC;
+        --primary-brown: #5D4037;
+        --secondary-brown: #8B6B61;
+        --light-brown: #A1887F;
+        --background-brown: #f8f4f0;
+        --border-brown: #e8d9c5;
+        --text-dark: #3E2723;
+        --text-light: #8D6E63;
+        --shadow-color: rgba(93, 64, 55, 0.1);
     }
 
     .container-fluid {
-        background-color: var(--background-light);
+        background-color: var(--background-brown);
         min-height: 100vh;
         padding: 2rem;
     }
@@ -25,13 +28,15 @@
         border-bottom: 2px solid var(--light-brown);
         margin-top: 10px;
         margin-left: 250px;
+        font-family: 'Cormorant Garamond', serif;
     }
 
     .card {
         border: none;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 6px var(--shadow-color);
         border-radius: 10px;
         margin-bottom: 2rem;
+        background-color: white;
     }
 
     .card-body {
@@ -48,14 +53,15 @@
     }
 
     .form-control, .form-select {
-        border: 1px solid var(--light-brown);
+        border: 1px solid var(--border-brown);
         border-radius: 5px;
         padding: 0.75rem;
+        color: var(--text-dark);
     }
 
     .form-control:focus, .form-select:focus {
         border-color: var(--primary-brown);
-        box-shadow: 0 0 0 0.2rem rgba(139, 69, 19, 0.25);
+        box-shadow: 0 0 0 0.2rem rgba(93, 64, 55, 0.25);
     }
 
     .btn-primary {
@@ -66,8 +72,8 @@
     }
 
     .btn-primary:hover {
-        background-color: var(--dark-brown);
-        border-color: var(--dark-brown);
+        background-color: var(--secondary-brown);
+        border-color: var(--secondary-brown);
     }
 
     /* Table Styling */
@@ -86,11 +92,12 @@
     .table tbody td {
         padding: 1rem;
         vertical-align: middle;
-        border-bottom: 1px solid var(--light-brown);
+        border-bottom: 1px solid var(--border-brown);
+        color: var(--text-dark);
     }
 
     .table tbody tr:hover {
-        background-color: rgba(210, 180, 140, 0.1);
+        background-color: var(--background-brown);
     }
 
     /* Status Select Styling */
@@ -101,14 +108,14 @@
 
     /* Action Buttons */
     .btn-info {
-        background-color: var(--accent-brown);
-        border-color: var(--accent-brown);
+        background-color: var(--secondary-brown);
+        border-color: var(--secondary-brown);
         color: white;
     }
 
     .btn-info:hover {
-        background-color: var(--dark-brown);
-        border-color: var(--dark-brown);
+        background-color: var(--primary-brown);
+        border-color: var(--primary-brown);
         color: white;
     }
 
@@ -133,11 +140,11 @@
         padding: 1rem;
         background-color: white;
         border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px var(--shadow-color);
     }
 
     .pagination-info {
-        color: var(--dark-brown);
+        color: var(--text-dark);
         font-size: 0.9rem;
     }
 
@@ -147,7 +154,7 @@
 
     .page-link {
         color: var(--primary-brown);
-        border: 1px solid var(--light-brown);
+        border: 1px solid var(--border-brown);
         padding: 0.5rem 1rem;
         margin: 0 2px;
         border-radius: 5px;
@@ -161,9 +168,9 @@
     }
 
     .page-link:hover {
-        color: var(--dark-brown);
-        background-color: var(--light-brown);
-        border-color: var(--light-brown);
+        color: var(--text-dark);
+        background-color: var(--background-brown);
+        border-color: var(--border-brown);
     }
 
     .page-item.disabled .page-link {
@@ -179,17 +186,21 @@
         gap: 0.5rem;
     }
 
-    .page-size-selector select {
-        border: 1px solid var(--light-brown);
-        border-radius: 5px;
-        padding: 0.25rem 0.5rem;
-        color: var(--dark-brown);
+    .page-size-selector label {
+        color: var(--text-dark);
+        margin-bottom: 0;
+    }
+
+    .page-size-selector .form-select {
+        width: auto;
+        padding: 0.25rem 2rem 0.25rem 0.5rem;
     }
 
     /* Modal Styling */
     .modal-content {
-        border-radius: 10px;
         border: none;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px var(--shadow-color);
     }
 
     .modal-header {
@@ -208,6 +219,10 @@
 
     .modal-body {
         padding: 1.5rem;
+    }
+
+    .modal-footer {
+        border-top: 1px solid var(--border-brown);
     }
 
     /* Order Details Styling */
@@ -248,11 +263,18 @@
         position: fixed;
         top: 20px;
         right: 20px;
-        z-index: 2000;
+        z-index: 9999;
     }
     
     .toast {
-        min-width: 250px;
+        background-color: white;
+        border: none;
+        box-shadow: 0 4px 6px var(--shadow-color);
+    }
+    
+    .toast-header {
+        background-color: var(--primary-brown);
+        color: white;
     }
     
     .toast-success {
@@ -262,7 +284,27 @@
     
     .toast-error {
         background-color: #f8d7da;
-        color: #721c24;
+        color: #38080dc2;
+    }
+
+    /* Status Badges */
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        font-weight: 500;
+    }
+
+    .badge.bg-success {
+        background-color: var(--secondary-brown) !important;
+    }
+
+    .badge.bg-warning {
+        background-color: var(--light-brown) !important;
+        color: white;
+    }
+
+    .badge.bg-danger {
+        background-color: var(--primary-brown) !important;
     }
 </style>
 
@@ -294,11 +336,12 @@
                 </div>
                 <div class="col-md-3">
                     <select class="form-select" id="sortBy">
-                        <option value="createdAt">Sort by Date</option>
+                        <option value="createdAt" selected>Sort by Date & Time</option>
                         <option value="totalPrice">Sort by Amount</option>
                     </select>
                 </div>
                 <div class="col-md-2">
+                    <div id="currentDateTime" class="text-end mb-2" style="font-size: 0.9rem; color: var(--text-dark);"></div>
                     <button type="submit" class="btn btn-primary w-100">Search</button>
                 </div>
             </form>
@@ -339,7 +382,7 @@
                 <div class="page-size-selector">
                     <label for="pageSize">Show:</label>
                     <select class="form-select form-select-sm" id="pageSize">
-                        <option value="10">10</option>
+                        <option value="20">20</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
@@ -384,10 +427,6 @@
                             <option value="accept">Accept Return</option>
                             <option value="reject">Reject Return</option>
                         </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Reason</label>
-                        <textarea class="form-control" id="returnReason" rows="3" required></textarea>
                     </div>
                     <div class="mb-3" id="refundAmountSection" style="display: none;">
                         <label class="form-label">Refund Amount (₹)</label>
@@ -436,6 +475,25 @@ function showToast(message, type = 'success') {
     });
 }
 
+// Function to update current date and time
+function updateCurrentDateTime() {
+    const now = new Date();
+    const dateTimeString = now.toLocaleString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    });
+    document.getElementById('currentDateTime').textContent = dateTimeString;
+}
+
+// Update date and time every second
+setInterval(updateCurrentDateTime, 1000);
+updateCurrentDateTime(); // Initial call
+
 // Function to load orders
 async function loadOrders(page = 1) {
     try {
@@ -457,7 +515,8 @@ async function loadOrders(page = 1) {
             limit: pageSize,
             search: searchQuery,
             status: statusFilter,
-            sortBy: sortBy
+            sortBy: sortBy,
+            sortOrder: 'desc' // Always sort in descending order (newest first)
         });
         
         const response = await fetch(`/admin/api/orders?${queryParams.toString()}`);
@@ -486,29 +545,27 @@ async function loadOrders(page = 1) {
         }
         
         data.orders.forEach(order => {
+            // Format date and time properly
+            const orderDate = order.createdAt || order.createdOn;
+            const formattedDateTime = orderDate ? new Date(orderDate).toLocaleString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            }) : 'N/A';
+            
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${order._id}</td>
-                <td>${new Date(order.createdAt).toLocaleDateString()}</td>
+                <td>${formattedDateTime}</td>
                 <td>${order.userId ? order.userId.name : 'N/A'}<br><small>${order.userId ? order.userId.email : 'N/A'}</small></td>
                 <td>₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</td>
+                <td>${order.status}</td>
                 <td>
-                    <select class="form-select form-select-sm status-select" data-order-id="${order._id}">
-                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                        <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
-                        <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                        <option value="Out for Delivery" ${order.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
-                        <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                        <option value="Return Request" ${order.status === 'Return Request' ? 'selected' : ''}>Return Request</option>
-                        <option value="Returned" ${order.status === 'Returned' ? 'selected' : ''}>Returned</option>
-                    </select>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-info view-details" data-order-id="${order._id}">View</button>
-                    ${order.status === 'Return Request' ? 
-                        `<button class="btn btn-sm btn-warning handle-return" data-order-id="${order._id}">Handle Return</button>` : 
-                        ''}
+                    <a class="btn btn-sm btn-info view-details" href="/admin/orders/${order._id}">View</a>
                 </td>
             `;
             tableBody.appendChild(row);
@@ -635,7 +692,6 @@ async function updateOrderStatus(orderId, newStatus) {
         isUpdating = false;
     }
 }
-
 // Function to handle return request
 async function handleReturnRequest(orderId, action) {
     if (isUpdating) return;
@@ -649,7 +705,6 @@ async function handleReturnRequest(orderId, action) {
         
         // Set default values
         document.getElementById('returnAction').value = action;
-        document.getElementById('returnReason').value = '';
         
         // Show/hide refund amount section based on action
         const refundSection = document.getElementById('refundAmountSection');
@@ -700,7 +755,8 @@ async function loadOrders(page = 1) {
             limit: pageSize,
             search: searchQuery,
             status: statusFilter,
-            sortBy: sortBy
+            sortBy: sortBy,
+            sortOrder: 'desc' // Always sort in descending order (newest first)
         });
         
         const response = await fetch(`/admin/api/orders?${queryParams.toString()}`);
@@ -729,33 +785,27 @@ async function loadOrders(page = 1) {
         }
         
         data.orders.forEach(order => {
-            // Format date properly - handle both createdAt and createdOn
+            // Format date and time properly
             const orderDate = order.createdAt || order.createdOn;
-            const formattedDate = orderDate ? new Date(orderDate).toLocaleDateString() : 'N/A';
+            const formattedDateTime = orderDate ? new Date(orderDate).toLocaleString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            }) : 'N/A';
             
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${order._id}</td>
-                <td>${formattedDate}</td>
+                <td>${formattedDateTime}</td>
                 <td>${order.userId ? order.userId.name : 'N/A'}<br><small>${order.userId ? order.userId.email : 'N/A'}</small></td>
                 <td>₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</td>
+                <td>${order.status}</td>
                 <td>
-                    <select class="form-select form-select-sm status-select" data-order-id="${order._id}">
-                        <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                        <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
-                        <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                        <option value="Out for Delivery" ${order.status === 'Out for Delivery' ? 'selected' : ''}>Out for Delivery</option>
-                        <option value="Delivered" ${order.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                        <option value="Return Request" ${order.status === 'Return Request' ? 'selected' : ''}>Return Request</option>
-                        <option value="Returned" ${order.status === 'Returned' ? 'selected' : ''}>Returned</option>
-                    </select>
-                </td>
-                <td>
-                    <button class="btn btn-sm btn-info view-details" data-order-id="${order._id}">View</button>
-                    ${order.status === 'Return Request' ? 
-                        `<button class="btn btn-sm btn-warning handle-return" data-order-id="${order._id}">Handle Return</button>` : 
-                        ''}
+                    <a class="btn btn-sm btn-info view-details" href="/admin/orders/${order._id}">View</a>
                 </td>
             `;
             tableBody.appendChild(row);
@@ -787,69 +837,44 @@ async function loadOrderDetails(orderId) {
         
         // Format dates properly - handle both createdAt and createdOn
         const orderDate = order.createdAt || order.createdOn || order.formattedDate;
-        const formattedDate = orderDate ? new Date(orderDate).toLocaleString() : 'N/A';
+        const formattedDate = orderDate ? new Date(orderDate).toLocaleString('en-IN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        }) : 'N/A';
         
         modalContent.innerHTML = `
-            <div class="row">
-                <div class="col-md-6">
-                    <h6>Order Information</h6>
-                    <p><strong>Order ID:</strong> ${order._id}</p>
-                    <p><strong>Date:</strong> ${formattedDate}</p>
-                    <p><strong>Status:</strong> ${order.status}</p>
-                    <p><strong>Total Amount:</strong> ₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</p>
-                </div>
-                <div class="col-md-6">
-                    <h6>Customer Information</h6>
-                    <p><strong>Name:</strong> ${order.userId ? order.userId.name : 'N/A'}</p>
-                    <p><strong>Email:</strong> ${order.userId ? order.userId.email : 'N/A'}</p>
-                    <p><strong>Phone:</strong> ${order.userId ? order.userId.phone : 'N/A'}</p>
-                </div>
+            <div class="order-details">
+                <p><strong>Order ID:</strong> ${order._id}</p>
+                <p><strong>Date:</strong> ${formattedDate}</p>
+                <p><strong>Status:</strong> <span class="badge bg-${order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' || order.status === 'Returned' ? 'danger' : order.status === 'Out for Delivery' ? 'info' : 'warning'}">${order.status}</span></p>
+                <p><strong>Total Amount:</strong> ₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</p>
+                ${order.status === 'Delivered' ? 
+                    `<p><strong>Delivered On:</strong> ${new Date(order.updatedAt).toLocaleString('en-IN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    })}</p>` :
+                    order.status === 'Shipped' ?
+                    `<p><strong>Status:</strong> Order has been shipped and is in transit</p>` :
+                    order.status === 'Out for Delivery' ?
+                    `<p><strong>Status:</strong> Order is out for delivery</p>` :
+                    `<p><strong>Estimated Delivery:</strong> ${new Date(order.estimatedDeliveryDate).toLocaleString('en-IN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    })}</p>`
+                }
             </div>
-            <hr>
-            <h6>Order Items</h6>
-            <div class="table-responsive">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Price</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${order.orderedItems && order.orderedItems.map(item => `
-                            <tr>
-                                <td>${item.product ? item.product.productName : 'Product not found'}</td>
-                                <td>${item.quantity || 0}</td>
-                                <td>₹${item.price ? item.price.toFixed(2) : '0.00'}</td>
-                                <td>₹${(item.price * item.quantity).toFixed(2)}</td>
-                            </tr>
-                        `).join('') || '<tr><td colspan="4" class="text-center">No items found</td></tr>'}
-                    </tbody>
-                </table>
-            </div>
-            <hr>
-            <h6>Shipping Address</h6>
-            <p>
-                ${order.addressDetails ? `
-                    ${order.addressDetails.name}<br>
-                    ${order.addressDetails.address}<br>
-                    ${order.addressDetails.city}, ${order.addressDetails.state} - ${order.addressDetails.pincode}<br>
-                    Phone: ${order.addressDetails.phone}
-                ` : 'No address details available'}
-            </p>
-            ${order.status === 'Return Request' ? `
-                <hr>
-                <h6>Return Request Details</h6>
-                <p><strong>Reason:</strong> ${order.returnReason || 'Not specified'}</p>
-                <p><strong>Requested On:</strong> ${order.returnRequestDate ? new Date(order.returnRequestDate).toLocaleString() : 'N/A'}</p>
-            ` : ''}
-            ${order.status === 'Cancelled' ? `
-                <hr>
-                <h6>Cancellation</h6>
-                <p><strong>Reason:</strong> ${order.cancellationReason || 'Not specified'}</p>
-            ` : ''}
         `;
 
         // Update footer based on order status
@@ -897,8 +922,10 @@ async function loadOrderDetails(orderId) {
 }
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-    // Load initial page
-    loadOrders();
+    // Set default values
+    currentPage = 1;
+    sortBy = 'createdAt'; // Set default sort to date
+    document.getElementById('sortBy').value = 'createdAt';
     
     // Get initial values from URL if present
     const urlParams = new URLSearchParams(window.location.search);
@@ -922,6 +949,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('pageSize').value = pageSize;
     }
     
+    // Load initial page with current filters
+    loadOrders(currentPage);
+    
     // Update URL with current filters
     function updateURL() {
         const url = new URL(window.location);
@@ -936,22 +966,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add event listener for search form
     document.getElementById('searchForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        loadOrders(1); // Reset to first page on new search
+        currentPage = 1; // Reset to first page on new search
+        updateURL();
+        loadOrders(currentPage);
     });
     
     // Add event listener for status filter change
     document.getElementById('statusFilter').addEventListener('change', () => {
-        loadOrders(1); // Reset to first page on filter change
+        currentPage = 1; // Reset to first page on filter change
+        updateURL();
+        loadOrders(currentPage);
     });
     
     // Add event listener for sort by change
     document.getElementById('sortBy').addEventListener('change', () => {
-        loadOrders(1);
+        currentPage = 1; // Reset to first page on sort change
+        updateURL();
+        loadOrders(currentPage);
     });
     
     // Add event listener for page size change
     document.getElementById('pageSize').addEventListener('change', () => {
-        loadOrders(1); // Reset to first page when changing page size
+        currentPage = 1; // Reset to first page when changing page size
+        updateURL();
+        loadOrders(currentPage);
     });
     
     // Add event listener for pagination
@@ -960,6 +998,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target.classList.contains('page-link') && !e.target.parentElement.classList.contains('disabled')) {
             const page = parseInt(e.target.dataset.page);
             if (!isNaN(page)) {
+                currentPage = page;
+                updateURL();
                 loadOrders(page);
             }
         }
@@ -995,13 +1035,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         
         const action = document.getElementById('returnAction').value;
-        const reason = document.getElementById('returnReason').value;
         const refundAmount = document.getElementById('refundAmount').value;
-        
-        if (!reason.trim()) {
-            showToast('Please provide a reason', 'error');
-            return;
-        }
         
         if (action === 'accept' && (!refundAmount || refundAmount <= 0)) {
             showToast('Please enter a valid refund amount', 'error');
@@ -1015,8 +1049,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ 
-                    action, 
-                    reason,
+                    action,
                     refundAmount: action === 'accept' ? parseFloat(refundAmount) : 0
                 })
             });

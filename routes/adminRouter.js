@@ -60,5 +60,9 @@ router.get("/api/orders", adminAuth, orderController.getAllOrders);
 router.get("/api/orders/:orderId", adminAuth, orderController.getOrderDetails);
 router.patch("/api/orders/:orderId/status", adminAuth, orderController.updateOrderStatus);
 router.post("/api/orders/:orderId/return", adminAuth, orderController.handleReturnRequest);
+router.post("/api/orders/:orderId/items/:itemId/return", adminAuth, orderController.handleItemReturnRequest);
+router.get("/orders/:orderId", adminAuth, orderController.loadOrderDetailsPage);
+
+
 
 module.exports = router;

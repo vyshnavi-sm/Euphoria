@@ -385,7 +385,7 @@
      display: flex;
      align-items: center;
      gap: 20px;
-     margin-left: 20px;
+     margin-left: 40px;
      margin-top: 20px;
  }
 
@@ -740,8 +740,16 @@
             });
             
             const data = await response.json();
+            
             if (response.ok) {
-                showToast(`"${productName}" added to cart successfully!`);
+                Swal.fire({
+                    title: 'Added to Cart!',
+                    text: `"${productName}" has been added to your cart`,
+                    icon: 'success',
+                    confirmButtonColor: '#5C4033',
+                    timer: 2000,
+                    timerProgressBar: true
+                });
                 
                 button.innerHTML = '<i class="fas fa-check"></i> Added';
                 button.style.backgroundColor = '#4CAF50';
@@ -752,19 +760,56 @@
                     button.disabled = false;
                 }, 2000);
             } else if (response.status === 401) {
-                showToast('Please login to add items to cart', 'error');
-                setTimeout(() => {
-                    window.location.href = '/login';
-                }, 2000);
+                Swal.fire({
+                    title: 'Sign in Required',
+                    text: 'Please sign in to add items to your cart',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5C4033',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sign In',
+                    cancelButtonText: 'Continue Shopping'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/login';
+                    } else {
+                        button.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
+                        button.style.backgroundColor = '#5C4033';
+                        button.disabled = false;
+                    }
+                });
             } else {
-                showToast(data.message || 'Error adding to cart', 'error');
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message || 'Please Login',
+                    icon: 'error',
+                    confirmButtonColor: '#5C4033'
+                });
                 button.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
                 button.style.backgroundColor = '#5C4033';
                 button.disabled = false;
             }
         } catch (error) {
             console.error('Error adding to cart:', error);
-            showToast('Error adding to cart', 'error');
+            Swal.fire({
+                 title: 'Sign in Required',
+                    text: 'Please sign in to add items to your cart',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#5C4033',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sign In',
+                    cancelButtonText: 'Continue Shopping',
+                     }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/login';
+                    } else {
+                        button.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
+                        button.style.backgroundColor = '#5C4033';
+                        button.disabled = false;
+                    }
+                });
+                
             button.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
             button.style.backgroundColor = '#5C4033';
             button.disabled = false;

@@ -442,11 +442,15 @@
       <div class="header-content">
         <p class="section-subtitle">Your Purchase History</p>
         <h2 class="section-title">My Orders</h2>
+        <div id="currentDateTime" class="mt-2" style="font-size: 0.9rem; color: var(--text-dark);"></div>
       </div>
+      <a href="/shop" class="btn btn-brown mt-3 mb-3">
+        <i class="fas fa-shopping-bag"></i> Continue Shopping
+      </a>
     </div>
 
     <!-- Search Form -->
-    <form action="/orders/search" method="GET" class="search-container">
+    <form action="/user/orders" method="GET" class="search-container">
       <input type="text" name="query" placeholder="Search by Order ID or Product" class="search-input" value="<%= searchQuery || '' %>">
       <button type="submit" class="search-btn">
         <i class="fas fa-search"></i>
@@ -465,7 +469,15 @@
             </div>
             <div class="row">
               <div class="col-md-6">
-                <p class="mb-1"><strong>Order Date:</strong> <%= new Date(order.createdAt).toLocaleDateString() %></p>
+                <p class="mb-1"><strong>Order Date:</strong> <%= order.createdOn && !isNaN(new Date(order.createdOn)) ? new Date(order.createdOn).toLocaleString('en-IN', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: true
+                }) : 'Invalid Date' %></p>
                 <p class="mb-1"><strong>Total Amount:</strong> ₹<%= order.totalPrice.toFixed(2) %></p>
               </div>
               <div class="col-md-6 text-md-end">
@@ -528,7 +540,7 @@
           <% } %>
         </h3>
         <% if (searchQuery) { %>
-          <a href="/orders" class="btn btn-brown me-2">
+          <a href="/user/orders" class="btn btn-brown me-2">
             <i class="fas fa-arrow-left"></i> Back to All Orders
           </a>
         <% } %>
@@ -625,6 +637,46 @@
       document.body.removeChild(toast);
     });
   }
+
+  // Function to update current date and time
+  function updateCurrentDateTime() {
+    const now = new Date();
+    const dateTimeString = now.toLocaleString('en-IN', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+    });
+    document.getElementById('currentDateTime').textContent = dateTimeString;
+  }
+
+  // Update date and time every second
+  setInterval(updateCurrentDateTime, 1000);
+  updateCurrentDateTime(); // Initial call
+
+  // Modify the order date display to include time
+  document.addEventListener('DOMContentLoaded', () => {
+    // Update all order dates to include time
+    const orderDates = document.querySelectorAll('.order-date');
+    orderDates.forEach(dateElement => {
+        const dateText = dateElement.textContent;
+        if (dateText && dateText !== 'N/A') {
+            const date = new Date(dateText);
+            dateElement.textContent = date.toLocaleString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+        }
+    });
+  });
   </script>
 </body>
 </html>

@@ -5,33 +5,45 @@ const { createPDF } = require('../../utils/pdfGenerator');
 const getUserOrders = async (req, res) => {
     try {
         // Get user ID from session, handling both direct ID and user object cases
-        const userId = req.session.user._id ? req.session.user._id : req.session.user;
+        const userId = req.session.user; // Correctly get user ID from session
 
         if (!userId) {
             return res.redirect('/login');
         }
 
-        // Pagination parameters
         const page = parseInt(req.query.page) || 1;
-        const limit = 5; // Number of orders per page
+        const limit = 10; // Number of orders per page
         const skip = (page - 1) * limit;
+        const searchQuery = req.query.query?.trim();
 
-        // Get total count for pagination
-        const totalOrders = await Order.countDocuments({ userId });
-        const totalPages = Math.ceil(totalOrders / limit);
+        let query = { userId };
 
-        // Get orders for the current page
-        const orders = await Order.find({ userId })
+        // Add search functionality to the database query
+        if (searchQuery) {
+            query.$or = [
+                { _id: { $regex: searchQuery, $options: 'i' } }, // Search by Order ID
+                // To search within orderedItems product names, we need aggregation
+                // For simplicity, we'll keep the basic search on ID for now
+                // A more complex implementation would involve aggregation
+            ];
+        }
+
+        // Fetch user orders with sorting and pagination applied by the database
+        const orders = await Order.find(query)
             .populate('orderedItems.product')
-            .sort({ createdOn: -1 })
+            .sort({ createdOn: -1 }) // Always sort by newest first
             .skip(skip)
             .limit(limit);
 
-        res.render('user/orders', { 
-            orders,
+        // Get the total count of orders matching the search query for pagination
+        const totalOrders = await Order.countDocuments(query);
+        const totalPages = Math.ceil(totalOrders / limit);
+
+        res.render('user/orders', {
+            orders, // Render paginated and filtered orders
             currentPage: page,
             totalPages,
-            searchQuery: req.query.query || ''
+            searchQuery: searchQuery || '' // Pass the search query back to the template
         });
 
     } catch (error) {
@@ -41,41 +53,17 @@ const getUserOrders = async (req, res) => {
 };
 
 const searchUserOrders = async (req, res) => {
-    try {
-        const userId = req.session.user._id ? req.session.user._id : req.session.user;
-        const query = req.query.query?.trim();
-
-        if (!userId) {
-            return res.redirect('/login');
-        }
-
-        const orders = await Order.find({ userId })
-            .populate('orderedItems.product')
-            .sort({ createdOn: -1 });
-
-        const filtered = orders.filter(order =>
-            order.orderId.includes(query) ||
-            order.orderedItems.some(item =>
-                item.product?.productName?.toLowerCase().includes(query.toLowerCase())
-            )
-        );
-
-        res.render('user/orders', {
-            orders: filtered,
-            currentPage: 1,
-            totalPages: 1,
-            searchQuery: query
-        });
-    } catch (error) {
-        console.error('Error searching orders:', error);
-        res.status(500).send('Error searching orders');
-    }
+    // This function is now redundant as getUserOrders handles search
+    // We can redirect to the main orders page with the query
+    const query = req.query.query?.trim();
+    res.redirect(`/user/orders${query ? '?query=' + query : ''}`);
 };
 
 const getSingleOrder = async (req, res) => {
     try {
         const { orderId } = req.params;
-        const userId = req.session.user._id ? req.session.user._id : req.session.user;
+        // const userId = req.session.user._id ? req.session.user._id : req.session.user;
+        const userId = req.session.user; // Correctly get user ID from session
 
         if (!userId) {
             return res.redirect('/login');
@@ -90,6 +78,14 @@ const getSingleOrder = async (req, res) => {
             return res.redirect('/user/orders');
         }
 
+        console.log('Fetched order details for user:', order._id);
+        console.log('Order status:', order.status);
+        console.log('Overall admin rejection reason:', order.adminReturnRejectionReason);
+        order.orderedItems.forEach((item, index) => {
+            console.log(`Item ${index} status: ${item.status}`);
+            console.log(`Item ${index} admin rejection reason: ${item.adminRejectionReason}`);
+        });
+
         res.render('user/order-details', { order });
     } catch (error) {
         console.error('Error loading order details:', error);
@@ -101,7 +97,8 @@ const cancelOrder = async (req, res) => {
     try {
         const { orderId } = req.params;
         const { reason } = req.body;
-        const userId = req.session.user._id ? req.session.user._id : req.session.user;
+        // const userId = req.session.user._id ? req.session.user._id : req.session.user;
+        const userId = req.session.user; // Correctly get user ID from session
 
         if (!userId) {
             return res.json({ success: false, message: 'User not logged in' });
@@ -157,7 +154,8 @@ const cancelItem = async (req, res) => {
     try {
         const { orderId, itemId } = req.params;
         const { reason } = req.body;
-        const userId = req.session.user._id ? req.session.user._id : req.session.user;
+        // const userId = req.session.user._id ? req.session.user._id : req.session.user;
+        const userId = req.session.user; // Correctly get user ID from session
 
         if (!userId) {
             return res.json({ success: false, message: 'User not logged in' });
@@ -238,16 +236,79 @@ const cancelItem = async (req, res) => {
     } catch (error) {
         console.error('Error cancelling item:', error);
         return res.status(500).json({ success: false, message: 'Error cancelling item', error: error.message });
-    }
+     }
 };
 
+const returnSingleItem = async (req, res) => {
+    try {
+        // console.log('--- returnSingleItem function started ---');
+        const { orderId, itemId } = req.params;
+        const { reason } = req.body;
+        // const userId = req.session.user._id ? req.session.user._id : req.session.user;
+        const userId = req.session.user; // Correctly get user ID from session
 
+        // console.log('Received params and body:', { orderId, itemId, reason });
+        // console.log('User ID from session:', userId);
+
+        if (!userId) {
+            // console.log('Error: User not logged in');
+            return res.json({ success: false, message: 'User not logged in' });
+        }
+
+        if (!reason || reason.trim() === '') {
+            // console.log('Error: Return reason is required');
+            return res.json({ success: false, message: 'Return reason is required' });
+        }
+
+        // console.log('Searching for order with ID:', orderId, 'for user:', userId);
+        const order = await Order.findOne({ _id: orderId, userId });
+
+        if (!order) {
+            // console.log('Error: Order not found');
+            return res.json({ success: false, message: 'Order not found' });
+        }
+
+        // console.log('Order found. Searching for item with ID:', itemId);
+        const item = order.orderedItems.id(itemId);
+
+        if (!item) {
+            // console.log('Error: Item not found in order');
+            return res.json({ success: false, message: 'Item not found in order' });
+        }
+
+        // console.log('Item found. Checking order status:', order.status);
+        // Check if the item is in a returnable status (e.g., 'Delivered')
+        if (order.status !== 'Delivered') {
+            // console.log('Error: Order status is not Delivered');
+            return res.json({ success: false, message: 'Can only request return for items in delivered orders' });
+        }
+
+        // console.log('Order status is Delivered. Updating item status and reason.');
+        // Update the item's status to 'Return Requested'
+        item.status = 'Return Requested';
+        item.returnReason = reason.trim();
+
+        // console.log('Saving updated order:', order._id);
+        await order.save();
+
+        // console.log('Order saved successfully. Return request for item submitted.');
+        // console.log('--- returnSingleItem function finished ---');
+        return res.json({ success: true, message: 'Return request for item submitted successfully' });
+
+    } catch (error) {
+        // console.error('--- Error in returnSingleItem function ---');
+        // console.error('Error details:', error);
+        // console.error('--- End of Error in returnSingleItem ---');
+        return res.status(500).json({ success: false, message: 'Error submitting return request', error: error.message });
+    }
+};
 
 const returnOrder = async (req, res) => {
     try {
         const { orderId } = req.params;
         const { reason } = req.body;
-        const userId = req.session.user._id ? req.session.user._id : req.session.user;
+        // const userId = req.session.user._id ? req.session.user._id : req.session.user;
+        const userId = req.session.user; // Correctly get user ID from session
 
         if (!userId) {
             return res.json({ success: false, message: 'User not logged in' });
@@ -260,7 +321,9 @@ const returnOrder = async (req, res) => {
         const order = await Order.findOne({
             _id: orderId,
             userId: userId
-        });
+        })
+        .populate('orderedItems.product')
+        .select('+orderedItems.adminRejectionReason +orderedItems.adminReturnReason +adminReturnRejectionReason +adminRejectionReason'); // Include admin rejection reasons
 
         if (!order) {
             return res.json({ success: false, message: 'Order not found' });
@@ -370,7 +433,11 @@ module.exports = {
     getSingleOrder,
     cancelOrder,
     cancelItem,
+    returnSingleItem,
     returnOrder,
     downloadInvoice,
-    getOrderDetails
+    getOrderDetails,
 };
+
+
+

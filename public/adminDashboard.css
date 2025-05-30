@@ -11,7 +11,7 @@ body {
     top: 0;
     width: 100%;
     height: 60px;
-    background:#563d07;
+    background: #5D4037;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -71,7 +71,7 @@ body {
     left: 0;
     width: 200px;
     height: calc(100vh - 60px);
-    background: #5a3e06;
+    background: #5D4037;
     padding-top: 10px;
     color: white;
 }
@@ -95,7 +95,7 @@ body {
 }
 
 .nav-menu a:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: #5D4037;
     padding: 10px;
     border-radius: 5px;
 }

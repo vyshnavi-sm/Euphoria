@@ -61,9 +61,11 @@ router.post("/change-email",profileController.changeEmailValid)
 router.post("/verify-email-otp",profileController.verifyEmailOtp)
 router.post("/update-email",profileController.updateEmail);
 router.get("/change-password",profileController.changePassword);
-router.post("/change-password",profileController.changePasswordValid);
+router.post("/change-password",profileController.postNewPassword);
 router.post("/verify-changepassword-otp",profileController.verifyChangePassOtp);
 router.get("/addresses", profileController.viewAddresses);
+router.post("/update-profile", profileController.updateProfile);
+router.post("/delete-profile-picture", profileController.deleteProfilePicture);
 
 // Product Management
 router.get("/product/:id",productController.productDetails);
@@ -98,6 +100,7 @@ router.get("/user/orders/:id", userAuth, orderController.getOrderDetails);
 router.post("/user/orders/:orderId/cancel", userAuth, orderController.cancelOrder);
 router.post("/user/orders/:orderId/return", userAuth, orderController.returnOrder);
 router.post("/user/orders/:orderId/items/:itemId/cancel", userAuth, orderController.cancelItem);
+router.post("/user/orders/:orderId/items/:itemId/return", userAuth, orderController.returnSingleItem);
 router.get("/user/orders/:orderId/invoice", userAuth, orderController.downloadInvoice);
 
 module.exports=router;

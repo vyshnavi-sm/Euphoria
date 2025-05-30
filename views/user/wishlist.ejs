@@ -101,7 +101,7 @@
    cursor: pointer;
    transition: all 0.3s ease;
    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-   color: #f44336;
+   color: #5C4033;
  }
 
  .remove-wishlist-btn:hover {
@@ -350,23 +350,32 @@ async function addToCart(productId) {
     if (response.ok) {
       showToast('Product added to cart successfully');
       // Remove from wishlist after adding to cart
-      await removeFromWishlist(productId);
-      // Remove the product card from the wishlist
-      const productCard = document.querySelector(`[data-product-id="${productId}"]`);
-      if (productCard) {
-        productCard.remove();
-      }
-      // Check if wishlist is empty and update UI
-      const productGrid = document.querySelector('.product-grid');
-      if (!productGrid.querySelector('.product-card')) {
-        productGrid.innerHTML = `
-          <div class="empty-wishlist">
-            <i class="fas fa-heart empty-wishlist-icon"></i>
-            <h2>Your wishlist is empty</h2>
-            <p>Add items that you like to your wishlist</p>
-            <a href="/shop" class="shop-btn">Start Shopping</a>
-          </div>
-        `;
+      const wishlistResponse = await fetch('/user/wishlist/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ productId })
+      });
+      
+      if (wishlistResponse.ok) {
+        // Remove the product card from the wishlist
+        const productCard = document.querySelector(`[data-product-id="${productId}"]`);
+        if (productCard) {
+          productCard.remove();
+        }
+        // Check if wishlist is empty and update UI
+        const productGrid = document.querySelector('.product-grid');
+        if (!productGrid.querySelector('.product-card')) {
+          productGrid.innerHTML = `
+            <div class="empty-wishlist">
+              <i class="fas fa-heart empty-wishlist-icon"></i>
+              <h2>Your wishlist is empty</h2>
+              <p>Add items that you like to your wishlist</p>
+              <a href="/shop" class="shop-btn">Start Shopping</a>
+            </div>
+          `;
+        }
       }
     } else if (response.status === 401) {
       showToast('Please login to add items to cart', 'error');

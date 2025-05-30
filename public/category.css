@@ -11,7 +11,7 @@ body {
     top: 0;
     width: 100%;
     height: 60px;
-    background:#563d07;
+    background:rgba(55, 28, 2, 0.919);
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -69,7 +69,7 @@ body {
     left: 0;
     width: 200px;
     height: calc(100vh - 60px);
-    background: #5a3e06;
+    background: rgba(55, 28, 2, 0.919);
     padding-top: 10px;
     color: white;
 }
@@ -120,7 +120,7 @@ body {
 }
 
 .category-table th {
-    background: #5a3e06;
+    background: rgba(55, 28, 2, 0.919);
     color: white;
 }
 

@@ -200,6 +200,18 @@
             color: white;
             transform: translateY(-1px);
         }
+
+        .status-cancelled {
+            background-color: #FFEBEE;
+            color: #C62828;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .product-row-cancelled {
+            background-color: #FFF5F5 !important;
+        }
       
     </style>
 </head>
@@ -239,8 +251,13 @@
         <tbody>
             <% if (data && data.length > 0) { %>
                 <% data.forEach((product) => { %>
-                    <tr>
-                        <td><%= product.productName %></td>
+                    <tr class="<%= product.status === 'Cancelled' ? 'product-row-cancelled' : '' %>">
+                        <td>
+                            <%= product.productName %>
+                            <% if (product.status === 'Cancelled') { %>
+                                <span class="status-cancelled ms-2">Cancelled</span>
+                            <% } %>
+                        </td>
                         <td><%= product.brand ? product.brand.brandName : 'N/A' %></td>
                         <td><%= product.category ? product.category.name : 'N/A' %></td>
                         <td>₹<%= product.regularPrice %></td>
@@ -250,9 +267,6 @@
                             <a href="#" class="btn btn-outline-success btn-sm px-2" style="min-width: 80px;">Add Offer</a>
                             <a href="#" class="btn btn-outline-danger btn-sm px-2" style="min-width: 80px;">Remove</a>
                         </td>
-                        
-                        
-                        
                         <td>
                             <% if(product.isBlocked === false) { %>
                                 <a href="#" onclick="confirmBlock('<%= product._id %>')" class="btn btn-danger ps-3">Block</a>
@@ -265,7 +279,6 @@
                                 <a href="/admin/editProduct?id=<%= product._id %>">Edit</a>
                             </button>
                         </td>
-                        
                     </tr>
                 <% }) %>
             <% } else { %>

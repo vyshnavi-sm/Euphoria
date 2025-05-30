@@ -5,6 +5,32 @@ const bcrypt = require("bcrypt");
 const env = require('dotenv').config();
 const session = require("express-session");
 const Order = require("../../models/orderSchema");
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer for profile picture uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/images/profiles')
+    },
+    filename: function (req, file, cb) {
+        cb(null, 'profile-' + Date.now() + path.extname(file.originalname))
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    fileFilter: function (req, file, cb) {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Not an image! Please upload an image.'), false);
+        }
+    },
+    limits: {
+        fileSize: 5 * 1024 * 1024 // 5MB limit
+    }
+}).single('profilePicture');
 
 function generateOtp(){
     const digits = "1234567890";
@@ -174,49 +200,114 @@ const resendOtp = async (req,res)=>{
     }
 }
 
-const postNewPassword = async (req,res)=>{
+const postNewPassword = async (req, res) => {
     try {
-        const {newPass1, newPass2} = req.body;
-        const email = req.session.email;
+        const { oldPassword, newPassword, confirmPassword } = req.body;
         
-        if (!email) {
-            return res.status(400).json({
-                success: false,
-                message: "Session expired. Please try again."
-            });
-        }
-        
-        if (newPass1 !== newPass2) {
-            return res.status(400).json({
-                success: false,
-                message: "Passwords do not match"
-            });
-        }
+        // Check if this is a change password request (has oldPassword) or reset password request
+        if (oldPassword) {
+            // Change password flow
+            const userId = req.session.user._id;
+            
+            // Validate input
+            if (!oldPassword || !newPassword || !confirmPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'All fields are required'
+                });
+            }
 
-        const passwordHash = await securePassword(newPass1);
-        await User.updateOne(
-            {email: email},
-            {$set: {password: passwordHash}}
-        );
-        
-        // Clear session data
-        delete req.session.email;
-        delete req.session.userOtp;
-        delete req.session.user;
-        
-        return res.status(200).json({
-            success: true,
-            message: "Password updated successfully",
-            redirectUrl: "/login"
-        });
+            if (newPassword !== confirmPassword) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'New passwords do not match'
+                });
+            }
+
+            if (newPassword.length < 6) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Password must be at least 6 characters long'
+                });
+            }
+
+            // Find user and verify old password
+            const user = await User.findById(userId);
+            if (!user) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+
+            // Verify old password
+            const isMatch = await bcrypt.compare(oldPassword, user.password);
+            if (!isMatch) {
+                return res.status(401).json({  // Changed to 401 for unauthorized
+                    success: false,
+                    message: 'The current password you entered is incorrect. Please try again.'
+                });
+            }
+
+            // Hash new password
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+            // Update password
+            user.password = hashedPassword;
+            await user.save();
+
+            // Update session
+            req.session.user = user;
+
+            return res.status(200).json({
+                success: true,
+                message: 'Password updated successfully',
+                redirectUrl: '/userProfile'
+            });
+        } else {
+            // Reset password flow
+            const { newPass1, newPass2 } = req.body;
+            const email = req.session.email;
+            
+            if (!email) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Session expired. Please try again."
+                });
+            }
+            
+            if (newPass1 !== newPass2) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Passwords do not match"
+                });
+            }
+
+            const passwordHash = await bcrypt.hash(newPass1, 10);
+            await User.updateOne(
+                { email: email },
+                { $set: { password: passwordHash } }
+            );
+            
+            // Clear session data
+            delete req.session.email;
+            delete req.session.userOtp;
+            delete req.session.user;
+            
+            return res.status(200).json({
+                success: true,
+                message: "Password updated successfully",
+                redirectUrl: "/login"
+            });
+        }
     } catch (error) {
-        console.error("Error updating password:", error);
+        console.error('Error in postNewPassword:', error);
         return res.status(500).json({
             success: false,
-            message: "An error occurred while updating the password"
+            message: 'An error occurred while updating password'
         });
     }
-}
+};
 
 const userProfile = async (req, res) => {
     try {
@@ -538,7 +629,11 @@ const postAddAddress = async(req,res)=>{
 
         await userAddress.save();
         // Redirect to profile page with address tab active
-        res.redirect("/userProfile#address");
+        if (req.query.redirect === 'checkout') {
+            res.redirect("/user/checkout");
+        } else {
+            res.redirect("/userProfile#address");
+        }
 
     } catch (error) {
         console.error("Error adding address:", error);
@@ -675,15 +770,180 @@ const deleteAddress = async(req,res)=>{
     }
 }
 
+const updateProfile = async (req, res) => {
+    try {
+        upload(req, res, async function(err) {
+            if (err) {
+                return res.status(400).json({
+                    success: false,
+                    message: err.message
+                });
+            }
 
+            console.log('Update profile request received:', req.body);
+            const { name, phone } = req.body;
+            
+            // Get user ID from session - handle both object and direct ID cases
+            const userId = req.session.user?._id || req.session.user;
+            console.log('User ID from session:', userId);
 
+            if (!userId) {
+                console.log('No user ID found in session');
+                return res.status(401).json({
+                    success: false,
+                    message: 'User not authenticated'
+                });
+            }
 
+            // Validate name input
+            if (!name) {
+                console.log('Validation failed: Missing name field');
+                return res.status(400).json({
+                    success: false,
+                    message: 'Name is required'
+                });
+            }
 
+            // Prepare update object
+            const updateData = { name };
 
+            // Only validate and update phone if it's provided
+            if (phone) {
+                // Validate phone number format
+                if (!/^\d{10}$/.test(phone)) {
+                    console.log('Validation failed: Invalid phone format');
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Please enter a valid 10-digit phone number'
+                    });
+                }
 
+                // Check if phone number is already in use by another user
+                const existingUser = await User.findOne({ phone, _id: { $ne: userId } });
+                if (existingUser) {
+                    console.log('Validation failed: Phone number already in use');
+                    return res.status(400).json({
+                        success: false,
+                        message: 'This phone number is already registered with another account'
+                    });
+                }
 
+                updateData.phone = phone;
+            }
 
+            // Handle profile picture upload
+            if (req.file) {
+                updateData.profilePicture = '/images/profiles/' + req.file.filename;
+            }
 
+            console.log('Attempting to update user profile for ID:', userId);
+            // Update user profile
+            const updatedUser = await User.findByIdAndUpdate(
+                userId,
+                updateData,
+                { new: true }
+            );
+
+            console.log('Result of findByIdAndUpdate:', updatedUser);
+
+            if (!updatedUser) {
+                console.log('User not found with ID:', userId);
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+
+            console.log('Profile updated in DB, updating session...');
+            
+            // Update session with complete user data
+            req.session.user = {
+                _id: updatedUser._id,
+                name: updatedUser.name,
+                email: updatedUser.email,
+                phone: updatedUser.phone,
+                profilePicture: updatedUser.profilePicture
+            };
+
+            console.log('Session data prepared:', req.session.user);
+
+            // Save session explicitly
+            req.session.save((err) => {
+                if (err) {
+                    console.error('Error saving session:', err);
+                    return res.status(500).json({
+                        success: false,
+                        message: 'Error updating session'
+                    });
+                }
+                console.log('Session updated successfully');
+                return res.status(200).json({
+                    success: true,
+                    message: 'Profile updated successfully'
+                });
+            });
+        });
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while updating profile'
+        });
+    }
+};
+
+const deleteProfilePicture = async (req, res) => {
+    try {
+        const userId = req.session.user?._id || req.session.user;
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'User not authenticated'
+            });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Only delete if it's not the default picture
+        if (user.profilePicture && user.profilePicture !== '/images/default-profile.png') {
+            // Optional: Delete the old file from the server
+            // const oldPicturePath = path.join(__dirname, '..', '..', 'public', user.profilePicture);
+            // fs.unlink(oldPicturePath, (err) => {
+            //     if (err) console.error('Failed to delete old profile picture file:', err);
+            // });
+
+            user.profilePicture = '/images/default-profile.png';
+            await user.save();
+
+            // Update session
+            req.session.user.profilePicture = user.profilePicture;
+            req.session.save();
+
+            return res.status(200).json({
+                success: true,
+                message: 'Profile picture deleted successfully'
+            });
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'No custom profile picture to delete'
+            });
+        }
+
+    } catch (error) {
+        console.error('Error deleting profile picture:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while deleting profile picture'
+        });
+    }
+};
 
 module.exports = {
     getForgotPassPage,
@@ -706,5 +966,6 @@ module.exports = {
     editAddress,
     updateAddress,
     deleteAddress,
-    
+    updateProfile,
+    deleteProfilePicture,
 };
