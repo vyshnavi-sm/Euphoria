@@ -40,6 +40,10 @@
                     <label for="cPassword">Confirm Password</label>
                     <input type="password" id="cPassword" name="cPassword" required>
                 </div>
+                <div class="form-group">
+                    <label for="referralCode">Referral Code (Optional)</label>
+                    <input type="text" id="referralCode" name="referralCode" placeholder="Enter referral code if you have one">
+                </div>
                 <button type="submit" class="signup-btn">Sign Up</button>
             </form>
             
@@ -124,6 +128,25 @@
         window.history.pushState(null, null, window.location.href);
     };
 
+    // Function to get query parameter by name
+    function getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+
+    // Check for referral token in URL and pre-fill input
+    document.addEventListener('DOMContentLoaded', function() {
+        const referralCodeInput = document.getElementById('referralCode');
+        const referralToken = getQueryParam('ref');
+        if (referralToken && referralCodeInput) {
+            // You would ideally make an AJAX request here to get the actual referral code
+            // associated with the token. For this implementation, we'll just set the token as the code.
+            // If your system uses tokens that are also directly the codes, this is fine.
+            // If not, you'd need a backend endpoint to convert token to code.
+            referralCodeInput.value = referralToken;
+        }
+    });
+
     function validateSignupForm(event) {
         event.preventDefault();
         
@@ -132,6 +155,7 @@
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
         const cPassword = document.getElementById('cPassword').value;
+        const referralCode = document.getElementById('referralCode').value;
         
         // Basic validation
         if (password !== cPassword) {
@@ -151,7 +175,7 @@
         $.ajax({
             type: 'POST',
             url: '/signup',
-            data: { name, phone, email, password, cPassword },
+            data: { name, phone, email, password, cPassword, referralCode },
             success: function(response) {
                 submitBtn.classList.remove('loading');
                 submitBtn.textContent = 'Sign Up';

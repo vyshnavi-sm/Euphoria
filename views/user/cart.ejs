@@ -769,6 +769,16 @@
             });
             return;
         }
+
+        if (newQuantity > 5) {
+            Swal.fire({
+                title: 'Maximum Product Quantity',
+                text: 'The maximum quantity per product is 5',
+                icon: 'warning',
+                confirmButtonColor: '#5C4033'
+            });
+            return;
+        }
         
         try {
             const response = await fetch('/user/cart/update', {
@@ -787,12 +797,21 @@
                 quantitySpan.textContent = newQuantity;
                 updateItemTotal(cartItem, newQuantity);
             } else {
-                Swal.fire({
-                    title: 'Error',
-                    text: data.message || 'Error updating quantity',
-                    icon: 'error',
-                    confirmButtonColor: '#5C4033'
-                });
+                if (data.message === 'Maximum total items in cart is 10') {
+                    Swal.fire({
+                        title: 'Cart Limit Reached',
+                        text: 'You can only have a maximum of 10 items in your cart',
+                        icon: 'warning',
+                        confirmButtonColor: '#5C4033'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Error updating quantity',
+                        icon: 'error',
+                        confirmButtonColor: '#5C4033'
+                    });
+                }
             }
         } catch (error) {
             console.error('Error updating quantity:', error);

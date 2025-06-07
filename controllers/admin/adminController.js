@@ -25,7 +25,8 @@ const login = async (req, res) => {
 
         if (!email || !password) {
             console.log(" Missing email or password");
-            return res.redirect("/admin/login");
+            // Return JSON response for missing credentials
+            return res.json({ success: false, message: "Please provide both email and password" });
         }
 
         console.log(" Admin Login Attempt for:", email);
@@ -33,14 +34,27 @@ const login = async (req, res) => {
 
         if (!admin) {
             console.log(" Admin not found or not an admin.");
-            return res.redirect("/admin/login");
+            // Return JSON response for admin not found
+            return res.json({ success: false, message: "Invalid email or not an admin account" });
+        }
+
+        if (admin.isBlocked) {
+            console.log(" Admin account is blocked");
+            // Return JSON response for blocked account
+            return res.json({ success: false, message: "This admin account has been blocked" });
         }
 
         //  Compare Password
         const passwordMatch = await bcrypt.compare(password, admin.password);
         if (!passwordMatch) {
             console.log(" Incorrect password");
-            return res.redirect("/admin/login");
+            // Return JSON response for incorrect password
+            return res.json({ success: false, message: "Incorrect password" });
+        }
+
+        // Clear any existing session data
+        if (req.session) {
+            delete req.session.admin;
         }
 
         // Set admin session with more details
@@ -51,19 +65,18 @@ const login = async (req, res) => {
             lastActivity: Date.now()
         };
 
-        // Save session explicitly
-        req.session.save((err) => {
-            if (err) {
-                console.error("Session save error:", err);
-                return res.redirect("/pageerror");
-            }
-            console.log(" Admin Logged In:", req.session.admin);
-            return res.redirect("/admin/dashboard");
-        });
+        // Save session explicitly and wait for it to complete
+        await new Promise((resolve) => req.session.save(resolve));
+        console.log(" Admin Logged In:", req.session.admin);
+        
+        // Redirect upon successful login
+        // return res.redirect("/admin/dashboard"); // This will be handled on the frontend
+         return res.json({ success: true, redirect: "/admin/dashboard" });
 
     } catch (error) {
         console.error(" Login Error:", error);
-        return res.redirect("/pageerror");
+        // Return JSON response for unexpected errors
+        return res.status(500).json({ success: false, message: "An error occurred. Please try again." });
     }
 };
 
@@ -79,14 +92,9 @@ const loadDashboard = async (req, res) => {
         }
 
         // Update last activity
-        req.session.lastActivity = Date.now();
-        req.session.save((err) => {
-            if (err) {
-                console.error("Session save error:", err);
-                return res.redirect("/pageerror");
-            }
-            res.render("adminDashboard");
-        });
+        req.session.admin.lastActivity = Date.now();
+        await new Promise((resolve) => req.session.save(resolve));
+        res.render("adminDashboard");
     } catch (error) {
         console.error(" Error Rendering Dashboard:", error);
         return res.redirect("/pageerror");

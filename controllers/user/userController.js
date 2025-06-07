@@ -15,9 +15,101 @@ const loadSignup = async(req,res)=>{
     }
 }
 
-function generateOtp(){
-    return Math.floor(100000 + Math.random()*900000).toString();
+// Store OTPs temporarily (in production, use Redis or similar)
+const emailOTPs = new Map();
+
+// Generate OTP
+function generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
 }
+
+// Send OTP for email verification
+const sendEmailOTP = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        // Validate email
+        if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+            return res.status(400).json({ message: 'Please provide a valid email address' });
+        }
+
+        // Check if email is already in use
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'This email is already registered' });
+        }
+
+        // Generate OTP
+        const otp = generateOTP();
+        
+        // Store OTP with 10-minute expiration
+        emailOTPs.set(email, {
+            otp,
+            expiresAt: Date.now() + 10 * 60 * 1000 // 10 minutes
+        });
+
+        // Send OTP email
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Email Verification OTP',
+            html: `
+                <h1>Email Verification</h1>
+                <p>Your OTP for email verification is: <strong>${otp}</strong></p>
+                <p>This OTP will expire in 10 minutes.</p>
+                <p>If you didn't request this change, please ignore this email.</p>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        
+        res.json({ message: 'OTP sent successfully' });
+    } catch (error) {
+        console.error('Error sending OTP:', error);
+        res.status(500).json({ message: 'Error sending OTP' });
+    }
+};
+
+// Verify OTP and update email
+const verifyEmailOTP = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const userId = req.session.user_id;
+
+        // Validate input
+        if (!email || !otp) {
+            return res.status(400).json({ message: 'Email and OTP are required' });
+        }
+
+        // Get stored OTP
+        const storedData = emailOTPs.get(email);
+        if (!storedData) {
+            return res.status(400).json({ message: 'OTP expired or not found' });
+        }
+
+        // Check expiration
+        if (Date.now() > storedData.expiresAt) {
+            emailOTPs.delete(email);
+            return res.status(400).json({ message: 'OTP has expired' });
+        }
+
+        // Verify OTP
+        if (otp !== storedData.otp) {
+            return res.status(400).json({ message: 'Invalid OTP' });
+        }
+
+        // Update user's email
+        await User.findByIdAndUpdate(userId, { email });
+
+        // Clear OTP
+        emailOTPs.delete(email);
+
+        res.json({ message: 'Email updated successfully' });
+    } catch (error) {
+        console.error('Error verifying OTP:', error);
+        res.status(500).json({ message: 'Error verifying OTP' });
+    }
+};
 
 async function sendVerificationEmail(email,otp){
     try {
@@ -55,7 +147,7 @@ async function sendVerificationEmail(email,otp){
 
 const signup = async(req,res)=>{
     try {
-        const{name,phone,email,password,cPassword} = req.body;
+        const{name,phone,email,password,cPassword,referralCode} = req.body;
 
         if(password !== cPassword){
             return res.json({ status: "error", message: "Passwords do not match" });
@@ -66,15 +158,16 @@ const signup = async(req,res)=>{
             return res.json({ status: "error", message: "User with this email already exists" });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10)
-        const otp = generateOtp();
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const otp = generateOTP();
 
         // Store user data and OTP in session first
         req.session.userData = {
             name,
             phone,
             email,
-            hashedPassword
+            password: hashedPassword, // Store hashed password in session
+            referralCode // Store referral code in session
         };
         
         // Store OTP in session immediately
@@ -182,31 +275,49 @@ const securePassword = async(password)=>{
     const verifyOtp = async(req,res)=>{
         try {
             
-            const {otp} =req.body;
+            const {otp} = req.body;
 
-            console.log(otp);
+            if(otp === req.session.userOtp){
+                const userData = req.session.userData;
+                
+                // Create new user
+                const newUser = new User({
+                    name: userData.name,
+                    email: userData.email,
+                    phone: userData.phone,
+                    password: userData.password, // Use plain password, User model will hash it
+                });
 
-            if(otp===req.session.userOtp){
-                const user = req.session.userData
-                // const passwordHash = await securePassword(user.password);
+                // If referral code exists, process it
+                if (userData.referralCode) {
+                    const referrer = await User.findOne({ referalCode: userData.referralCode });
+                    if (referrer) {
+                        newUser.referredBy = referrer._id;
+                        
+                        // Update referrer's stats
+                        referrer.referralCount += 1;
+                        referrer.referralRewards.push({
+                            amount: 100, // You can adjust this amount
+                            referredUser: newUser._id
+                        });
+                        referrer.wallet += 100; // Add reward to referrer's wallet
+                        await referrer.save();
+                    }
+                }
 
-                const saveUserData = new User({
-                    name:user.name,
-                    email:user.email,
-                    phone:user.phone,
-                    password:user.hashedPassword,
-                })
-                await saveUserData.save();
-                // Remove the automatic login
-                // req.session.user = saveUserData._id;
-                res.json({success:true,redirectUrl:"/login"})
-            }else{
-                res.status(400).json({success:false,message:"Invalid OTP,Please try again"})
+                await newUser.save();
+                
+                // Clear session data
+                delete req.session.userData;
+                delete req.session.userOtp;
+                
+                res.json({success: true, redirectUrl: "/login"});
+            } else {
+                res.status(400).json({success: false, message: "Invalid OTP, Please try again"});
             }
-
         } catch (error) {
-            console.error("Error Verifying OTP",error)
-            res.status(500).json({success:false,message:"An error occured"})
+            console.error("Error Verifying OTP", error);
+            res.status(500).json({success: false, message: "An error occurred"});
         }
     }
 
@@ -223,7 +334,7 @@ const securePassword = async(password)=>{
 
             }
 
-            const otp = generateOtp();
+            const otp = generateOTP();
             req.session.userOtp = otp;
 
             const emailSent = await sendVerificationEmail(email,otp);
@@ -335,17 +446,41 @@ const loadShoppingPage = async (req, res) => {
         const skip = (page - 1) * limit;
         const search = req.query.search || '';
         const sort = req.query.sort || '';
+        const category = req.query.category;
+        const brand = req.query.brand;
+        const gt = req.query.gt;
+        const lt = req.query.lt;
 
         // Build the query
         let query = {
             isBlocked: false,
             quantity: { $gt: 0 }
         };
+
+        // Add search condition
         if (search) {
             query.$or = [
                 { productName: { $regex: search, $options: 'i' } },
                 { description: { $regex: search, $options: 'i' } }
             ];
+        }
+
+        // Add category filter if present
+        if (category) {
+            query.category = category;
+        }
+
+        // Add brand filter if present
+        if (brand) {
+            query.brand = brand;
+        }
+
+        // Add price range filter if present
+        if (gt !== undefined && lt !== undefined) {
+            query.salePrice = {
+                $gt: parseFloat(gt),
+                $lt: parseFloat(lt)
+            };
         }
 
         // Build the sort object
@@ -409,7 +544,10 @@ const loadShoppingPage = async (req, res) => {
             totalPages,
             search,
             sort,
-            user // Pass the user data to the view
+            user,
+            selectedCategory: category,
+            selectedBrand: brand,
+            priceRange: gt && lt ? `${gt}-${lt}` : null
         });
     } catch (error) {
         console.error('Error loading shop page:', error);
@@ -623,6 +761,8 @@ module.exports = {
     loadShoppingPage,
     filterProduct,
     filterByPrice,
+    sendEmailOTP,
+    verifyEmailOTP
 }
 
 

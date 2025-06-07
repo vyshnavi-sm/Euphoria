@@ -1,151 +1,187 @@
 <%- include("../../views/partials/user/header") %>
 <style>
-.otp-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    padding-top: 30px;
+.content-main {
     background: linear-gradient(135deg, #f8f9fa, #ffffff);
     min-height: 100vh;
-    margin-bottom: 10px;
+    margin-top: 100px;
+    padding: 20px;
+}
+
+.otp-wrapper {
+    max-width: 500px;
+    margin: 0 auto;
 }
 
 .otp-container {
-    max-width: 350px;
-    width: 100%;
-    padding: 30px;
-    background-color: #fff;
+    background: white;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    text-align: center;
-    margin-top: -40px;
+    padding: 30px;
 }
 
 .otp-container h3 {
-    font-size: 24px;
-    font-weight: bold;
     color: #5C4033;
-    margin-bottom: 20px;
     font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 24px;
+    margin-bottom: 25px;
+    text-align: center;
 }
 
-.form-group label {
-    display: block;
-    font-weight: 500;
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
     color: #5C4033;
-    margin-bottom: 8px;
     font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    margin-bottom: 8px;
+    display: block;
 }
 
 .otp-input {
     width: 100%;
     padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: 'Cormorant Garamond', serif;
     font-size: 18px;
     text-align: center;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    font-family: 'Cormorant Garamond', serif;
+    letter-spacing: 8px;
+    transition: all 0.3s ease;
 }
 
 .otp-input:focus {
     border-color: #a97155;
     box-shadow: 0 0 0 0.2rem rgba(169, 113, 85, 0.25);
+    outline: none;
 }
 
 .btn-primary {
-    width: 100%;
-    font-weight: 600;
     background-color: #a97155;
     border-color: #a97155;
-    margin-top: 20px;
-    border-radius: 8px;
-    padding: 12px;
+    color: white;
     font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    padding: 12px;
+    border-radius: 8px;
+    width: 100%;
+    transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
     background-color: #8b5e3c;
     border-color: #8b5e3c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(169, 113, 85, 0.2);
 }
 
 .otp-timer {
-    display: inline-block;
-    font-size: 14px;
+    text-align: center;
+    margin: 15px 0;
     color: #5C4033;
-    margin-top: 15px;
     font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
 }
 
 .resend-btn {
-    display: inline-block;
-    font-size: 14px;
-    color: #a97155;
-    margin-top: 15px;
     background: none;
     border: none;
+    color: #a97155;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
     cursor: pointer;
     text-decoration: underline;
-    opacity: 0.5;
-    pointer-events: none;
-    font-family: 'Cormorant Garamond', serif;
-}
-
-.resend-btn.active {
-    opacity: 1;
-    pointer-events: auto;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
 }
 
 .resend-btn:hover {
     color: #8b5e3c;
 }
 
+.resend-btn.active {
+    color: #6c757d;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+.alert {
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+    font-family: 'Cormorant Garamond', serif;
+}
+
 .alert-danger {
     background-color: #f8d7da;
     border-color: #f5c6cb;
     color: #721c24;
-    border-radius: 8px;
-    padding: 10px;
-    margin-top: 15px;
-    font-family: 'Cormorant Garamond', serif;
 }
 </style>
 
-<div class="otp-wrapper">
-   <div class="otp-container">
-       <h3>Email Verification</h3>
-       <form action="/verify-email-otp" method="post">
-           <div class="form-group">
-               <label for="otp">Enter OTP:</label>
-               <input type="text" id="otp" name="otp" class="otp-input" required>
-           </div>
-           <button type="submit" class="btn btn-primary">Verify OTP</button>
-           <div class="otp-timer">
-               <span id="otpTimer">OTP Expires in: 1:00</span>
-           </div>
-           <button type="button" id="resendBtn" class="resend-btn" onclick="resendOTP()">Resend OTP</button>
-           <% if (locals.message && message.length > 0) { %>
-               <div class="alert alert-danger mt-3">
-                   <%= message %>
-               </div>
-           <% } %>
-       </form>
-   </div>
-</div>
+<section class="content-main">
+    <div class="otp-wrapper">
+        <div class="otp-container">
+            <h3>Email Verification</h3>
+            <form action="/verify-email-otp" method="post" onsubmit="return validateOTPForm()">
+                <div class="form-group">
+                    <label for="otp" class="form-label">Enter Verification Code</label>
+                    <input type="text" id="otp" name="otp" class="otp-input" maxlength="6" required>
+                    <div class="error-message" id="otp-error"></div>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Verify Code</button>
+                </div>
+                <div class="otp-timer">
+                    <span id="otpTimer">Verification code expires in: 1:00</span>
+                </div>
+                <button type="button" id="resendBtn" class="resend-btn" onclick="resendOTP()">Resend Verification Code</button>
+                <% if (locals.message && message.length > 0) { %>
+                    <div class="alert alert-danger mt-3">
+                        <%= message %>
+                    </div>
+                <% } %>
+            </form>
+        </div>
+    </div>
+</section>
+
 <script>
 let timerInterval;
 let timeLeft = 60; // 1 minute in seconds
+
+function validateOTPForm() {
+    const otpInput = document.getElementById('otp');
+    const otpError = document.getElementById('otp-error');
+    const otpValue = otpInput.value.trim();
+
+    if (otpValue === '') {
+        otpError.textContent = 'Please enter the verification code.';
+        otpInput.classList.add('is-invalid');
+        return false;
+    } else if (!/^\d{6}$/.test(otpValue)) {
+        otpError.textContent = 'Please enter a valid 6-digit verification code.';
+        otpInput.classList.add('is-invalid');
+        return false;
+    } else {
+        otpError.textContent = '';
+        otpInput.classList.remove('is-invalid');
+        return true;
+    }
+}
 
 function startOTPTimer() {
     const timerDisplay = document.getElementById('otpTimer');
     const resendBtn = document.getElementById('resendBtn');
     
-    // Clear any existing interval
     if (timerInterval) {
         clearInterval(timerInterval);
     }
     
-    // Reset timer
     timeLeft = 60;
     resendBtn.classList.remove('active');
     
@@ -153,11 +189,11 @@ function startOTPTimer() {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
         
-        timerDisplay.textContent = `OTP Expires in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        timerDisplay.textContent = `Verification code expires in: ${minutes}:${seconds.toString().padStart(2, '0')}`;
         
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
-            timerDisplay.textContent = 'OTP Expired';
+            timerDisplay.textContent = 'Verification code expired';
             resendBtn.classList.add('active');
         }
         
@@ -167,6 +203,8 @@ function startOTPTimer() {
 
 async function resendOTP() {
     const resendBtn = document.getElementById('resendBtn');
+    if (resendBtn.classList.contains('active')) return;
+    
     resendBtn.classList.remove('active');
     
     try {
@@ -183,7 +221,7 @@ async function resendOTP() {
             Swal.fire({
                 icon: 'success',
                 title: 'Success',
-                text: 'New OTP has been sent to your email',
+                text: 'New verification code has been sent to your email',
                 timer: 2000,
                 showConfirmButton: false
             });
@@ -192,7 +230,7 @@ async function resendOTP() {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: data.message || 'Failed to resend OTP'
+                text: data.message || 'Failed to resend verification code'
             });
             resendBtn.classList.add('active');
         }
@@ -201,7 +239,7 @@ async function resendOTP() {
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'An error occurred while resending OTP'
+            text: 'An error occurred while resending verification code'
         });
         resendBtn.classList.add('active');
     }
@@ -210,6 +248,8 @@ async function resendOTP() {
 // Start the timer when the page loads
 document.addEventListener('DOMContentLoaded', startOTPTimer);
 </script>
+
+<%- include("../../views/partials/user/footer") %>
 
 
 

@@ -8,6 +8,7 @@
   border-radius: 10px;
   border: none;
   box-shadow: 0 4px 20px rgba(93, 64, 55, 0.15);
+  width: 1000px;
 }
 
 .modal-header {
@@ -105,7 +106,6 @@
 .dashboard-menu .nav-link:hover {
   background-color: #f8f4f0;
   color: #8B6B61;
-  transform: translateX(5px);
 }
 
 .dashboard-menu .nav-link.active {
@@ -322,6 +322,165 @@
   padding: 4px 8px;
   font-size: 12px;
 }
+
+/* Profile Picture Styles */
+.profile-picture-container {
+  width: 150px;
+  height: 150px;
+  margin: 0 auto 20px;
+  position: relative;
+}
+
+.profile-picture {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #5D4037;
+  box-shadow: 0 4px 10px rgba(93, 64, 55, 0.2);
+}
+
+.profile-picture-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #e8d9c5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: #5D4037;
+  border: 3px solid #5D4037;
+  box-shadow: 0 4px 10px rgba(93, 64, 55, 0.2);
+}
+
+/* Custom style for wider orders table */
+#orders .card-body {
+  padding: 50px !important; /* Reduce padding */
+}
+
+/* Style for the orders table */
+#orders .table {
+  width: 150%; /* Make the table fill the width of its container */
+}
+
+.content-main {
+    padding: 30px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    background-color: #fff;
+}
+
+.card-header {
+    background-color: #5C4033;
+    color: white;
+    font-family: 'Playfair Display', serif;
+    font-weight: 600;
+    font-size: 20px;
+    padding: 15px 20px;
+    border-bottom: none;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.card-body {
+    padding: 30px;
+}
+
+.profile-picture-container {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 0 auto 20px;
+    border: 3px solid #a97155;
+    box-shadow: 0 0 0 5px rgba(169, 113, 85, 0.2);
+}
+
+.profile-picture {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.profile-picture-placeholder {
+    width: 100%;
+    height: 100%;
+    background-color: #e9ecef;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 60px;
+    color: #6c757d;
+}
+
+.card-title {
+    color: #5C4033;
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.card-text {
+    color: #343a40;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    line-height: 1.6;
+    margin-bottom: 5px;
+}
+
+.card-text strong {
+    color: #5C4033;
+}
+
+.btn-primary {
+    background-color: #a97155;
+    border-color: #a97155;
+    color: white;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    padding: 12px 25px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary:hover {
+    background-color: #8b5e3c;
+    border-color: #8b5e3c;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(169, 113, 85, 0.2);
+}
+
+.btn-primary i {
+    font-size: 18px;
+}
+
+/* Adjustments for the layout */
+.tab-pane .card {
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .btn-primary {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    .d-flex.justify-content-center.gap-3.mt-4 {
+        flex-direction: column;
+        align-items: center;
+    }
+}
 </style>
 
 <main class="main">
@@ -338,7 +497,7 @@
       <div class="row">
         <div class="col-lg-10 m-auto">
           <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <div class="dashboard-menu">
                 <ul class="nav flex-column" role="tablist">
                   <li class="nav-item">
@@ -379,27 +538,39 @@
                 </ul>
               </div>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-9">
               <div class="tab-content dashboard-content">
                 <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
-                  <div class="card card-green">
+                  <div class="card">
                     <div class="card-header">
                       <h5 class="mb-0 text-center">User Profile</h5>
                     </div>
                     <div class="card-body text-center">
+                      <div class="profile-picture-container">
+                        <% if (user.profilePicture) { %>
+                          <img src="/images/profiles/<%= user.profilePicture %>" alt="Profile Picture" class="profile-picture">
+                        <% } else { %>
+                          <div class="profile-picture-placeholder">
+                            <i class="fi-rs-user"></i>
+                          </div>
+                        <% } %>
+                      </div>
                       <h5 class="card-title"><%=user.name%></h5>
                       <p class="card-text">
                         <strong>Phone:</strong> <%=user.phone%>
                       </p>
-                      <p class="card-text">
+                      <p class="card-text mb-3">
                         <strong>Email:</strong> <%=user.email%>
                       </p>
-                    
-                      <button class="btn btn-sm btn-success" onclick="openEditProfileModal()">
-                        <i class="fi-rs-edit"></i> Edit Profile
-                      </button>
-                      <a href="/change-email" class="btn btn-sm btn-success ml-2">Change Email</a>
-                      <a href="/change-password" class="btn btn-sm btn-success">Change Password</a>
+                      <div class="d-flex justify-content-center gap-3 mt-4">
+                        <button class="btn btn-primary" onclick="openEditProfileModal()">
+                          <i class="fi-rs-edit"></i> Edit Profile
+                        </button>
+                        <a href="/change-email" class="btn btn-primary">
+                          <i class="fi-rs-envelope"></i> Change Email
+                        </a>
+                        <a href="/change-password" class="btn btn-primary">Change Password</a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -423,6 +594,11 @@
                             <label for="phone" class="form-label">Phone</label>
                             <input type="tel" class="form-control" id="phone" name="phone" value="<%=user.phone%>" required>
                             <div class="error-message" id="phone-error"></div>
+                          </div>
+                          <div class="mb-3">
+                            <label for="profilePicture" class="form-label">Profile Picture</label>
+                            <input type="file" class="form-control" id="profilePicture" name="profilePicture" accept="image/*">
+                            <div class="error-message" id="profilePicture-error"></div>
                           </div>
                           <div class="text-end">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -511,20 +687,26 @@
                                   <td><%= new Date(order.createdOn).toLocaleDateString() %></td>
                                   <td>
                                     <div class="product-list">
-                                      <% order.orderedItems.forEach(item => { %>
-                                        <div class="product-item">
-                                          <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
-                                            <img src="/uploads/product-images/<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" class="product-image">
+                                      <% if (order.orderedItems && order.orderedItems.length > 0) { %>
+                                        <% const firstItem = order.orderedItems[0]; %>
+                                        <div class="product-item d-flex align-items-center py-2">
+                                          <% if (firstItem.product && firstItem.product.productImage && firstItem.product.productImage.length > 0) { %>
+                                            <img src="/uploads/product-images/<%= firstItem.product.productImage[0] %>" alt="<%= firstItem.product.productName %>" class="product-image me-3">
                                           <% } else { %>
-                                            <img src="/images/default-product.jpg" alt="Product Image" class="product-image">
+                                            <img src="/images/default-product.jpg" alt="Product Image" class="product-image me-3">
                                           <% } %>
-                                          <div class="product-info">
-                                            <div class="product-name"><%= item.product.productName %></div>
-                                            <div class="product-quantity">Qty: <%= item.quantity %></div>
-                                            <div class="product-price">₹<%= (item.price * item.quantity).toFixed(2) %></div>
+                                          <div class="product-info flex-grow-1">
+                                            <div class="product-name"><%= firstItem.product.productName %></div>
+                                            <div class="product-quantity">Qty: <%= firstItem.quantity %></div>
+                                            <div class="product-price">₹<%= (firstItem.price * firstItem.quantity).toFixed(2) %></div>
                                           </div>
                                         </div>
-                                      <% }) %>
+                                        <% if (order.orderedItems.length > 1) { %>
+                                          <small>+ <%= order.orderedItems.length - 1 %> more item(s)</small>
+                                        <% } %>
+                                      <% } else { %>
+                                        <small>No items in this order</small>
+                                      <% } %>
                                     </div>
                                   </td>
                                   <td>
@@ -602,13 +784,10 @@
                     <div class="card-body contact-from-area">
                       <div class="row">
                         <div class="col-lg-8 mx-auto text-center mt-90">
-                          <form>
-                            <div class="form-group">
-                              <label for="walletAmount" class="h4">Amount</label>
-                              <div class="h3"></div>
-                            </div>
-                            <button type="button" class="btn btn-success" onclick="">Add Money</button>
-                          </form>
+                          <div class="wallet-balance mb-4">
+                            <h4>Current Balance</h4>
+                            <h2 class="text-success">₹<%= user.wallet ? user.wallet.toFixed(2) : '0.00' %></h2>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -626,16 +805,32 @@
                           <thead>
                             <tr>
                               <th>Date</th>
-                              <th>Status</th>
+                              <th>Description</th>
+                              <th>Type</th>
                               <th>Amount</th>
                             </tr>
                           </thead>
                           <tbody>
-                            <tr>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                            </tr>
+                            <% if (walletTransactions && walletTransactions.length > 0) { %>
+                              <% walletTransactions.forEach(transaction => { %>
+                                <tr>
+                                  <td><%= new Date(transaction.createdAt).toLocaleString('en-IN') %></td>
+                                  <td><%= transaction.description %></td>
+                                  <td>
+                                    <span class="badge bg-<%= transaction.type === 'credit' ? 'success' : 'danger' %>">
+                                      <%= transaction.type === 'credit' ? 'Credit' : 'Debit' %>
+                                    </span>
+                                  </td>
+                                  <td class="<%= transaction.type === 'credit' ? 'text-success' : 'text-danger' %>">
+                                    <%= transaction.type === 'credit' ? '+' : '-' %>₹<%= transaction.amount.toFixed(2) %>
+                                  </td>
+                                </tr>
+                              <% }) %>
+                            <% } else { %>
+                              <tr>
+                                <td colspan="4" class="text-center">No transactions found</td>
+                              </tr>
+                            <% } %>
                           </tbody>
                         </table>
                       </div>
@@ -646,12 +841,29 @@
                 <div class="tab-pane fade" id="referal" role="tabpanel" aria-labelledby="track-orders-tab">
                   <div class="card">
                     <div class="card-header">
-                      <h5 class="mb-0">Referal</h5>
+                      <h5 class="mb-0">Referral</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body text-center">
                       <h6 class="mb-3">Refer your friends and earn money!</h6>
-                      <p>Share this link: <strong>></strong></p>
-                      <p>Earned: ₹</p>
+                      <div class="mb-4">
+                        <p class="mb-2">Your Referral Code:</p>
+                        <div class="input-group mb-3">
+                          <input type="text" class="form-control text-center" id="referralCodeDisplay" value="<%= user.referalCode %>" readonly>
+                          <button class="btn btn-primary" type="button" id="copyReferralCodeBtn">Copy Code</button>
+                        </div>
+                        <small class="text-muted">Share this code with your friends when they sign up.</small>
+                      </div>
+
+                      <div class="mb-4">
+                        <p class="mb-2">Share Referral Link:</p>
+                        <div class="input-group mb-3">
+                          <input type="text" class="form-control text-center" id="referralLinkDisplay" value="<%= user.referralToken ? `http://localhost:4000/signup?ref=${user.referralToken}` : '' %>" readonly>
+                          <button class="btn btn-primary" type="button" id="copyReferralLinkBtn">Copy Link</button>
+                        </div>
+                        <small class="text-muted">Share this link with your friends to invite them.</small>
+                      </div>
+
+                      <p class="lead">Total Earned: <strong class="text-success">₹<%= user.referralRewards.reduce((sum, reward) => sum + reward.amount, 0) %></strong></p>
                     </div>
                   </div>
                 </div>
@@ -665,6 +877,8 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Function to activate a tab
@@ -705,6 +919,44 @@
         window.addEventListener('hashchange', function() {
             activateTab(window.location.hash);
         });
+
+        // Copy Referral Code functionality
+        const copyCodeBtn = document.getElementById('copyReferralCodeBtn');
+        if (copyCodeBtn) {
+            copyCodeBtn.addEventListener('click', function() {
+                const referralCodeInput = document.getElementById('referralCodeDisplay');
+                referralCodeInput.select();
+                referralCodeInput.setSelectionRange(0, 99999); // For mobile devices
+                document.execCommand('copy');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Copied!',
+                    text: 'Referral code copied to clipboard!',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            });
+        }
+
+        // Copy Referral Link functionality
+        const copyLinkBtn = document.getElementById('copyReferralLinkBtn');
+        if (copyLinkBtn) {
+            copyLinkBtn.addEventListener('click', function() {
+                const referralLinkInput = document.getElementById('referralLinkDisplay');
+                referralLinkInput.select();
+                referralLinkInput.setSelectionRange(0, 99999); // For mobile devices
+                document.execCommand('copy');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Copied!',
+                    text: 'Referral link copied to clipboard!',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            });
+        }
     });
 
     function editAddress(addressId) {

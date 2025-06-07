@@ -433,6 +433,11 @@
                         <input type="number" class="form-control" id="refundAmount" step="0.01" required>
                         <small class="text-muted">This amount will be credited to the user's wallet</small>
                     </div>
+                    <div class="mb-3" id="rejectReasonSection" style="display: none;">
+                        <label class="form-label">Rejection Reason</label>
+                        <textarea class="form-control" id="rejectReason" rows="3" required></textarea>
+                        <small class="text-muted">Please provide a reason for rejecting the return request</small>
+                    </div>
                     <button type="submit" class="btn btn-primary">Submit</button>
                 </form>
             </div>
@@ -516,7 +521,7 @@ async function loadOrders(page = 1) {
             search: searchQuery,
             status: statusFilter,
             sortBy: sortBy,
-            sortOrder: 'desc' // Always sort in descending order (newest first)
+            sortOrder: 'desc' // Explicitly sort in descending order (newest first)
         });
         
         const response = await fetch(`/admin/api/orders?${queryParams.toString()}`);
@@ -704,14 +709,20 @@ async function handleReturnRequest(orderId, action) {
         currentOrderId = orderId;
         
         // Set default values
-        document.getElementById('returnAction').value = action;
+        const actionSelect = document.getElementById('returnAction');
+        actionSelect.value = action;
         
-        // Show/hide refund amount section based on action
+        // Show/hide sections based on action
         const refundSection = document.getElementById('refundAmountSection');
         const refundInput = document.getElementById('refundAmount');
+        const rejectSection = document.getElementById('rejectReasonSection');
+        const rejectInput = document.getElementById('rejectReason');
         
         if (action === 'accept') {
             refundSection.style.display = 'block';
+            rejectSection.style.display = 'none';
+            refundInput.required = true;
+            rejectInput.required = false;
             // Fetch order details to set default refund amount
             const response = await fetch(`/admin/api/orders/${orderId}`);
             if (response.ok) {
@@ -720,8 +731,27 @@ async function handleReturnRequest(orderId, action) {
             }
         } else {
             refundSection.style.display = 'none';
+            rejectSection.style.display = 'block';
+            refundInput.required = false;
+            rejectInput.required = true;
             refundInput.value = '';
         }
+        
+        // Add event listener for action change
+        actionSelect.addEventListener('change', function() {
+            const selectedAction = this.value;
+            if (selectedAction === 'accept') {
+                refundSection.style.display = 'block';
+                rejectSection.style.display = 'none';
+                refundInput.required = true;
+                rejectInput.required = false;
+            } else {
+                refundSection.style.display = 'none';
+                rejectSection.style.display = 'block';
+                refundInput.required = false;
+                rejectInput.required = true;
+            }
+        });
         
         modal.show();
         
@@ -1034,11 +1064,22 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('returnRequestForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
+        if (isUpdating) return;
+        isUpdating = true;
+        
         const action = document.getElementById('returnAction').value;
         const refundAmount = document.getElementById('refundAmount').value;
+        const rejectReason = document.getElementById('rejectReason')?.value;
         
         if (action === 'accept' && (!refundAmount || refundAmount <= 0)) {
             showToast('Please enter a valid refund amount', 'error');
+            isUpdating = false;
+            return;
+        }
+        
+        if (action === 'reject' && (!rejectReason || rejectReason.trim() === '')) {
+            showToast('Please provide a reason for rejection', 'error');
+            isUpdating = false;
             return;
         }
         
@@ -1050,7 +1091,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 body: JSON.stringify({ 
                     action,
-                    refundAmount: action === 'accept' ? parseFloat(refundAmount) : 0
+                    refundAmount: action === 'accept' ? parseFloat(refundAmount) : 0,
+                    rejectReason: action === 'reject' ? rejectReason.trim() : undefined
                 })
             });
             
@@ -1069,6 +1111,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error processing return request:', error);
             showToast(error.message || 'Error processing return request', 'error');
+        } finally {
+            isUpdating = false;
         }
     });
     

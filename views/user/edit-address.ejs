@@ -182,6 +182,7 @@ function validateForm() {
     const nameRegex = /^[a-zA-Z\s]{2,50}$/;
     const mobileRegex = /^[0-9]{10}$/;
     const pincodeRegex = /^[0-9]{6}$/;
+    const cityStateRegex = /^[a-zA-Z\s]{2,50}$/;
 
     // Name validation
     const name = document.getElementById('name').value.trim();
@@ -212,8 +213,8 @@ function validateForm() {
 
     // Address Line 1 validation
     const addressLine1 = document.getElementById('addressLine1').value.trim();
-    if (addressLine1.length < 5) {
-        document.getElementById('address1-error').textContent = 'Please enter a valid address (minimum 5 characters)';
+    if (addressLine1.length < 5 || addressLine1.length > 100) {
+        document.getElementById('address1-error').textContent = 'Please enter a valid address (5-100 characters)';
         isValid = false;
     } else {
         document.getElementById('address1-error').textContent = '';
@@ -221,8 +222,8 @@ function validateForm() {
 
     // City validation
     const city = document.getElementById('city').value.trim();
-    if (city.length < 2) {
-        document.getElementById('city-error').textContent = 'Please enter a valid city name';
+    if (!cityStateRegex.test(city)) {
+        document.getElementById('city-error').textContent = 'Please enter a valid city name (2-50 characters, letters only)';
         isValid = false;
     } else {
         document.getElementById('city-error').textContent = '';
@@ -230,8 +231,8 @@ function validateForm() {
 
     // State validation
     const state = document.getElementById('state').value.trim();
-    if (state.length < 2) {
-        document.getElementById('state-error').textContent = 'Please enter a valid state name';
+    if (!cityStateRegex.test(state)) {
+        document.getElementById('state-error').textContent = 'Please enter a valid state name (2-50 characters, letters only)';
         isValid = false;
     } else {
         document.getElementById('state-error').textContent = '';
@@ -248,6 +249,19 @@ function validateForm() {
 
     return isValid;
 }
+
+// Add real-time validation
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            validateForm();
+        });
+        input.addEventListener('blur', function() {
+            validateForm();
+        });
+    });
+});
 </script>
 
 <%- include("../../views/partials/user/footer") %>

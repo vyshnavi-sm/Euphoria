@@ -1,9 +1,7 @@
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const User = require("../../models/userSchema");
-
-
-
+const { CategoryOffer } = require('../../models/offerSchema');
 
 const productDetails = async (req,res)=>{
     try {
@@ -14,10 +12,18 @@ const productDetails = async (req,res)=>{
             .populate('category')
             .populate('brand');
 
-        const findCategory = product.category;
-        const categoryOffer = findCategory?.categoryOffer || 0;
-        const productOffer = product.productOffer || 0;
-        const totalOffer = categoryOffer + productOffer;
+        // Check for active category offer
+        const currentDate = new Date();
+        const categoryOffer = await CategoryOffer.findOne({
+            category: product.category._id,
+            isActive: true,
+            startDate: { $lte: currentDate },
+            endDate: { $gte: currentDate }
+        });
+
+        const productOffer = product.offerDiscount || 0;
+        const categoryDiscount = categoryOffer ? categoryOffer.discountPercentage : 0;
+        const totalOffer = productOffer + categoryDiscount;
 
         // First, try to fetch related products from the same category
         let relatedProducts = await Product.find({
@@ -49,7 +55,7 @@ const productDetails = async (req,res)=>{
             product: product,
             quantity: product.quantity,
             totalOffer: totalOffer,
-            category: findCategory,
+            category: product.category,
             relatedProducts: relatedProducts
         });
         
@@ -58,8 +64,6 @@ const productDetails = async (req,res)=>{
         res.redirect("/pageNotFound");
     }
 }
-
-
 
 module.exports ={
     productDetails,

@@ -249,8 +249,8 @@
             </tr>
         </thead>
         <tbody>
-            <% if (data && data.length > 0) { %>
-                <% data.forEach((product) => { %>
+            <% if (pro && pro.length > 0) { %>
+                <% pro.forEach((product) => { %>
                     <tr class="<%= product.status === 'Cancelled' ? 'product-row-cancelled' : '' %>">
                         <td>
                             <%= product.productName %>
@@ -264,20 +264,41 @@
                         <td>₹<%= product.salePrice %></td>
                         <td><%= product.quantity %></td>
                         <td>
-                            <a href="#" class="btn btn-outline-success btn-sm px-2" style="min-width: 80px;">Add Offer</a>
-                            <a href="#" class="btn btn-outline-danger btn-sm px-2" style="min-width: 80px;">Remove</a>
-                        </td>
-                        <td>
-                            <% if(product.isBlocked === false) { %>
-                                <a href="#" onclick="confirmBlock('<%= product._id %>')" class="btn btn-danger ps-3">Block</a>
+                            <% if (product.offerDiscount > 0) { %>
+                                <span class="badge bg-success"><%= product.offerDiscount %>% OFF</span>
+                                <button onclick="removeOffer('<%= product._id %>')" class="btn btn-sm btn-remove">
+                                    <i class="fas fa-times"></i> Remove
+                                </button>
                             <% } else { %>
-                                <a href="#" onclick="confirmUnblock('<%= product._id %>')" class="btn btn-success ps-3">Unblock</a>
+                                <button onclick="showOfferModal('<%= product._id %>', '<%= product.productName %>')" class="btn btn-sm btn-offer">
+                                    <i class="fas fa-tag"></i> Add Offer
+                                </button>
                             <% } %>
                         </td>
                         <td>
-                            <button class="btn btn-info">
-                                <a href="/admin/editProduct?id=<%= product._id %>">Edit</a>
-                            </button>
+                            <% if (product.isBlocked) { %>
+                                <span class="badge bg-danger">Blocked</span>
+                            <% } else if (product.quantity === 0) { %>
+                                <span class="badge bg-warning">Out of Stock</span>
+                            <% } else { %>
+                                <span class="badge bg-success">Active</span>
+                            <% } %>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="/admin/editProduct?id=<%= product._id %>" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <% if (product.isBlocked) { %>
+                                    <a href="/admin/unblockProduct?id=<%= product._id %>" class="btn btn-sm btn-success" onclick="return confirm('Are you sure you want to unblock this product?')">
+                                        <i class="fas fa-unlock"></i> Unblock
+                                    </a>
+                                <% } else { %>
+                                    <a href="/admin/blockProduct?id=<%= product._id %>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to block this product? It will be removed from all user carts.')">
+                                        <i class="fas fa-ban"></i> Block
+                                    </a>
+                                <% } %>
+                            </div>
                         </td>
                     </tr>
                 <% }) %>
@@ -294,49 +315,177 @@
 <div class="pagination-container">
     <nav aria-label="Page navigation">
         <ul class="pagination justify-content-center">
+            <% if (currentPage > 1) { %>
+                <li class="page-item">
+                    <a class="page-link" href="/admin/products?page=<%= currentPage - 1 %>&search=<%= search %>">Previous</a>
+                </li>
+            <% } %>
             <% for (let i = 1; i <= totalPages; i++) { %>
-                <li class="page-item <%=(i === currentPage) ? 'active' : '' %>">
-                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                    <a class="page-link" href="/admin/products?page=<%= i %>&search=<%= search %>"><%= i %></a>
+                </li>
+            <% } %>
+            <% if (currentPage < totalPages) { %>
+                <li class="page-item">
+                    <a class="page-link" href="/admin/products?page=<%= currentPage + 1 %>&search=<%= search %>">Next</a>
                 </li>
             <% } %>
         </ul>
     </nav>
 </div>
 
+<!-- Offer Modal -->
+<div class="modal fade" id="offerModal" tabindex="-1" aria-labelledby="offerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="offerModalLabel">Add Offer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="offerForm">
+                    <input type="hidden" id="productId" name="productId">
+                    <div class="mb-3">
+                        <label for="productName" class="form-label">Product</label>
+                        <input type="text" class="form-control" id="productName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="discountPercentage" class="form-label">Discount Percentage</label>
+                        <input type="number" class="form-control" id="discountPercentage" name="discountPercentage" min="0" max="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="datetime-local" class="form-control" id="startDate" name="startDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="datetime-local" class="form-control" id="endDate" name="endDate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="applyOffer()">Apply Offer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
 <script>
-    function confirmBlock(productId) {
-        Swal.fire({
-            title: "Are you sure?",
-            text: "You are about to block this product!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            cancelButtonColor: "#3085d6",
-            confirmButtonText: "Yes, Block it!"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = `/admin/blockProduct?id=${productId}`;
-            }
+    // Show success/error messages from URL parameters
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const successMessage = urlParams.get('success');
+        const errorMessage = urlParams.get('error');
+
+        if (successMessage) {
+            showToast(successMessage, 'success');
+        }
+        if (errorMessage) {
+            showToast(errorMessage, 'error');
+        }
+    });
+
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        `;
+        
+        const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+        toastContainer.appendChild(toast);
+        
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
         });
     }
 
-    function confirmUnblock(productId) {
-        Swal.fire({
-            title: "Are you sure?",
-            text: "You are about to unblock this product!",
-            icon: "info",
-            showCancelButton: true,
-            confirmButtonColor: "#28a745",
-            cancelButtonColor: "#3085d6",
-            confirmButtonText: "Yes, Unblock it!"
-        }).then((result) => {
-            if (result.isConfirmed) {
-                window.location.href = `/admin/unblockProduct?id=${productId}`;
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    function showOfferModal(productId, productName) {
+        document.getElementById('productId').value = productId;
+        document.getElementById('productName').value = productName;
+        const modal = new bootstrap.Modal(document.getElementById('offerModal'));
+        modal.show();
+    }
+
+    async function applyOffer() {
+        const form = document.getElementById('offerForm');
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/admin/products/applyOffer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(result.message, 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showToast(result.message, 'error');
             }
-        });
+        } catch (error) {
+            console.error('Error applying offer:', error);
+            showToast('Error applying offer', 'error');
+        }
+    }
+
+    async function removeOffer(productId) {
+        if (!confirm('Are you sure you want to remove this offer?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/products/removeOffer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ productId })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showToast(result.message, 'success');
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error removing offer:', error);
+            showToast('Error removing offer', 'error');
+        }
     }
 </script>
 

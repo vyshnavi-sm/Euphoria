@@ -53,13 +53,27 @@ const addToCart = async (req, res) => {
             if (existingItemIndex !== -1) {
                 // Update quantity and total price if product exists
                 const newQuantity = cart.items[existingItemIndex].quantity + quantity;
+                
+                // Check if new quantity exceeds maximum limit of 5 for individual product
+                if (newQuantity > 5) {
+                    return res.status(400).json({ message: 'Maximum quantity per product is 5' });
+                }
+                
+                // Check if new quantity exceeds available stock
                 if (newQuantity > product.quantity) {
                     return res.status(400).json({ message: 'Total quantity exceeds available stock' });
                 }
+                
                 cart.items[existingItemIndex].quantity = newQuantity;
                 cart.items[existingItemIndex].totalPrice = 
                     cart.items[existingItemIndex].quantity * cart.items[existingItemIndex].price;
             } else {
+                // Check total items in cart before adding new item
+                const totalItemsInCart = cart.items.reduce((total, item) => total + item.quantity, 0);
+                if (totalItemsInCart + quantity > 10) {
+                    return res.status(400).json({ message: 'Maximum total items in cart is 10' });
+                }
+
                 // Add new item if product doesn't exist
                 cart.items.push({
                     productId,
@@ -77,10 +91,6 @@ const addToCart = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
-
-
-
-
 
 // Remove from cart
 const removeFromCart = async (req, res) => {
@@ -137,8 +147,28 @@ const updateCart = async (req, res) => {
             return res.status(404).json({ message: 'Product not found' });
         }
 
+        // Check if quantity exceeds maximum limit of 5 for individual product
+        if (quantity > 5) {
+            return res.status(400).json({ message: 'Maximum quantity per product is 5' });
+        }
+
+        // Check if quantity exceeds available stock
         if (quantity > product.quantity) {
             return res.status(400).json({ message: 'Requested quantity exceeds available stock' });
+        }
+
+        // Calculate total items in cart after update
+        const currentItemQuantity = cartItem.quantity;
+        const totalItemsInCart = cart.items.reduce((total, item) => {
+            if (item.productId.toString() === productId) {
+                return total + quantity; // Use new quantity for current item
+            }
+            return total + item.quantity;
+        }, 0);
+
+        // Check if total items would exceed 10
+        if (totalItemsInCart > 10) {
+            return res.status(400).json({ message: 'Maximum total items in cart is 10' });
         }
 
         // Update quantity and total price

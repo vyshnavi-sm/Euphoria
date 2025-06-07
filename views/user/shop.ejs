@@ -500,6 +500,35 @@
      0% { transform: rotate(0deg); }
      100% { transform: rotate(360deg); }
  }
+
+ .clear-filters-btn {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   padding: 10px 15px;
+   background-color: #f8f9fa;
+   border: 1px solid #ddd;
+   border-radius: 25px;
+   color: #5C4033;
+   font-family: 'Cormorant Garamond', serif;
+   font-size: 14px;
+   cursor: pointer;
+   transition: all 0.3s ease;
+   margin-bottom: 15px;
+   width: 100%;
+ }
+
+ .clear-filters-btn:hover {
+   background-color: #5C4033;
+   color: white;
+   border-color: #5C4033;
+   transform: translateY(-2px);
+   box-shadow: 0 2px 8px rgba(92, 64, 51, 0.2);
+ }
+
+ .clear-filters-btn i {
+   font-size: 14px;
+ }
 </style>
 
 <!-- Add Google Fonts for classy typography -->
@@ -578,10 +607,10 @@
          <div class="filter-title">Filter by Price</div>
          <form id="price-filter-form">
            <div class="price-options">
-             <a href="/filterPrice?gt=0&&lt=1000"><button type="button" class="price-button">Under ₹1000</button></a>
-             <a href="/filterPrice?gt=1000&&lt=2000"><button type="button" class="price-button">₹1000 - ₹2000</button></a>
-             <a href="/filterPrice?gt=000&&lt=5000"><button type="button" class="price-button">₹2000- ₹5000</button></a>
-             <a href="/filterPrice?gt=5000&&lt=100000"><button type="button" class="price-button">Above ₹5000</button></a>
+             <button type="button" class="price-button" onclick="handleFilter('price', '0-1000')">Under ₹1000</button>
+             <button type="button" class="price-button" onclick="handleFilter('price', '1000-2000')">₹1000 - ₹2000</button>
+             <button type="button" class="price-button" onclick="handleFilter('price', '2000-5000')">₹2000 - ₹5000</button>
+             <button type="button" class="price-button" onclick="handleFilter('price', '5000-100000')">Above ₹5000</button>
            </div>
          </form>
        </div>
@@ -610,7 +639,7 @@
                              <% } %>
                          </div>
                      </a>
-                     <button class="add-to-cart-btn" onclick="addToCart(event, '<%= product._id %>')">Add to Cart</button>
+                     <button class="add-to-cart-btn" onclick="addToCart('<%= product._id %>')">Add to Cart</button>
                  </div>
              <% }); %>
          <% } else { %>
@@ -624,17 +653,17 @@
 <!-- Pagination -->
 <div class="pagination">
     <% if (currentPage > 1) { %>
-      <a class="btn" href="/shop?page=<%= currentPage - 1 %>&search=<%= search || '' %>">Prev</a>
+      <a class="btn" href="/shop?page=<%= currentPage - 1 %><%= search ? `&search=${search}` : '' %><%= sort ? `&sort=${sort}` : '' %><%= selectedCategory ? `&category=${selectedCategory}` : '' %><%= selectedBrand ? `&brand=${selectedBrand}` : '' %><%= priceRange ? `&gt=${priceRange.split('-')[0]}&lt=${priceRange.split('-')[1]}` : '' %>">Prev</a>
     <% } %>
 
     <% for (let i = 1; i <= totalPages; i++) { %>
-      <a class="btn <%= currentPage === i ? 'active' : '' %>" href="/shop?page=<%= i %>&search=<%= search || '' %>"><%= i %></a>
+      <a class="btn <%= currentPage === i ? 'active' : '' %>" href="/shop?page=<%= i %><%= search ? `&search=${search}` : '' %><%= sort ? `&sort=${sort}` : '' %><%= selectedCategory ? `&category=${selectedCategory}` : '' %><%= selectedBrand ? `&brand=${selectedBrand}` : '' %><%= priceRange ? `&gt=${priceRange.split('-')[0]}&lt=${priceRange.split('-')[1]}` : '' %>"><%= i %></a>
     <% } %>
 
     <% if (currentPage < totalPages) { %>
-      <a class="btn" href="/shop?page=<%= currentPage + 1 %>&search=<%= search || '' %>">Next</a>
+      <a class="btn" href="/shop?page=<%= currentPage + 1 %><%= search ? `&search=${search}` : '' %><%= sort ? `&sort=${sort}` : '' %><%= selectedCategory ? `&category=${selectedCategory}` : '' %><%= selectedBrand ? `&brand=${selectedBrand}` : '' %><%= priceRange ? `&gt=${priceRange.split('-')[0]}&lt=${priceRange.split('-')[1]}` : '' %>">Next</a>
     <% } %>
-  </div>
+</div>
   
  </section>
 </div>
@@ -719,12 +748,12 @@
         }, 3000);
     }
 
-    async function addToCart(event, productId) {
-        const button = event.target;
-        const productCard = button.closest('.product-card');
-        const productName = productCard.querySelector('h4').textContent;
-        
+    async function addToCart(productId) {
         try {
+            const button = document.querySelector(`.add-to-cart-btn[onclick="addToCart('${productId}')"]`);
+            const productCard = button.closest('.product-card');
+            const productName = productCard.querySelector('h4').textContent;
+            
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
             
@@ -733,9 +762,9 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ 
-                    productId,
-                    quantity: 1 
+                body: JSON.stringify({
+                    productId: productId,
+                    quantity: 1
                 })
             });
             
@@ -779,12 +808,28 @@
                     }
                 });
             } else {
-                Swal.fire({
-                    title: 'Error',
-                    text: data.message || 'Please Login',
-                    icon: 'error',
-                    confirmButtonColor: '#5C4033'
-                });
+                if (data.message === 'Maximum quantity per product is 5') {
+                    Swal.fire({
+                        title: 'Maximum Product Quantity',
+                        text: 'You can only add up to 5 items of this product',
+                        icon: 'warning',
+                        confirmButtonColor: '#5C4033'
+                    });
+                } else if (data.message === 'Maximum total items in cart is 10') {
+                    Swal.fire({
+                        title: 'Cart Limit Reached',
+                        text: 'You can only have a maximum of 10 items in your cart',
+                        icon: 'warning',
+                        confirmButtonColor: '#5C4033'
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: data.message || 'Error adding to cart',
+                        icon: 'error',
+                        confirmButtonColor: '#5C4033'
+                    });
+                }
                 button.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
                 button.style.backgroundColor = '#5C4033';
                 button.disabled = false;
@@ -792,24 +837,11 @@
         } catch (error) {
             console.error('Error adding to cart:', error);
             Swal.fire({
-                 title: 'Sign in Required',
-                    text: 'Please sign in to add items to your cart',
-                    icon: 'info',
-                    showCancelButton: true,
-                    confirmButtonColor: '#5C4033',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Sign In',
-                    cancelButtonText: 'Continue Shopping',
-                     }).then((result) => {
-                    if (result.isConfirmed) {
-                        window.location.href = '/login';
-                    } else {
-                        button.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
-                        button.style.backgroundColor = '#5C4033';
-                        button.disabled = false;
-                    }
-                });
-                
+                title: 'Error',
+                text: 'Error adding to cart',
+                icon: 'error',
+                confirmButtonColor: '#5C4033'
+            });
             button.innerHTML = '<i class="fas fa-shopping-cart"></i> Add to Cart';
             button.style.backgroundColor = '#5C4033';
             button.disabled = false;
@@ -826,62 +858,107 @@
         window.location.href = currentUrl.toString();
     }
 
-    // Highlight selected filters
+    function handleFilter(type, value) {
+        const currentUrl = new URL(window.location.href);
+        const search = currentUrl.searchParams.get('search') || '';
+        const sort = currentUrl.searchParams.get('sort') || '';
+        
+        // Reset to first page when applying new filter
+        currentUrl.searchParams.set('page', '1');
+        
+        // Preserve search and sort parameters
+        if (search) currentUrl.searchParams.set('search', search);
+        if (sort) currentUrl.searchParams.set('sort', sort);
+        
+        // Update the specific filter without removing other filters
+        if (type === 'category') {
+            currentUrl.searchParams.set('category', value);
+        } else if (type === 'brand') {
+            currentUrl.searchParams.set('brand', value);
+        } else if (type === 'price') {
+            const [gt, lt] = value.split('-');
+            currentUrl.searchParams.set('gt', gt);
+            currentUrl.searchParams.set('lt', lt);
+        }
+        
+        window.location.href = currentUrl.toString();
+    }
+
+    // Function to clear all filters
+    function clearAllFilters() {
+        const currentUrl = new URL(window.location.href);
+        const search = currentUrl.searchParams.get('search') || '';
+        const sort = currentUrl.searchParams.get('sort') || '';
+        
+        // Clear all filter parameters
+        currentUrl.searchParams.delete('category');
+        currentUrl.searchParams.delete('brand');
+        currentUrl.searchParams.delete('gt');
+        currentUrl.searchParams.delete('lt');
+        
+        // Preserve search and sort
+        if (search) currentUrl.searchParams.set('search', search);
+        if (sort) currentUrl.searchParams.set('sort', sort);
+        
+        window.location.href = currentUrl.toString();
+    }
+
+    // Update filter links to use the new handler
     document.addEventListener('DOMContentLoaded', function() {
-        // Get current URL parameters
+        // Update category links
+        document.querySelectorAll('.filter-item a').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href.includes('category=')) {
+                const categoryId = href.split('category=')[1];
+                link.setAttribute('onclick', `handleFilter('category', '${categoryId}'); return false;`);
+            } else if (href.includes('brand=')) {
+                const brandId = href.split('brand=')[1];
+                link.setAttribute('onclick', `handleFilter('brand', '${brandId}'); return false;`);
+            }
+        });
+
+        // Add clear filters button if any filter is active
         const urlParams = new URLSearchParams(window.location.search);
+        const hasFilters = urlParams.has('category') || urlParams.has('brand') || (urlParams.has('gt') && urlParams.has('lt'));
+        
+        if (hasFilters) {
+            const clearFiltersBtn = document.createElement('button');
+            clearFiltersBtn.className = 'clear-filters-btn';
+            clearFiltersBtn.innerHTML = '<i class="fas fa-times"></i> Clear All Filters';
+            clearFiltersBtn.onclick = clearAllFilters;
+            document.querySelector('.filter-section').prepend(clearFiltersBtn);
+        }
+
+        // Highlight selected filters
         const category = urlParams.get('category');
         const brand = urlParams.get('brand');
-        const priceRange = urlParams.get('gt') && urlParams.get('lt') ? 
-            `${urlParams.get('gt')}-${urlParams.get('lt')}` : null;
+        const gt = urlParams.get('gt');
+        const lt = urlParams.get('lt');
 
-        // Highlight selected category
         if (category) {
             document.querySelectorAll('.filter-item a').forEach(link => {
-                if (link.getAttribute('href').includes(`category=${category}`)) {
+                if (link.getAttribute('onclick')?.includes(`category', '${category}'`)) {
                     link.classList.add('selected');
                 }
             });
         }
 
-        // Highlight selected brand
         if (brand) {
             document.querySelectorAll('.filter-item a').forEach(link => {
-                if (link.getAttribute('href').includes(`brand=${brand}`)) {
+                if (link.getAttribute('onclick')?.includes(`brand', '${brand}'`)) {
                     link.classList.add('selected');
                 }
             });
         }
 
-        // Highlight selected price range
-        if (priceRange) {
+        if (gt && lt) {
             document.querySelectorAll('.price-button').forEach(button => {
-                const buttonHref = button.parentElement.getAttribute('href');
-                if (buttonHref.includes(priceRange)) {
+                const buttonValue = button.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+                if (buttonValue === `${gt}-${lt}`) {
                     button.classList.add('selected');
                 }
             });
         }
-
-        // Add click handlers for filters
-        document.querySelectorAll('.filter-item a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                // Remove selected class from all category/brand links
-                document.querySelectorAll('.filter-item a').forEach(l => l.classList.remove('selected'));
-                // Add selected class to clicked link
-                this.classList.add('selected');
-            });
-        });
-
-        // Add click handlers for price buttons
-        document.querySelectorAll('.price-button').forEach(button => {
-            button.addEventListener('click', function(e) {
-                // Remove selected class from all price buttons
-                document.querySelectorAll('.price-button').forEach(b => b.classList.remove('selected'));
-                // Add selected class to clicked button
-                this.classList.add('selected');
-            });
-        });
     });
 </script>
 <%- include("../../views/partials/user/footer") %>

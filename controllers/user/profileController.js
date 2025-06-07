@@ -7,6 +7,7 @@ const session = require("express-session");
 const Order = require("../../models/orderSchema");
 const multer = require('multer');
 const path = require('path');
+const WalletTransaction = require("../../models/walletTransactionSchema");
 
 // Configure multer for profile picture uploads
 const storage = multer.diskStorage({
@@ -309,52 +310,91 @@ const postNewPassword = async (req, res) => {
     }
 };
 
-const userProfile = async (req, res) => {
+const getProfile = async (req, res) => {
     try {
         const userId = req.session.user;
-        if (!userId) {
-            return res.redirect('/login');
+        let user = await User.findById(userId);
+        
+        if (!user) {
+            return res.redirect('/login'); // Redirect if user not found
         }
 
-        const userData = await User.findById(userId);
-        const addressData = await Address.findOne({userId: userId});
-        
-        // Fetch user's orders with pagination
+        // Ensure the user has a referral code. If not, generate and save it.
+        if (!user.referalCode) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = '';
+            let isUnique = false;
+            while (!isUnique) {
+                code = '';
+                for (let i = 0; i < 8; i++) {
+                    code += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                const existingUserWithCode = await User.findOne({ referalCode: code });
+                if (!existingUserWithCode) {
+                    isUnique = true;
+                }
+            }
+            user.referalCode = code;
+            await user.save();
+        }
+
+        // Ensure the user has a referral token. If not, generate and save it.
+        if (!user.referralToken) {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+            let token = '';
+            let isUnique = false;
+            while (!isUnique) {
+                token = '';
+                for (let i = 0; i < 20; i++) { // Generate a longer token for better uniqueness
+                    token += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                const existingUserWithToken = await User.findOne({ referralToken: token });
+                if (!existingUserWithToken) {
+                    isUnique = true;
+                }
+            }
+            user.referralToken = token;
+            await user.save();
+        }
+
+        // Pagination setup
         const page = parseInt(req.query.page) || 1;
-        const limit = 5; // Number of orders per page
+        const limit = 10; // Number of orders per page
         const skip = (page - 1) * limit;
+
+        // Fetch orders with pagination
+        const orders = await Order.find({ userId })
+            .populate('orderedItems.product')
+            .sort({ createdOn: -1 })
+            .skip(skip)
+            .limit(limit);
 
         // Get total count for pagination
         const totalOrders = await Order.countDocuments({ userId });
         const totalPages = Math.ceil(totalOrders / limit);
+        
+        // Fetch wallet transactions
+        const walletTransactions = await WalletTransaction.find({ userId })
+            .sort({ createdAt: -1 })
+            .limit(50); // Limit to last 50 transactions
 
-        // Get orders for the current page with populated product details
-        const orders = await Order.find({ userId })
-            .populate({
-                path: 'orderedItems.product',
-                select: 'productName productImage price'  // Select only needed fields
-            })
-            .sort({ createdOn: -1 })
-            .skip(skip)
-            .limit(limit);
-        
-        // Ensure addressData is properly structured
-        const formattedAddressData = addressData || { address: [] };
-        
-        res.render("profile", {
-            user: userData,
-            userAddress: formattedAddressData,
+        // Fetch user addresses
+        const userAddress = await Address.findOne({ userId });
+
+        res.render("user/profile", {
+            user,
             orders,
+            walletTransactions,
+            userAddress,
             currentPage: page,
             totalPages,
             searchQuery: req.query.query || ''
         });
-        
     } catch (error) {
-        console.error("Error retrieving profile data:", error);
-        res.redirect("/pageNotFound");
+        console.error("Error fetching profile:", error);
+        res.status(500).send("Error fetching profile");
     }
-}
+};
 
 const changeEmail = async(req,res)=>{
     try {
@@ -393,28 +433,39 @@ const changeEmailValid = async(req,res)=>{
             return res.redirect('/login');
         }
 
-        const userExists = await User.findOne({email});
+        // Check if the new email is already registered by another user
+        const userExists = await User.findOne({email: email, _id: { $ne: userId }});
         if(userExists){
-            const otp = generateOtp();
-            const emailSent = await sendVerificationEmail(email,otp);
-            if(emailSent){
-                req.session.userOtp = otp;
-                req.session.userData = req.body;
-                req.session.email = email;
-                res.render("change-email-otp", {
-                    user: userData,
-                    message: ''
-                });
-                console.log("Email sent:",email)
-                console.log("OTP:",otp)
-            }else{
-                res.json("email-error");
-            }
+            return res.render("change-email",{
+                user: userData,
+                message : "This email is already registered by another user."
+            });
+        }
+
+        // Check if the new email is the same as the current email
+        if (userData.email === email) {
+            return res.render("change-email", {
+                user: userData,
+                message: "New email cannot be the same as the current email."
+            });
+        }
+
+        const otp = generateOtp();
+        const emailSent = await sendVerificationEmail(email,otp);
+        if(emailSent){
+            req.session.userOtp = otp;
+            req.session.emailToUpdate = email; // Store the new email to be updated
+            res.render("change-email-otp", {
+                user: userData,
+                message: ''
+            });
+            console.log("Email sent to:",email);
+            console.log("OTP:",otp);
         }else{
             res.render("change-email",{
                 user: userData,
-                message : "User with this email not exist"
-            })
+                message : "Failed to send OTP. Please try again."
+            });
         }
     } catch (error) {
         console.error("Error in change email validation:", error);
@@ -438,10 +489,21 @@ const verifyEmailOtp = async(req,res)=>{
         }
 
         if(enteredOtp === req.session.userOtp){
-            res.render("new-email", {
-                user: userData,
-                userData: req.session.userData
-            });
+            // Instead of rendering 'new-email', we will now update the email directly
+            // since the OTP verification is the final step before update.
+            const newEmail = req.session.emailToUpdate; // Retrieve the new email from session
+            if (newEmail) {
+                await User.findByIdAndUpdate(userId,{email: newEmail});
+                delete req.session.userOtp; // Clear OTP from session
+                delete req.session.emailToUpdate; // Clear new email from session
+                res.redirect("/userProfile"); // Redirect to profile page after successful update
+            } else {
+                // This case should ideally not happen if the flow is correct
+                res.render("change-email-otp", {
+                    message: "New email not found in session. Please restart the process.",
+                    user: userData
+                });
+            }
         } else {
             res.render("change-email-otp", {
                 message: "OTP not matching",
@@ -456,6 +518,8 @@ const verifyEmailOtp = async(req,res)=>{
 
 
 const updateEmail = async(req,res)=>{
+    // This function will no longer be needed as update is done in verifyEmailOtp
+    // However, keeping it for now to avoid breaking existing routes if any.
     try {
 
         const newEmail = req.body.newEmail;
@@ -770,6 +834,66 @@ const deleteAddress = async(req,res)=>{
     }
 }
 
+const updateProfile = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        const { name, phone } = req.body;
+        
+        // Validate input
+        if (!name) {
+            return res.status(400).json({
+                success: false,
+                message: 'Name is required'
+            });
+        }
+
+        if (phone && !/^\d{10}$/.test(phone)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please enter a valid 10-digit phone number'
+            });
+        }
+
+        // Update user profile
+        const updateData = { name };
+        if (phone) {
+            updateData.phone = phone;
+        }
+
+        // Handle profile picture upload if present
+        if (req.file) {
+            updateData.profilePicture = req.file.filename;
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { $set: updateData },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Update session with new user data
+        req.session.user = updatedUser;
+
+        return res.status(200).json({
+            success: true,
+            message: 'Profile updated successfully'
+        });
+
+    } catch (error) {
+        console.error('Error updating profile:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'An error occurred while updating profile'
+        });
+    }
+};
 
 module.exports = {
     getForgotPassPage,
@@ -778,7 +902,7 @@ module.exports = {
     getResetPassPage,
     resendOtp,
     postNewPassword,
-    userProfile,
+    getProfile,
     changeEmail,
     changeEmailValid,
     verifyEmailOtp,
@@ -792,5 +916,6 @@ module.exports = {
     editAddress,
     updateAddress,
     deleteAddress,
-    
+    updateProfile,
+    upload
 };

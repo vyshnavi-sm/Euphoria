@@ -478,7 +478,7 @@
                   second: '2-digit',
                   hour12: true
                 }) : 'Invalid Date' %></p>
-                <p class="mb-1"><strong>Total Amount:</strong> ₹<%= order.totalPrice.toFixed(2) %></p>
+                <p class="mb-1"><strong>Total Amount:</strong> ₹<%= order.finalAmount ? order.finalAmount.toFixed(2) : '0.00' %></p>
               </div>
               <div class="col-md-6 text-md-end">
                 <a href="/user/orders/<%= order._id %>" class="btn btn-sm btn-primary">View Details</a>
@@ -563,8 +563,9 @@
           <form id="cancelOrderForm">
             <input type="hidden" id="cancelOrderId" name="orderId">
             <div class="mb-3">
-              <label for="cancelReason" class="form-label">Reason for Cancellation (Optional)</label>
-              <textarea class="form-control" id="cancelReason" name="reason" rows="3"></textarea>
+              <label for="cancelReason" class="form-label">Reason for Cancellation <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="cancelReason" name="reason" rows="3" required></textarea>
+              <div class="invalid-feedback">Please provide a reason for cancellation.</div>
             </div>
           </form>
         </div>
@@ -586,7 +587,12 @@
 
   async function submitCancelOrder() {
     const orderId = document.getElementById('cancelOrderId').value;
-    const reason = document.getElementById('cancelReason').value;
+    const reason = document.getElementById('cancelReason').value.trim();
+    
+    if (!reason) {
+      showToast('Please provide a reason for cancellation', 'error');
+      return;
+    }
     
     try {
       const response = await fetch(`/user/orders/${orderId}/cancel`, {

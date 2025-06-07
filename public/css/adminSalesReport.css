@@ -1,0 +1,282 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5dc; /* Light beige background */
+    color: #5a4a42; /* Dark brown text */
+    font-size: 0.9em; /* Slightly smaller base font size */
+}
+
+.main-content {
+    padding: 15px; /* Reduced padding */
+    margin-left: 220px; /* Adjust based on sidebar width */
+    padding-top: 70px; /* Adjusted based on assumed topbar height */
+}
+
+/* Overall page title styling */
+h1 {
+    color: #4a3a32; /* Slightly darker brown for heading */
+    font-size: 1.8em; /* Reduced font size */
+    margin-bottom: 20px; /* Reduced bottom margin */
+    text-align: center;
+    font-weight: bold;
+}
+
+/* Metric Boxes */
+.report-metrics {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 25px; /* Reduced bottom margin */
+    gap: 20px; /* Reduced gap */
+    flex-wrap: wrap;
+}
+
+.metric-box {
+    border: 1px solid #c8b9a6; /* Lighter brown border */
+    padding: 15px; /* Reduced padding */
+    text-align: center;
+    flex: 1;
+    border-radius: 8px; /* Slightly less rounded corners */
+    background-color: #e2d8c6; /* Light brown background */
+    color: #4a3a32; /* Dark brown text */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Maintained shadow */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    min-width: 150px; /* Add a minimum width */
+}
+
+.metric-box:hover {
+    transform: translateY(-3px); /* Reduced lift on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.metric-box i {
+    font-size: 1.3em; /* Adjusted icon size to match header icons */
+    color: white; /* Changed color to white to match header icons */
+    margin-bottom: 0; /* Remove bottom margin if flexbox is handling alignment */
+    margin-right: 20px; /* Increased space between icon and text */
+}
+
+.metric-box h3 {
+    margin-top: 0;
+    font-size: 1.1em; /* Reduced font size */
+    color: #5a4a42; /* Dark brown text for heading */
+    margin-bottom: 5px; /* Reduced bottom margin */
+}
+
+.metric-box p {
+    font-size: 1.5em; /* Reduced font size */
+    font-weight: bold;
+    margin-bottom: 0;
+}
+
+/* Filter Section */
+.filter-section {
+    margin-bottom: 20px; /* Reduced bottom margin */
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Reduced gap */
+    flex-wrap: wrap;
+    padding: 15px; /* Reduced padding */
+    border: 1px solid #c8b9a6; /* Lighter brown border */
+    border-radius: 8px;
+    background-color: #e2d8c6; /* Light brown background */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-section label {
+    font-weight: bold;
+    color: #4a3a32; /* Dark brown text */
+    font-size: 0.9em; /* Reduced font size */
+}
+
+.filter-section select,
+.filter-section input[type="date"] {
+    padding: 8px; /* Reduced padding */
+    border: 1px solid #a1887f; /* Light brown border */
+    border-radius: 4px;
+    color: #4a3a32; /* Dark brown text */
+    background-color: white;
+    font-size: 0.9em; /* Reduced font size */
+}
+
+#applyCustomFilter {
+    background-color: #5d4037; /* Primary brown */
+    color: white;
+    padding: 8px 15px; /* Reduced padding */
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    font-size: 0.9em; /* Reduced font size */
+}
+
+#applyCustomFilter:hover {
+    background-color: #6d5046; /* Darker brown on hover */
+}
+
+.download-buttons {
+    display: flex;
+    gap: 8px; /* Reduced gap */
+    margin-left: auto;
+}
+
+.download-buttons button {
+    padding: 8px 15px; /* Reduced padding */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    font-size: 0.9em; /* Reduced font size */
+}
+
+.download-buttons .pdf-button {
+    background-color: #c62828; /* Darker red for PDF */
+    color: white;
+}
+
+.download-buttons .pdf-button:hover {
+    background-color: #b71c1c; /* Even darker red on hover */
+}
+
+.download-buttons .excel-button {
+    background-color: #2e7d32; /* Darker green for Excel */
+    color: white;
+}
+
+.download-buttons .excel-button:hover {
+    background-color: #1b5e20; /* Even darker green on hover */
+}
+
+/* Table Styling */
+h2 {
+    color: #4a3a32; /* Dark brown for table heading */
+    font-size: 1.5em; /* Reduced font size */
+    margin-top: 20px; /* Reduced top margin */
+    margin-bottom: 10px; /* Reduced bottom margin */
+    font-weight: bold;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.9em; /* Reduced font size for table text */
+}
+
+thead th {
+    background-color: #5d4037; /* Primary brown */
+    color: white;
+    font-weight: bold;
+    padding: 10px 12px; /* Reduced padding */
+    text-align: left;
+    border-bottom: 2px solid #4a3a32; /* Darker brown bottom border */
+}
+
+tbody td {
+    border: 1px solid #e2d8c6; /* Light brown border */
+    padding: 8px 12px; /* Reduced padding */
+    text-align: left;
+    color: #5a4a42; /* Dark brown text */
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f8f4f0; /* Alternating light beige row color */
+}
+
+tbody tr:hover {
+    background-color: #d3c9b6; /* Hover effect */
+}
+
+.hidden {
+    display: none;
+}
+
+/* Custom Pagination Styles for Sales Report */
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap; /* Allow wrapping on small screens */
+}
+
+.pagination-info {
+  font-size: 0.9em;
+  color: #5a4a42; /* Dark brown text */
+  margin-bottom: 10px; /* Space below info before pagination */
+}
+
+.pagination {
+  display: flex;
+  padding-left: 0;
+  list-style: none;
+  border-radius: 0.25rem; /* Slight border radius */
+  margin-bottom: 10px; /* Space below pagination on small screens */
+}
+
+.page-item {
+  margin: 0 4px; /* Space between pagination items */
+}
+
+.page-item:first-child,
+.page-item:last-child {
+    margin: 0 4px; /* Ensure spacing for first/last items */
+}
+
+.page-item .page-link {
+  position: relative;
+  display: block;
+  padding: 8px 12px; /* Adjust padding as needed */
+  color: white; /* White text color */
+  text-decoration: none;
+  background-color: #795548; /* Brown background color */
+  border: 1px solid #795548; /* Brown border */
+  border-radius: 6px; /* More rounded corners */
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.page-item .page-link:hover {
+  background-color: #6d5046; /* Darker brown on hover */
+  border-color: #6d5046;
+}
+
+.page-item.active .page-link {
+  z-index: 3;
+  color: white; /* White text for active */
+  background-color: #007bff; /* Blue background for active */
+  border-color: #007bff; /* Blue border for active */
+}
+
+.page-item.disabled .page-link {
+  color: #6c757d; /* Grayed out text for disabled */
+  pointer-events: none;
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+    border-radius: 6px; /* Apply rounded corners to first and last items */
+}
+
+/* Ensure border radius is consistent for all page items */
+.pagination li a {
+    border-radius: 6px !important;
+}
+
+.page-size-selector label {
+  font-size: 0.9em;
+  color: #5a4a42; /* Dark brown text */
+}
+
+.page-size-selector select {
+  font-size: 0.9em;
+  padding: 4px 8px; /* Adjust padding */
+  border: 1px solid #a1887f; /* Light brown border */
+  border-radius: 4px;
+  color: #4a3a32; /* Dark brown text */
+  background-color: white;
+} 

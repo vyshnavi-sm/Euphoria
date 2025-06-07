@@ -25,7 +25,7 @@ const orderSchema = new Schema({
         },
         price:{
             type: Number,
-            default: 0
+            required: true
         },
         status: {
             type: String,
@@ -90,7 +90,16 @@ const orderSchema = new Schema({
     },
     paymentMethod: {
         type: String,
+        enum: ['cod', 'card', 'upi', 'razorpay', 'paypal', 'wallet'],
         required: true
+    },
+    paymentStatus: {
+        type: String,
+        enum: ['Pending', 'Paid', 'Failed', 'Refunded'],
+        default: 'Pending'
+    },
+    paymentId: {
+        type: String
     },
     cancellationReason: String,
     returnReason: String

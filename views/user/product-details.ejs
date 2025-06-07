@@ -1294,7 +1294,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Quantity Controls
   window.increaseQuantity = function() {
-    if (currentQuantity < maxQuantity) {
+    if (currentQuantity < Math.min(maxQuantity, 5)) {
       currentQuantity++;
       updateQuantityDisplay();
       if (currentQuantity > maxQuantity) {
@@ -1306,7 +1306,7 @@ document.addEventListener('DOMContentLoaded', function() {
         addToCartBtn.disabled = maxQuantity <= 0;
       }
     } else {
-      showToast(`Only ${maxQuantity} items available in stock`, 'error');
+      showToast(`Maximum quantity per product is 5`, 'error');
     }
   };
 

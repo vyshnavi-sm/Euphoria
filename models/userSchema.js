@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
+const bcrypt = require("bcrypt");
 
 const userSchema = new Schema({
   name: {
@@ -42,10 +43,10 @@ const userSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Cart"
   }],
-  wallet: [{
+  wallet: {
     type: Number,
-    ref: "Wishlist"
-  }],
+    default: 0
+  },
   orderHistory: [{
     type: Schema.Types.ObjectId,
     ref: "Order"
@@ -69,8 +70,35 @@ const userSchema = new Schema({
     }
   ],
   referalCode: {
-    type: String
+    type: String,
+    unique: true,
+    sparse: true
   },
+  referralToken: {
+    type: String,
+    unique: true,
+    sparse: true,
+  },
+  referredBy: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    default: null
+  },
+  referralCount: {
+    type: Number,
+    default: 0
+  },
+  referralRewards: [{
+    amount: Number,
+    date: {
+      type: Date,
+      default: Date.now
+    },
+    referredUser: {
+      type: Schema.Types.ObjectId,
+      ref: "User"
+    }
+  }],
   redeemed: {
     type: Boolean
   },
@@ -91,6 +119,45 @@ const userSchema = new Schema({
     type: Date,
     default: Date.now
   }
+});
+
+// Hash password before saving
+userSchema.pre("save", async function (next) {
+  if (this.isModified("password")) {
+    // Check if password is already hashed (bcrypt hashes start with $2b$)
+    if (!this.password.startsWith('$2b$')) {
+      this.password = await bcrypt.hash(this.password, 10);
+    }
+  }
+  next();
+});
+
+// Generate unique referral code before saving
+userSchema.pre('save', async function(next) {
+  if (!this.referalCode) {
+    const generateReferralCode = () => {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      let code = '';
+      for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    };
+
+    let isUnique = false;
+    let referralCode;
+    
+    while (!isUnique) {
+      referralCode = generateReferralCode();
+      const existingUser = await this.constructor.findOne({ referalCode: referralCode });
+      if (!existingUser) {
+        isUnique = true;
+      }
+    }
+    
+    this.referalCode = referralCode;
+  }
+  next();
 });
 
 const User = mongoose.model("User", userSchema);

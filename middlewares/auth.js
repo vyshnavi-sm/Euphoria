@@ -36,20 +36,19 @@ const userAuth = (req, res, next) => {
 const adminAuth = async (req, res, next) => {
     try {
         if (!req.session.admin) {
+            console.log("No admin session found");
             return res.redirect('/admin/login');
         }
 
         // Check if session has expired (24 hours timeout)
         const sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-        if (Date.now() - req.session.lastActivity > sessionTimeout) {
+        const lastActivity = req.session.admin.lastActivity || 0;
+        
+        if (Date.now() - lastActivity > sessionTimeout) {
+            console.log("Session expired - Last activity:", new Date(lastActivity));
             delete req.session.admin;
-            req.session.save((err) => {
-                if (err) {
-                    console.error("Session save error:", err);
-                }
-                return res.redirect('/admin/login');
-            });
-            return;
+            await new Promise((resolve) => req.session.save(resolve));
+            return res.redirect('/admin/login');
         }
 
         // Verify admin still exists and is not blocked
@@ -59,24 +58,16 @@ const adminAuth = async (req, res, next) => {
         });
 
         if (!admin || admin.isBlocked) {
+            console.log("Admin not found or blocked");
             delete req.session.admin;
-            req.session.save((err) => {
-                if (err) {
-                    console.error("Session save error:", err);
-                }
-                return res.redirect('/admin/login');
-            });
-            return;
+            await new Promise((resolve) => req.session.save(resolve));
+            return res.redirect('/admin/login');
         }
 
         // Update last activity timestamp
-        req.session.lastActivity = Date.now();
-        req.session.save((err) => {
-            if (err) {
-                console.error("Session save error:", err);
-            }
-            next();
-        });
+        req.session.admin.lastActivity = Date.now();
+        await new Promise((resolve) => req.session.save(resolve));
+        next();
     } catch (error) {
         console.error("Admin auth error:", error);
         return res.redirect('/admin/login');

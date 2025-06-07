@@ -1,0 +1,282 @@
+<%- include("../../views/partials/admin/header") %>
+
+<style>
+    :root {
+        --primary-brown: #5D4037;
+        --secondary-brown: #8B6B61;
+        --light-brown: #A1887F;
+        --background-brown: #f8f4f0;
+        --border-brown: #e8d9c5;
+        --text-dark: #3E2723;
+        --text-light: #8D6E63;
+        --shadow-color: rgba(93, 64, 55, 0.1);
+    }
+
+    body {
+        background-color: var(--background-brown);
+        color: var(--text-dark);
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .container-fluid{
+        padding-left: 400px;
+        padding-right: 60px;
+        margin-top: 50px;
+        max-width: 1090px;
+    }
+
+    h1, h2 {
+        color: var(--primary-brown);
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 600;
+    }
+
+    .card {
+        box-shadow: 0 4px 6px var(--shadow-color);
+        border: none;
+        background-color: white;
+        border-radius: 10px;
+    }
+
+    .card-header {
+        background-color: var(--primary-brown);
+        color: white;
+        border-radius: 10px 10px 0 0;
+        font-size: 1.25rem;
+        font-weight: 500;
+    }
+
+    .form-label {
+        color: var(--text-dark);
+        font-weight: 500;
+    }
+
+    .form-control, .form-select {
+        border: 1px solid var(--border-brown);
+        border-radius: 5px;
+        padding: 0.75rem;
+        color: var(--text-dark);
+        background-color: #fffaf5;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-brown);
+        box-shadow: 0 0 0 0.2rem rgba(93, 64, 55, 0.25);
+    }
+
+    .btn-primary {
+        background-color: var(--primary-brown);
+        border-color: var(--primary-brown);
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--secondary-brown);
+        border-color: var(--secondary-brown);
+    }
+
+    .table thead th {
+        background-color: var(--primary-brown);
+        color: white;
+        font-weight: 500;
+        border: none;
+        padding: 1rem;
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-brown);
+        color: var(--text-dark);
+    }
+
+    .table tbody tr:hover {
+        background-color: var(--background-brown);
+    }
+
+    .badge.bg-success {
+        background-color: var(--secondary-brown) !important;
+    }
+
+    .badge.bg-danger {
+         background-color: var(--primary-brown) !important;
+    }
+
+    .btn-danger {
+        background-color: var(--primary-brown);
+        border-color: var(--primary-brown);
+    }
+
+     .btn-danger:hover {
+         background-color: #b00020;
+         border-color: #b00020;
+     }
+
+    .btn-warning {
+        background-color: var(--light-brown);
+        border-color: var(--light-brown);
+        color: var(--text-dark);
+    }
+
+    .btn-warning:hover {
+        background-color: #9a7d74;
+        border-color: #9a7d74;
+    }
+
+    .btn-success {
+         background-color: var(--secondary-brown);
+         border-color: var(--secondary-brown);
+    }
+
+     .btn-success:hover {
+         background-color: #7d5c53;
+         border-color: #7d5c53;
+     }
+
+</style>
+
+<div class="container-fluid">
+    <h1 class="mt-4">Coupon Management</h1>
+
+    <% if (success_msg && success_msg.length > 0) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <%= success_msg %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
+
+    <% if (error_msg && error_msg.length > 0) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <%= error_msg %>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <% } %>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Add New Coupon</h2>
+        </div>
+        <div class="card-body">
+            <form action="/admin/coupons" method="POST">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="code" class="form-label">Coupon Code</label>
+                        <input type="text" class="form-control" id="code" name="code" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="discountType" class="form-label">Discount Type</label>
+                        <select class="form-select" id="discountType" name="discountType" required>
+                            <option value="percentage">Percentage (%)</option>
+                            <option value="fixed">Fixed Amount (₹)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="discountValue" class="form-label">Discount Value</label>
+                        <input type="number" class="form-control" id="discountValue" name="discountValue" step="0.01" min="0" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                     <div class="col-md-4">
+                        <label for="minOrderAmount" class="form-label">Minimum Order Amount (₹)</label>
+                        <input type="number" class="form-control" id="minOrderAmount" name="minOrderAmount" step="0.01" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="maxDiscountAmount" class="form-label">Maximum Discount Amount (₹)</label>
+                        <input type="number" class="form-control" id="maxDiscountAmount" name="maxDiscountAmount" step="0.01" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="usageLimit" class="form-label">Usage Limit</label>
+                        <input type="number" class="form-control" id="usageLimit" name="usageLimit" min="1">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Create Coupon</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Existing Coupons</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Type</th>
+                            <th>Value</th>
+                            <th>Min Amount</th>
+                            <th>Max Discount</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Usage Limit</th>
+                            <th>Used Count</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (coupons && coupons.length > 0) { %>
+                            <% coupons.forEach(coupon => { %>
+                                <tr>
+                                    <td><%= coupon.code %></td>
+                                    <td><%= coupon.discountType %></td>
+                                    <td><%= coupon.discountValue %></td>
+                                    <td><%= coupon.minOrderAmount %></td>
+                                    <td><%= coupon.maxDiscountAmount %></td>
+                                    <td><%= new Date(coupon.startDate).toLocaleDateString() %></td>
+                                    <td><%= new Date(coupon.endDate).toLocaleDateString() %></td>
+                                    <td><%= coupon.usageLimit %></td>
+                                    <td><%= coupon.usageCount %></td>
+                                    <td>
+                                        <span class="badge bg-<%= coupon.isActive ? 'success' : 'danger' %>">
+                                            <%= coupon.isActive ? 'Active' : 'Inactive' %>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <form action="/admin/coupons/<%= coupon._id %>?_method=DELETE" method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this coupon?');">Delete</button>
+                                        </form>
+                                        <form action="/admin/coupons/<%= coupon._id %>/toggle?_method=PATCH" method="POST" style="display: inline;">
+                                             <button type="submit" class="btn btn-<%= coupon.isActive ? 'warning' : 'success' %> btn-sm">
+                                                 <%= coupon.isActive ? 'Deactivate' : 'Activate' %>
+                                             </button>
+                                         </form>
+                                    </td>
+                                </tr>
+                            <% }) %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="11" class="text-center">No coupons found.</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include("../../views/partials/admin/footer") %>
+
+<script>
+    // Basic client-side date validation (optional, backend validation is already there)
+    document.getElementById('startDate').addEventListener('change', function() {
+        document.getElementById('endDate').min = this.value;
+    });
+</script> 

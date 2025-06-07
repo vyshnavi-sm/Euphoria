@@ -3,7 +3,8 @@
 .content-main {
     background: linear-gradient(135deg, #f8f9fa, #ffffff);
     min-height: 100vh;
-    margin-top: 150px;
+    margin-top: 100px;
+    padding: 20px;
 }
 
 .card {
@@ -11,6 +12,8 @@
     border: none;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    max-width: 500px;
+    margin: 0 auto;
 }
 
 .card-title {
@@ -19,6 +22,19 @@
     font-weight: 600;
     font-size: 24px;
     margin-bottom: 25px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    color: #5C4033;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    margin-bottom: 8px;
+    display: block;
 }
 
 .form-control {
@@ -26,6 +42,7 @@
     border-radius: 8px;
     padding: 12px;
     font-family: 'Cormorant Garamond', serif;
+    width: 100%;
     transition: all 0.3s ease;
 }
 
@@ -42,6 +59,7 @@
     font-weight: 600;
     padding: 12px;
     border-radius: 8px;
+    width: 100%;
     transition: all 0.3s ease;
 }
 
@@ -66,34 +84,61 @@
 .form-control.is-invalid:focus {
     box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
+
+.alert {
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 20px;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.card-body {
+    padding: 30px;
+}
 </style>
 
-<section class="content-main mt-180 mb-80">
-   <div class="card mx-auto card-login col-4">
+<section class="content-main">
+   <div class="card">
        <div class="card-body">
-           <h4 class="card-title mb-4">Change Email</h4>
-           <form method="post" action="/change-email" onsubmit="return validateLoginForm()">
-               <div class="mb-3">
-                   <input class="form-control" name="email" placeholder="Email" type="text" id="email">
+           <h4 class="card-title">Change Email Address</h4>
+           <% if (locals.message && message.length > 0) { %>
+               <div class="alert alert-danger">
+                   <%= message %>
+               </div>
+           <% } %>
+           <form method="post" action="/change-email" onsubmit="return validateEmailForm()">
+               <div class="form-group">
+                   <label for="email" class="form-label">Current Email</label>
+                   <input type="email" class="form-control" id="currentEmail" value="<%= user.email %>" readonly>
+               </div>
+               <div class="form-group">
+                   <label for="newEmail" class="form-label">New Email Address</label>
+                   <input class="form-control" name="email" placeholder="Enter new email address" type="email" id="newEmail">
                    <div class="error-message" id="email-error"></div>
                </div>
-               <div class="mb-4">
-                   <button type="submit" class="btn btn-primary w-100">Verify</button>
+               <div class="form-group">
+                   <button type="submit" class="btn btn-primary">Send Verification Code</button>
                </div>
            </form>
        </div>
    </div>
 </section>
+
 <script>
-   function validateLoginForm() {
-       const emailInput = document.getElementById('email');
+   function validateEmailForm() {
+       const emailInput = document.getElementById('newEmail');
        const emailError = document.getElementById('email-error');
        const emailValue = emailInput.value.trim();
        const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
-
        if (emailValue === '') {
-           emailError.textContent = 'Please enter your email.';
+           emailError.textContent = 'Please enter your new email address.';
            emailInput.classList.add('is-invalid');
            return false;
        } else if (!emailValue.match(emailPattern)) {
@@ -107,6 +152,8 @@
        }
    }
 </script>
+
+<%- include("../../views/partials/user/footer") %>
 
 
 

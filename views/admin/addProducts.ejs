@@ -279,6 +279,8 @@
     </div>
 </section>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
 <script>
     // Global variable to store croppers
     const croppers = {};
@@ -459,9 +461,26 @@
         }
         
         // Image validation
-        if (images.files.length === 0) {
-            displayErrorMessage("images-error", 'Please select at least one image.');
+        // Check for minimum 4 images
+        const imageInputs = document.querySelectorAll('input[name="images"]');
+        let totalImages = 0;
+        imageInputs.forEach(input => {
+            if (input.files && input.files.length > 0) {
+                // On the add page, after cropping, each 'images' input should have one file.
+                // We need to count the number of input elements that actually have a selected file.
+                totalImages += input.files.length; // This should add 1 for each input with a file
+            }
+        });
+
+        if (totalImages < 4) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Image Error!',
+                text: 'Please upload at least 4 product images.'
+            });
             isValid = false;
+            // Crucially, we need to return false here to stop the form submission if validation fails
+            return false;
         }
         
         return isValid;
@@ -482,6 +501,55 @@
             element.style.display = "none";
         });
     }
+
+    // Function to get URL parameters
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, '\\\\[').replace(/[\]]/, '\\\\]');
+        var regex = new RegExp('[\\\\?&]' + name + '=([^&#]*)');
+        var results = regex.exec(location.search);
+        return results === null ? '' : decodeURIComponent(results[1].replace(/\\+/g, ' '));
+    };
+
+    // Check for error message on page load
+    window.onload = function() {
+        const errorMessage = getUrlParameter('error');
+        if (errorMessage) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: errorMessage
+            });
+        }
+    };
+
+    // Add event listener for product name duplication check on blur
+    document.getElementById('product_name').addEventListener('blur', async function() {
+        const productName = this.value.trim();
+        if (productName) { // Only check if name is not empty
+            try {
+                const response = await fetch(`/admin/products/checkDuplicateName?productName=${encodeURIComponent(productName)}`);
+                const data = await response.json();
+                
+                if (data.isDuplicate) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Duplicate Product Name',
+                        text: data.message,
+                        confirmButtonColor: '#a0522d'
+                    });
+                    // You might want to clear the input or disable the submit button here
+                }
+            } catch (error) {
+                console.error('Error checking duplicate product name:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Could not check for duplicate product name.',
+                    confirmButtonColor: '#a0522d'
+                });
+            }
+        }
+    });
 </script>
 
 <%- include("../../views/partials/admin/footer") %>

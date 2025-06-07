@@ -22,8 +22,28 @@
         }
     
         .logo {
-          font-size: 22px;
+          font-size: 20px;
           font-weight: bold;
+          color: #fcf8f6ee;
+        }
+    
+        /* Style for the right side icons and profile picture */
+        .topbar .d-flex {
+          align-items: center;
+          gap: 25px; /* Increased gap for more space */
+        }
+    
+        .topbar .d-flex i {
+          color: white; /* Ensure icons are white */
+          font-size: 1.3em; /* Slightly larger icon size for better visibility */
+        }
+    
+        .topbar .rounded-circle {
+          width: 40px; /* Slightly larger profile image */
+          height: 40px;
+          object-fit: cover;
+          border: 2px solid white; /* Add a white border around the profile pic */
+          border-radius: 50%; /* Explicitly make it round */
         }
     
         .top-right {
@@ -86,6 +106,7 @@
           display: flex;
           align-items: center;
           gap: 10px;
+          font-size: 1.03em;
         }
     
         .nav-menu a:hover {
@@ -185,9 +206,10 @@
           <li><a href="/admin/category"><i class="fas fa-box"></i> Category</a></li>
           <li><a href="/admin/brands"><i class="fas fa-chart-bar"></i> Brands</a></li>
           <li><a href="/admin/products"><i class="fas fa-users"></i> Products</a></li>
-          <li><a href="#"><i class="fas fa-ticket-alt"></i> Coupons</a></li>
+          <li><a href="/admin/coupons"><i class="fas fa-ticket-alt"></i> Coupons</a></li>
           <li><a href="#"><i class="fas fa-th"></i> Banners</a></li>
           <li><a href="/admin/orders"><i class="fas fa-image"></i> Orders</a></li>
+          <li><a href="/admin/sales-report"><i class="fas fa-chart-bar"></i> Sales Report</a></li>
           <li><a href="#"><i class="fas fa-undo-alt"></i> Refunds</a></li>
           <li><a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> Sign Out</a></li>
         </ul>

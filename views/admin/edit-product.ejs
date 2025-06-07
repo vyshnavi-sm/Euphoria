@@ -195,6 +195,30 @@
         .remove-preview:hover {
             background-color: rgba(255, 0, 0, 0.9);
         }
+
+        /* Image counter styling */
+        .image-counter {
+            background-color: #e6d3c0;
+            color: #4e342e;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .image-counter.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .image-counter.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
     
     <!-- Make sure to include these scripts in this specific order -->
@@ -202,6 +226,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.12/dist/cropper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <!-- Add CSRF token if your application uses it -->
     <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
@@ -212,7 +237,7 @@
             <div class="content-header">
                 <h2 class="content-title">Edit Product</h2>
                 <% if (locals.error) { %>
-                    <div class="status-message error-message-visible">
+                    <div class="status-message error-message-visible" id="server-error-message">
                         <%= error %>
                     </div>
                 <% } %>
@@ -318,7 +343,13 @@
                         </div>
                         <div class="mb-4">
                             <label class="form-label">Product Images</label>
-                                <div class="row">
+                            
+                            <!-- Image Counter -->
+                            <div class="image-counter" id="imageCounter">
+                                Current Images: <span id="currentImageCount"><%= product.productImage ? product.productImage.length : 0 %></span>/4
+                            </div>
+                            
+                            <div class="row">
                                 <% if (product.productImage && product.productImage.length > 0) { %>
                                     <div class="col-12 mb-3">
                                         <div class="thumbnails-container">
@@ -330,24 +361,26 @@
                                                         data-product="<%= product._id %>"
                                                         style="position: absolute; top: 5px; right: 5px;">
                                                         <i class="fas fa-times"></i>
-                                                </button>
-                                            </div>
+                                                    </button>
+                                                </div>
                                             <% }); %>
                                         </div>
                                     </div>
                                 <% } %>
-                                    <div class="col-12">
+                                <div class="col-12">
                                     <div class="mb-3">
                                         <label class="form-label">Add New Images</label>
                                         <input type="file" name="images" class="form-control border" multiple accept="image/*" id="imageInput">
-                                </div>
+                                        <div id="images-error" class="error-message-visible" style="display: none;"></div>
+                                        <small class="text-muted">Maximum 4 images total. Accepted formats: JPG, PNG, GIF</small>
+                                    </div>
                                 
                                     <div id="previewContainer" class="row mt-3">
                                         <!-- Cropped image previews will appear here -->
-                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
                         <div class="mt-4">
                             <button class="btn btn-md rounded font-sm hover-up" id="updatebtn" type="submit">Update Product</button>
                         </div>
@@ -389,17 +422,171 @@ $(document).ready(function() {
     let currentFileIndex = 0;
     let files = [];
     let cropperModal = null;
+    let existingImagesCount = parseInt('<%= product.productImage ? product.productImage.length : 0 %>');
     
     // Initialize the Bootstrap modal
     cropperModal = new bootstrap.Modal(document.getElementById('cropperModal'));
     
+    // Update image counter
+    function updateImageCounter() {
+        const currentCount = existingImagesCount + croppedImages.length;
+        $('#currentImageCount').text(currentCount);
+        
+        const counter = $('#imageCounter');
+        counter.removeClass('warning error');
+        
+        if (currentCount > 4) {
+            counter.addClass('error');
+        } else if (currentCount === 4) {
+            counter.addClass('warning');
+        }
+    }
+    
+    // Validate form fields
+    function validateForm() {
+        let isValid = true;
+        
+        // Clear previous errors
+        $('.error-message').hide();
+        $('#images-error').hide();
+        
+        // Product name validation
+        const productName = $('#product_name').val().trim();
+        if (!productName) {
+            $('#productName-error').text('Product name is required').show();
+            isValid = false;
+        } else if (productName.length < 3) {
+            $('#productName-error').text('Product name must be at least 3 characters long').show();
+            isValid = false;
+        }
+        
+        // Description validation
+        const description = $('textarea[name="description"]').val().trim();
+        if (!description) {
+            $('#description-error').text('Description is required').show();
+            isValid = false;
+        } else if (description.length < 10) {
+            $('#description-error').text('Description must be at least 10 characters long').show();
+            isValid = false;
+        }
+        
+        // Price validation
+        const regularPrice = $('input[name="regularPrice"]').val().trim();
+        if (!regularPrice) {
+            $('#regularPrice-error').text('Regular price is required').show();
+            isValid = false;
+        } else if (isNaN(regularPrice) || parseFloat(regularPrice) <= 0) {
+            $('#regularPrice-error').text('Regular price must be a valid positive number').show();
+            isValid = false;
+        }
+        
+        const salePrice = $('input[name="salePrice"]').val().trim();
+        if (salePrice && (isNaN(salePrice) || parseFloat(salePrice) < 0)) {
+            $('#salePrice-error').text('Sale price must be a valid positive number').show();
+            isValid = false;
+        } else if (salePrice && parseFloat(salePrice) >= parseFloat(regularPrice)) {
+            $('#salePrice-error').text('Sale price must be less than regular price').show();
+            isValid = false;
+        }
+        
+        // Quantity validation
+        const quantity = $('input[name="quantity"]').val().trim();
+        if (!quantity) {
+            $('#quantity-error').text('Quantity is required').show();
+            isValid = false;
+        } else if (isNaN(quantity) || parseInt(quantity) < 0) {
+            $('#quantity-error').text('Quantity must be a valid non-negative number').show();
+            isValid = false;
+        }
+        
+        // Color validation
+        const color = $('input[name="color"]').val().trim();
+        if (!color) {
+            $('#color-error').text('Color is required').show();
+            isValid = false;
+        }
+        
+        // Image validation
+        const totalImages = existingImagesCount + croppedImages.length;
+        if (totalImages < 1) {
+            $('#images-error').text('At least 1 product image is required').show();
+            isValid = false;
+        } else if (totalImages > 4) {
+            $('#images-error').text('Maximum 4 product images are allowed').show();
+            isValid = false;
+        }
+        
+        return isValid;
+    }
+    
+    // Validate file selection
+    function validateFileSelection(selectedFiles) {
+        const errors = [];
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        const maxFileSize = 5 * 1024 * 1024; // 5MB
+        const fileNames = [];
+        
+        // Check if adding these files would exceed the limit
+        const totalAfterAdd = existingImagesCount + croppedImages.length + selectedFiles.length;
+        if (totalAfterAdd > 4) {
+            errors.push('Cannot add ' + selectedFiles.length + ' images. Maximum 4 images total allowed. You currently have ' + (existingImagesCount + croppedImages.length) + ' images.');
+            return errors;
+        }
+        
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const file = selectedFiles[i];
+            
+            // Check file type
+            if (!allowedTypes.includes(file.type.toLowerCase())) {
+                errors.push('"' + file.name + '" is not a valid image format. Allowed formats: JPG, PNG, GIF');
+                continue;
+            }
+            
+            // Check file size
+            if (file.size > maxFileSize) {
+                errors.push('"' + file.name + '" is too large. Maximum file size is 5MB');
+                continue;
+            }
+            
+            // Check for duplicate names
+            if (fileNames.includes(file.name.toLowerCase())) {
+                errors.push('Duplicate file name detected: "' + file.name + '"');
+                continue;
+            }
+            
+            fileNames.push(file.name.toLowerCase());
+        }
+        
+        return errors;
+    }
+    
     // Handle image input change event
     $('#imageInput').on('change', function(e) {
-        files = Array.from(e.target.files);
-        if (files.length > 0) {
-            currentFileIndex = 0;
-            processNextImage();
+        const selectedFiles = Array.from(e.target.files);
+        
+        if (selectedFiles.length === 0) {
+            return;
         }
+        
+        // Validate file selection
+        const validationErrors = validateFileSelection(selectedFiles);
+        
+        if (validationErrors.length > 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Image Selection Error',
+                html: '<ul>' + validationErrors.map(error => '<li>' + error + '</li>').join('') + '</ul>',
+                confirmButtonColor: '#a0522d'
+            });
+            
+            // Clear the file input
+            $(this).val('');
+            return;
+        }
+        
+        files = selectedFiles;
+        currentFileIndex = 0;
+        processNextImage();
     });
     
     function processNextImage() {
@@ -441,12 +628,27 @@ $(document).ready(function() {
                 currentFileIndex++;
                 processNextImage();
             }
+        } else {
+            // Clear the file input after processing all files
+            $('#imageInput').val('');
         }
     }
     
     // Crop button click handler
     $('#cropButton').on('click', function() {
         if (!cropper) return;
+        
+        // Check if we can add more images
+        if (existingImagesCount + croppedImages.length >= 4) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Image Limit Reached',
+                text: 'Maximum 4 images are allowed per product.',
+                confirmButtonColor: '#a0522d'
+            });
+            cropperModal.hide();
+            return;
+        }
         
         // Get the cropped canvas
         const canvas = cropper.getCroppedCanvas({
@@ -475,12 +677,16 @@ $(document).ready(function() {
             // Store the cropped file
             croppedImages.push(croppedFile);
             
+            // Update image counter
+            updateImageCounter();
+            
             // Remove handler for preview
             removeButton.on('click', function() {
                 const index = $('#previewContainer .col-md-3').index(previewDiv);
                 if (index > -1) {
                     croppedImages.splice(index, 1);
                     previewDiv.remove();
+                    updateImageCounter();
                 }
             });
             
@@ -495,38 +701,77 @@ $(document).ready(function() {
     
     // Handle form submission
     $('#editProductForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Validate form
+        if (!validateForm()) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Please fix the errors above before submitting.',
+                confirmButtonColor: '#a0522d'
+            });
+            return;
+        }
+        
+        // Create a new FormData object
+        const formData = new FormData(this);
+        
+        // If there are cropped images, replace the original image files
         if (croppedImages.length > 0) {
-            e.preventDefault();
-            
-            // Create a new FormData object
-            const formData = new FormData(this);
-            
             // Remove the original image files
             formData.delete('images');
             
             // Add each cropped image
-            croppedImages.forEach(function(file, index) {
+            croppedImages.forEach(function(file) {
                 formData.append('images', file);
             });
-            
-            // Submit the form with FormData
-            $.ajax({
-                url: $(this).attr('action'),
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function(response) {
-                    // Redirect on success or handle response
-                    window.location.href = '/admin/products';
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error submitting form:', error);
-                    alert('Error updating product: ' + error);
-                }
-            });
         }
-        // If no cropped images, let the form submit normally
+        
+        // Show loading state
+        const submitButton = $('#updatebtn');
+        const originalText = submitButton.text();
+        submitButton.text('Updating...').prop('disabled', true);
+        
+        // Submit the form with FormData
+        $.ajax({
+            url: $(this).attr('action'),
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: 'Product updated successfully!',
+                    confirmButtonColor: '#a0522d'
+                }).then(() => {
+                    window.location.href = '/admin/products?success=Product updated successfully!';
+                });
+            },
+            error: function(xhr, status, error) {
+                console.error('Error submitting form:', error);
+                let errorMessage = 'Error updating product';
+                
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.responseText) {
+                    errorMessage = xhr.responseText;
+                }
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: errorMessage,
+                    confirmButtonColor: '#a0522d'
+                });
+            },
+            complete: function() {
+                // Restore button state
+                submitButton.text(originalText).prop('disabled', false);
+            }
+        });
     });
     
     // Handle image deletion
@@ -535,46 +780,84 @@ $(document).ready(function() {
         const productId = $(this).data('product');
         
         if (imageName && productId) {
+            // Check if this would leave us with too few images
+            if (existingImagesCount + croppedImages.length <= 1) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Cannot Delete',
+                    text: 'At least 1 product image is required.',
+                    confirmButtonColor: '#a0522d'
+                });
+                return;
+            }
+            
             deleteImage(imageName, productId, $(this));
         }
     });
     
     // Function to delete an image
     function deleteImage(imageName, productId, buttonElement) {
-        if (!confirm('Are you sure you want to delete this image?')) {
-            return;
-        }
-        
-        // Add loading spinner
-        const originalHtml = buttonElement.html();
-        buttonElement.html('<span class="spinner"></span>');
-        buttonElement.prop('disabled', true);
-        
-    $.ajax({
-            url: '/admin/deleteImage',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                imageNameToServer: imageName,
-            productIdToServer: productId
-            }),
-            success: function(response) {
-                if (response.status === true) {
-                    // Remove the thumbnail
-                    buttonElement.closest('.thumbnail').remove();
-                    alert('Image deleted successfully');
-                } else {
-                    alert(response.message || 'Failed to delete image');
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Error:', error);
-                alert('Error deleting image: ' + error);
-            },
-            complete: function() {
-                // Restore button state
-                buttonElement.html(originalHtml);
-                buttonElement.prop('disabled', false);
+        Swal.fire({
+            title: 'Delete Image?',
+            text: 'Are you sure you want to delete this image?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#a0522d',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Add loading spinner
+                const originalHtml = buttonElement.html();
+                buttonElement.html('<span class="spinner"></span>');
+                buttonElement.prop('disabled', true);
+                
+                $.ajax({
+                    url: '/admin/deleteImage',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        imageNameToServer: imageName,
+                        productIdToServer: productId
+                    }),
+                    success: function(response) {
+                        if (response.status === true) {
+                            // Remove the thumbnail
+                            buttonElement.closest('.thumbnail').remove();
+                            // Decrease existing images count
+                            existingImagesCount--;
+                            updateImageCounter();
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: 'Image deleted successfully.',
+                                confirmButtonColor: '#a0522d'
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: response.message || 'Failed to delete image',
+                                confirmButtonColor: '#a0522d'
+                            });
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Error deleting image: ' + error,
+                            confirmButtonColor: '#a0522d'
+                        });
+                    },
+                    complete: function() {
+                        // Restore button state
+                        buttonElement.html(originalHtml);
+                        buttonElement.prop('disabled', false);
+                    }
+                });
             }
         });
     }
@@ -586,5 +869,75 @@ $(document).ready(function() {
             cropper = null;
         }
     });
+    
+    // Add event listener for product name duplication check on blur
+    document.getElementById('product_name').addEventListener('blur', async function() {
+        const productName = this.value.trim();
+        const productId = '<%= product._id %>'; // Get the current product ID
+
+        if (productName) { // Only check if name is not empty
+            try {
+                const response = await fetch(`/admin/products/checkDuplicateName?productName=${encodeURIComponent(productName)}&productId=${productId}`);
+                const data = await response.json();
+                
+                if (data.isDuplicate) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Duplicate Product Name',
+                        text: data.message,
+                        confirmButtonColor: '#a0522d'
+                    });
+                    // You might want to clear the input or disable the submit button here
+                }
+            } catch (error) {
+                console.error('Error checking duplicate product name:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Could not check for duplicate product name.',
+                    confirmButtonColor: '#a0522d'
+                });
+            }
+        }
+    });
+    
+    // Initialize image counter on page load
+    updateImageCounter();
 });
+
+// Function to get URL parameters
+function getUrlParameter(name) {
+    name = name.replace(/[\[]/, '\\\\[').replace(/[\]]/, '\\\\]');
+    var regex = new RegExp('[\\\\?&]' + name + '=([^&#]*)');
+    var results = regex.exec(location.search);
+    return results === null ? '' : decodeURIComponent(results[1].replace(/\\+/g, ' '));
+}
+
+// Check for error message on page load
+window.onload = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorMessage = urlParams.get('error');
+    const successMessage = urlParams.get('success');
+
+    if (errorMessage) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error!',
+            text: errorMessage,
+            confirmButtonColor: '#a0522d'
+        });
+    } else if (successMessage) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: successMessage,
+            confirmButtonColor: '#a0522d'
+        });
+    }
+
+    // Clear the query parameters after displaying the alert to prevent it from showing again on reload
+    if (errorMessage || successMessage) {
+        history.replaceState({}, document.title, window.location.pathname);
+    }
+};
 </script>

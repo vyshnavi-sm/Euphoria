@@ -237,9 +237,9 @@
                 </div>
               <% } %>
             </td>
-            <td>₹<%= item.product.salePrice.toFixed(2) %></td>
+            <td>₹<%= item.price.toFixed(2) %></td>
             <td><%= item.quantity %></td>
-            <td>₹<%= (item.product.salePrice * item.quantity).toFixed(2) %></td>
+            <td>₹<%= (item.price * item.quantity).toFixed(2) %></td>
           </tr>
         <% }); %>
       </tbody>
@@ -588,7 +588,7 @@
             refundInput.required = true;
              // Attempt to pre-fill refund amount with item's price
              if (item) {
-                 refundInput.value = (item.product.salePrice * item.quantity).toFixed(2);
+                 refundInput.value = (item.price * item.quantity).toFixed(2);
              } else {
                  refundInput.value = 0; // Fallback
              }

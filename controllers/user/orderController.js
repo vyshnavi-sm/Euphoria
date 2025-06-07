@@ -1,6 +1,8 @@
 const Order = require('../../models/orderSchema');
 const Product = require('../../models/productSchema');
 const { createPDF } = require('../../utils/pdfGenerator');
+const User = require('../../models/userSchema');
+const WalletTransaction = require('../../models/walletTransactionSchema');
 
 const getUserOrders = async (req, res) => {
     try {
@@ -97,8 +99,7 @@ const cancelOrder = async (req, res) => {
     try {
         const { orderId } = req.params;
         const { reason } = req.body;
-        // const userId = req.session.user._id ? req.session.user._id : req.session.user;
-        const userId = req.session.user; // Correctly get user ID from session
+        const userId = req.session.user;
 
         if (!userId) {
             return res.json({ success: false, message: 'User not logged in' });
@@ -130,17 +131,37 @@ const cancelOrder = async (req, res) => {
         for (const item of order.orderedItems) {
             // Make sure product exists before updating stock
             if (item.product && item.product._id) {
-                await Product.findByIdAndUpdate(
-                    item.product._id,
-                    { $inc: { stock: item.quantity } },
-                    { new: true } // Return the updated document
-                );
+                const product = await Product.findById(item.product._id);
+                if (product) {
+                    product.quantity += item.quantity;
+                    await product.save();
+                }
             }
         }
 
         // Update order status
         order.status = 'Cancelled';
         order.cancellationReason = reason.trim();
+
+        // Process refund to wallet if payment was made
+        if (order.paymentStatus === 'Paid') {
+            const user = await User.findById(userId);
+            if (user) {
+                // Add refund amount to wallet
+                user.wallet = Number(user.wallet) + order.finalAmount;
+                await user.save();
+
+                // Create wallet transaction record
+                await WalletTransaction.create({
+                    userId: user._id,
+                    amount: order.finalAmount,
+                    type: 'credit',
+                    description: `Refund for cancelled order #${order._id}`,
+                    orderId: order._id
+                });
+            }
+        }
+
         await order.save();
 
         return res.json({ success: true, message: 'Order cancelled successfully' });
@@ -154,8 +175,7 @@ const cancelItem = async (req, res) => {
     try {
         const { orderId, itemId } = req.params;
         const { reason } = req.body;
-        // const userId = req.session.user._id ? req.session.user._id : req.session.user;
-        const userId = req.session.user; // Correctly get user ID from session
+        const userId = req.session.user;
 
         if (!userId) {
             return res.json({ success: false, message: 'User not logged in' });
@@ -188,14 +208,34 @@ const cancelItem = async (req, res) => {
 
         // Update product stock
         if (item.product && item.product._id) {
-            await Product.findByIdAndUpdate(
-                item.product._id,
-                { $inc: { stock: item.quantity } },
-                { new: true }
-            );
+            const product = await Product.findById(item.product._id);
+            if (product) {
+                product.quantity += item.quantity;
+                await product.save();
+            }
         }
 
         const cancelledItemTotal = item.price * item.quantity;
+
+        // Process refund to wallet if payment was made
+        if (order.paymentStatus === 'Paid') {
+            const user = await User.findById(userId);
+            if (user) {
+                // Add refund amount to wallet
+                user.wallet = Number(user.wallet) + cancelledItemTotal;
+                await user.save();
+
+                // Create wallet transaction record
+                await WalletTransaction.create({
+                    userId: user._id,
+                    amount: cancelledItemTotal,
+                    type: 'credit',
+                    description: `Refund for cancelled item (Order #${order._id}, Item ID: ${item._id})`,
+                    orderId: order._id,
+                    itemId: item._id
+                });
+            }
+        }
 
         // Mark the item as cancelled
         item.status = 'Cancelled';
@@ -203,12 +243,10 @@ const cancelItem = async (req, res) => {
 
         // Recalculate total price: only include non-cancelled items
         order.totalPrice = order.orderedItems.reduce((total, currentItem) => {
-            
             return currentItem.status !== 'Cancelled'
                 ? total + (currentItem.product.salePrice * currentItem.quantity)
                 : total;
         }, 0);
-        
 
         // Recalculate tax (18%) and final amount
         order.tax = order.totalPrice * 0.18;
@@ -236,7 +274,7 @@ const cancelItem = async (req, res) => {
     } catch (error) {
         console.error('Error cancelling item:', error);
         return res.status(500).json({ success: false, message: 'Error cancelling item', error: error.message });
-     }
+    }
 };
 
 const returnSingleItem = async (req, res) => {
@@ -339,11 +377,11 @@ const returnOrder = async (req, res) => {
         // Update product stock for each item
         for (const item of order.orderedItems) {
             if (item.product && item.product._id) {
-                await Product.findByIdAndUpdate(
-                    item.product._id,
-                    { $inc: { stock: item.quantity } },
-                    { new: true }
-                );
+                const product = await Product.findById(item.product._id);
+                if (product) {
+                    product.quantity += item.quantity;
+                    await product.save();
+                }
             }
         }
 

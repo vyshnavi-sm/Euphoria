@@ -9,6 +9,8 @@ const flash = require('connect-flash');
 const db = require("./config/db");
 const userRouter = require("./routes/userRouter");
 const adminRouter = require("./routes/adminRouter");
+const methodOverride = require('method-override');
+
 const sessionMiddleware = require("./middlewares/sessionMiddleware");
 const MongoStore = require('connect-mongo');
 
@@ -22,22 +24,32 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+app.use(methodOverride('_method'));
 app.use(session({
     secret: process.env.SESSION_SECRET,
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     store: MongoStore.create({
         mongoUrl: process.env.MONGODB_URI,
         ttl: 72 * 60 * 60, // 72 hours in seconds
-        autoRemove: 'native'
+        autoRemove: 'native',
+        touchAfter: 24 * 3600 // time period in seconds
     }),
     cookie: {
-        secure: false,
+        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
         httpOnly: true,
         maxAge: 72 * 60 * 60 * 1000, // 72 hours in milliseconds
         sameSite: 'lax'
     }
 }));
+
+// Add security headers
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    next();
+});
 
 // Add flash middleware
 app.use(flash());

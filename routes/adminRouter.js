@@ -7,8 +7,10 @@ const categoryController = require("../controllers/admin/categoryController");
 const brandController = require("../controllers/admin/brandController")
 const productController = require("../controllers/admin/productController");
 const orderController = require("../controllers/admin/orderController");
+const couponController = require("../controllers/admin/couponController");
 const multer = require("multer");
 const uploads = require('../helpers/multer');
+const salesReportController = require('../controllers/admin/salesReportController');
 
 
 router.get("/pageerror",adminController.pageerror)
@@ -54,6 +56,13 @@ router.get("/editProduct",adminAuth,productController.getEditProduct);
 router.post("/editProduct/:id",adminAuth,uploads.array("images",4),productController.editProduct);
 router.post("/deleteImage",adminAuth,productController.deleteSingleImage);
 
+// Offer Management for Products
+router.post("/products/applyOffer", adminAuth, productController.applyProductOffer);
+router.post("/products/removeOffer", adminAuth, productController.removeProductOffer);
+
+// Product Name Duplication Check
+router.get("/products/checkDuplicateName", adminAuth, productController.checkDuplicateProductName);
+
 // Order Management
 router.get("/orders", adminAuth, orderController.loadOrdersPage);
 router.get("/api/orders", adminAuth, orderController.getAllOrders);
@@ -63,6 +72,14 @@ router.post("/api/orders/:orderId/return", adminAuth, orderController.handleRetu
 router.post("/api/orders/:orderId/items/:itemId/return", adminAuth, orderController.handleItemReturnRequest);
 router.get("/orders/:orderId", adminAuth, orderController.loadOrderDetailsPage);
 
+// Coupon Management
+router.get("/coupons", adminAuth, couponController.loadCouponPage);
+router.post("/coupons", adminAuth, couponController.createCoupon);
+router.delete("/coupons/:id", adminAuth, couponController.deleteCoupon);
+router.patch("/coupons/:id/toggle", adminAuth, couponController.toggleCouponStatus);
 
+// Sales Report Management
+router.get("/sales-report", adminAuth, salesReportController.loadSalesReport);
+router.get("/sales-report/download", adminAuth, salesReportController.generateSalesReport);
 
 module.exports = router;

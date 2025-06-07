@@ -256,11 +256,10 @@ const handleReturnRequest = async (req, res) => {
         if (action === 'accept') {
             order.status = 'Returned';
             order.returnStatus = 'Accepted';
-            order.orderedItems.forEach((item)=>{
-                item.status="Returned"
-            })
+            order.orderedItems.forEach((item) => {
+                item.status = "Returned";
+            });
             order.returnProcessedDate = new Date();
-            
 
             if (refundAmount > 0) {
                 const user = await User.findById(order.userId._id);
@@ -287,7 +286,7 @@ const handleReturnRequest = async (req, res) => {
                     await product.save();
                 }
             }
-        } else {
+        } else if (action === 'reject') {
             order.status = 'Delivered';
             order.returnStatus = 'Rejected';
             order.returnProcessedDate = new Date();
@@ -297,10 +296,12 @@ const handleReturnRequest = async (req, res) => {
                     item.status = 'Delivered';
                 }
             });
-            // Assuming a rejection reason is sent in the body for overall order rejection
+            // Add rejection reason if provided
             if (req.body.rejectReason) {
                 order.adminReturnRejectionReason = req.body.rejectReason.trim();
             }
+        } else {
+            return res.status(400).json({ message: 'Invalid action specified' });
         }
 
         await order.save();
@@ -319,39 +320,65 @@ const handleReturnRequest = async (req, res) => {
 // Handle individual item return request from admin side
 const handleItemReturnRequest = async (req, res) => {
     try {
+        console.log('--- handleItemReturnRequest function started ---');
+        console.log('Request body:', req.body);
+        console.log('Request params:', req.params);
+
         const { orderId, itemId } = req.params;
         const { action, refundAmount } = req.body;
 
         if (!orderId || !itemId || !action) {
+            console.log('Missing required parameters');
             return res.status(400).json({ message: 'Missing required parameters' });
         }
+
+        console.log(`Processing action: ${action} for Order ID: ${orderId}, Item ID: ${itemId}`);
 
         const order = await Order.findById(orderId).populate('orderedItems.product');
 
         if (!order) {
+            console.log('Order not found');
             return res.status(404).json({ message: 'Order not found' });
         }
 
+        console.log('Order found. Finding item in orderedItems array.');
         const item = order.orderedItems.id(itemId);
 
         if (!item) {
+            console.log('Item not found in order');
             return res.status(404).json({ message: 'Item not found in order' });
         }
 
+        console.log(`Item found. Current item status: ${item.status}`);
+
         // Validate item status - should be 'Return Requested' to process
         if (item.status !== 'Return Requested') {
+            console.log(`Invalid item status for return processing: ${item.status}`);
             return res.status(400).json({ message: `Item status is '${item.status}', cannot process return request.` });
         }
 
+        console.log(`Item status is 'Return Requested'. Proceeding with ${action} action.`);
+
         if (action === 'accept') {
+            console.log('Action is accept.');
             item.status = 'Returned';
+            console.log('Item status set to Returned.');
+
             // Process refund if amount is provided and valid
             const refundAmt = parseFloat(refundAmount);
+            console.log('Provided refund amount:', refundAmount);
+            console.log('Parsed refund amount (refundAmt):', refundAmt);
+
             if (!isNaN(refundAmt) && refundAmt > 0 && order.userId) {
+                console.log('Refund amount is valid and user ID exists. Processing refund.');
                  const user = await User.findById(order.userId);
                  if(user) {
-                     user.wallet = Number(user.wallet) + refundAmt; // Ensure wallet is treated as a number
+                     console.log('User found. Current wallet amount:', user.wallet);
+                     // Ensure user.wallet is a number, defaulting to 0 if undefined/null, before adding refundAmt
+                     user.wallet = (user.wallet || 0) + refundAmt;
+                     console.log('New wallet amount:', user.wallet);
                      await user.save();
+                     console.log('User wallet updated successfully.');
                      // Log wallet transaction (optional but recommended)
                       await WalletTransaction.create({
                           userId: user._id,
@@ -361,55 +388,84 @@ const handleItemReturnRequest = async (req, res) => {
                           orderId: order._id,
                           itemId: item._id
                       });
+                     console.log('Wallet transaction logged.');
                  } else {
                      console.error('User not found for wallet update:', order.userId);
+                     // Decide how to handle this - perhaps return an error or log and continue?
+                     // For now, we'll log and continue saving the order status change.
                  }
+            } else {
+                 console.log(`Refund not processed: Invalid amount (${refundAmt}) or missing user ID (${order.userId})`);
             }
 
             // Update product stock
             if (item.product) {
+                console.log('Item has a product. Updating stock.');
                 const product = await Product.findById(item.product._id);
                  if(product) {
-                     product.stock += item.quantity;
+                     console.log('Product found. Current quantity:', product.quantity);
+                     product.quantity += item.quantity;
+                     console.log('New quantity:', product.quantity);
                      await product.save();
+                     console.log('Product quantity updated successfully.');
                  } else {
-                      console.error('Product not found for stock update:', item.product._id);
+                      console.error('Product not found for quantity update:', item.product._id);
+                      // Decide how to handle this - log and continue?
                  }
+            } else {
+                console.log('Item does not have a product association.');
             }
 
             // Recalculate order totals if the item price was included in them
+            // This part might be optional depending on your requirements for item-level returns affecting order totals
+            console.log('Recalculating order totals...');
             const returnedItemsTotal = order.orderedItems.reduce((total, item) => {
                 if (item.status === 'Returned' || item.status === 'Cancelled') {
-                    return total + (item.product.salePrice * item.quantity);
+                    // Make sure item.product is populated and has salePrice
+                     if (item.product && item.product.salePrice) {
+                         return total + (item.product.salePrice * item.quantity);
+                     }
                 }
                 return total;
             }, 0);
 
             // Update order totals
+            // This might need adjustment if item returns should affect the overall order price displayed to the user
+             // For now, we'll keep the original logic which recalculates based on non-returned/cancelled items.
             order.totalPrice = order.orderedItems.reduce((total, item) => {
                 if (item.status !== 'Returned' && item.status !== 'Cancelled') {
-                    return total + (item.product.salePrice * item.quantity);
+                     // Make sure item.product is populated and has salePrice
+                     if (item.product && item.product.salePrice) {
+                         return total + (item.product.salePrice * item.quantity);
+                     }
                 }
                 return total;
             }, 0);
 
-            // Recalculate tax and final amount
-            order.tax = order.totalPrice * 0.18; // Assuming 18% tax
-            order.finalAmount = order.totalPrice + order.tax - (order.discount || 0);
+            // Recalculate tax and final amount based on new totalPrice
+             order.tax = order.totalPrice * 0.18; // Assuming 18% tax
+             order.finalAmount = order.totalPrice + order.tax - (order.discount || 0);
+            console.log('Order totals recalculated.');
 
         } else if (action === 'reject') {
+            console.log('Action is reject.');
             // Change item status back to Delivered
             item.status = 'Delivered';
+            console.log('Item status set to Delivered.');
              item.returnReason = undefined; // Clear user's return reason on rejection
             // Save admin's rejection reason for the item
             if (req.body.rejectReason) {
                 item.adminRejectionReason = req.body.rejectReason.trim();
+                console.log('Admin rejection reason added.');
             }
         } else {
+            console.log('Invalid action specified:', action);
             return res.status(400).json({ message: 'Invalid action specified' });
         }
 
+        console.log('Saving order...');
         await order.save();
+        console.log('Order saved successfully.');
 
         res.json({ 
             success: true,
@@ -419,8 +475,12 @@ const handleItemReturnRequest = async (req, res) => {
             ...(action === 'reject' && item.adminRejectionReason && { adminRejectionReason: item.adminRejectionReason })
         });
 
+        console.log('--- handleItemReturnRequest function finished successfully ---');
+
     } catch (error) {
-        console.error('Error handling item return request:', error);
+        console.error('--- Error in handleItemReturnRequest function ---');
+        console.error('Error details:', error);
+        console.error('--- End of Error in handleItemReturnRequest ---');
         res.status(500).json({ message: 'Error processing item return request', error: error.message });
     }
 };

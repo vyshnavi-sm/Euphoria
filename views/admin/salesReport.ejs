@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sales Report</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/adminSalesReport.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    .filter-section {
+      display: flex;
+      flex-direction: row; /* Arrange items horizontally */
+      align-items: center; /* Align items vertically in the center */
+      gap: 1rem; /* Add gap between filter elements and download buttons */
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap; /* Allow wrapping on smaller screens */
+      justify-content: space-between; /* Push elements to the ends */
+    }
+
+    .filter-section > div {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .report-actions {
+      display: flex;
+      gap: 0.5rem; /* Reduce gap between buttons */
+      /* margin-top: 1rem; Removed margin-top */
+    }
+
+    .download-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem; /* Reduce gap between icon and text */
+      padding: 0.2rem 0.6rem; /* Further reduce padding */
+      border: none;
+      border-radius: 4px;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      font-size: 0.8rem; /* Further reduce font size */
+    }
+
+    .download-btn:hover {
+      background-color: #45a049;
+    }
+
+    .download-btn i {
+      font-size: 0.9rem; /* Further reduce icon size */
+    }
+
+    /* Style for custom date range inputs */
+    #customDateRange {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        /* margin-top: 0.5rem; Removed, not needed in row layout */
+    }
+
+    #customDateRange.hidden {
+        display: none;
+    }
+  </style>
+</head>
+<body>
+  <%- include("../../views/partials/admin/header") %>
+
+  <main class="main-content">
+    <h1>Sales Report</h1>
+
+    <div class="filter-section">
+      <label for="timeFilter">Filter By:</label>
+      <select id="timeFilter">
+        <option value="all" <%= selectedFilter === 'all' ? 'selected' : '' %>>All Time</option>
+        <option value="daily" <%= selectedFilter === 'daily' ? 'selected' : '' %>>Daily</option>
+        <option value="weekly" <%= selectedFilter === 'weekly' ? 'selected' : '' %>>Weekly</option>
+        <option value="yearly" <%= selectedFilter === 'yearly' ? 'selected' : '' %>>Yearly</option>
+        <option value="custom" <%= selectedFilter === 'custom' ? 'selected' : '' %>>Custom Date Range</option>
+      </select>
+
+      <div id="customDateRange" class="<%= selectedFilter === 'custom' ? '' : 'hidden' %>">
+        <label for="startDate">Start Date:</label>
+        <input type="date" id="startDate" value="<%= startDate %>">
+        <label for="endDate">End Date:</label>
+        <input type="date" id="endDate" value="<%= endDate %>">
+        <button id="applyCustomFilter">Apply</button>
+      </div>
+
+      <div class="report-actions">
+        <button class="download-btn" onclick="downloadReport('pdf')">
+          <i class="fas fa-file-pdf"></i> Download PDF
+        </button>
+        <button class="download-btn" onclick="downloadReport('excel')">
+          <i class="fas fa-file-excel"></i> Download Excel
+        </button>
+      </div>
+    </div>
+
+    <div class="report-metrics">
+      <div class="metric-box">
+        <i class="fas fa-shopping-cart"></i>
+        <h3>Total Orders</h3>
+        <p><%= totalOrders %></p>
+      </div>
+      <div class="metric-box">
+        <i class="fas fa-credit-card"></i>
+        <h3>Total Amount</h3>
+        <p>₹ <%= totalAmount.toFixed(2) %></p>
+      </div>
+      <div class="metric-box">
+        <i class="fas fa-tags"></i>
+        <h3>Total Discounts</h3>
+        <p>₹ <%= totalDiscount.toFixed(2) %></p>
+      </div>
+      <div class="metric-box">
+        <i class="fas fa-chart-line"></i>
+        <h3>Net Sales</h3>
+        <p>₹ <%= netSales.toFixed(2) %></p>
+      </div>
+    </div>
+
+    <h2>Order Details</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Order Date</th>
+          <th>Products</th>
+          <th>Total (₹)</th>
+          <th>Discount (₹)</th>
+          <th>Payment</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% orders.forEach(order => { %>
+          <tr>
+            <td><%= order._id %></td>
+            <td><%= order.userId ? order.userId.name : 'N/A' %></td>
+            <td><%= order.createdAt ? new Date(order.createdAt).toLocaleString('en-IN', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            }) : 'N/A' %></td>
+            <td>
+              <% order.orderedItems.forEach(item => {
+                if (item.product) { %>
+                  <%= item.product.name %> (Qty: <%= item.quantity %>)<br>
+                <% } else { %>
+                  Product Not Available<br>
+                <% }
+              }); %>
+            </td>
+            <td><%= order.totalPrice.toFixed(2) %></td>
+            <td><%= ((order.couponDiscount || 0) + (order.discount || 0)).toFixed(2) %></td>
+            <td><%= order.paymentMethod %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination-container mt-4">
+      <div class="pagination-info mb-2">
+        Showing <%= pagination.startRecord %> to <%= pagination.endRecord %> of <%= pagination.totalOrders %> orders
+      </div>
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="page-size-selector">
+          <label for="pageSize">Show:</label>
+          <select class="form-select form-select-sm" id="pageSize" style="width: auto; display: inline-block; margin-left: 8px;">
+            <option value="10" <%= pagination.limit === 10 ? 'selected' : '' %>>10</option>
+            <option value="25" <%= pagination.limit === 25 ? 'selected' : '' %>>25</option>
+            <option value="50" <%= pagination.limit === 50 ? 'selected' : '' %>>50</option>
+            <option value="100" <%= pagination.limit === 100 ? 'selected' : '' %>>100</option>
+          </select>
+        </div>
+        <nav aria-label="Page navigation">
+          <ul class="pagination mb-0">
+            <% if (pagination.hasPrevPage) { %>
+              <li class="page-item">
+                <a class="page-link" href="?page=<%= pagination.page - 1 %>&limit=<%= pagination.limit %>&filter=<%= selectedFilter %><%= startDate ? '&startDate=' + startDate : '' %><%= endDate ? '&endDate=' + endDate : '' %>" aria-label="Previous">
+                  <span aria-hidden="true">&laquo;</span>
+                </a>
+              </li>
+            <% } %>
+            
+            <% 
+              let startPage = Math.max(1, pagination.page - 2);
+              let endPage = Math.min(pagination.totalPages, startPage + 4);
+              if (endPage - startPage < 4) {
+                startPage = Math.max(1, endPage - 4);
+              }
+            %>
+            
+            <% if (startPage > 1) { %>
+              <li class="page-item">
+                <a class="page-link" href="?page=1&limit=<%= pagination.limit %>&filter=<%= selectedFilter %><%= startDate ? '&startDate=' + startDate : '' %><%= endDate ? '&endDate=' + endDate : '' %>">1</a>
+              </li>
+              <% if (startPage > 2) { %>
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+              <% } %>
+            <% } %>
+            
+            <% for(let i = startPage; i <= endPage; i++) { %>
+              <li class="page-item <%= i === pagination.page ? 'active' : '' %>">
+                <a class="page-link" href="?page=<%= i %>&limit=<%= pagination.limit %>&filter=<%= selectedFilter %><%= startDate ? '&startDate=' + startDate : '' %><%= endDate ? '&endDate=' + endDate : '' %>"><%= i %></a>
+              </li>
+            <% } %>
+            
+            <% if (endPage < pagination.totalPages) { %>
+              <% if (endPage < pagination.totalPages - 1) { %>
+                <li class="page-item disabled"><span class="page-link">...</span></li>
+              <% } %>
+              <li class="page-item">
+                <a class="page-link" href="?page=<%= pagination.totalPages %>&limit=<%= pagination.limit %>&filter=<%= selectedFilter %><%= startDate ? '&startDate=' + startDate : '' %><%= endDate ? '&endDate=' + endDate : '' %>"><%= pagination.totalPages %></a>
+              </li>
+            <% } %>
+            
+            <% if (pagination.hasNextPage) { %>
+              <li class="page-item">
+                <a class="page-link" href="?page=<%= pagination.page + 1 %>&limit=<%= pagination.limit %>&filter=<%= selectedFilter %><%= startDate ? '&startDate=' + startDate : '' %><%= endDate ? '&endDate=' + endDate : '' %>" aria-label="Next">
+                  <span aria-hidden="true">&raquo;</span>
+                </a>
+              </li>
+            <% } %>
+          </ul>
+        </nav>
+      </div>
+    </div>
+
+    <script>
+      const timeFilter = document.getElementById('timeFilter');
+      const customDateRange = document.getElementById('customDateRange');
+      const startDateInput = document.getElementById('startDate');
+      const endDateInput = document.getElementById('endDate');
+      const applyCustomFilterButton = document.getElementById('applyCustomFilter');
+      const pageSizeSelect = document.getElementById('pageSize');
+
+      // Set initial filter and dates
+      timeFilter.value = '<%= selectedFilter %>';
+      if (timeFilter.value === 'custom') {
+        customDateRange.classList.remove('hidden');
+      }
+
+      timeFilter.addEventListener('change', (event) => {
+        const selectedValue = event.target.value;
+        if (selectedValue === 'custom') {
+          customDateRange.classList.remove('hidden');
+        } else {
+          customDateRange.classList.add('hidden');
+          // Redirect with selected filter
+          window.location.href = `/admin/sales-report?filter=${selectedValue}&limit=<%= pagination.limit %>`;
+        }
+      });
+
+      applyCustomFilterButton.addEventListener('click', () => {
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        if (startDate && endDate) {
+          // Redirect with custom date range filter
+          window.location.href = `/admin/sales-report?filter=custom&startDate=${startDate}&endDate=${endDate}&limit=<%= pagination.limit %>`;
+        } else {
+          alert('Please select both start and end dates.');
+        }
+      });
+
+      // Handle page size change
+      pageSizeSelect.addEventListener('change', (event) => {
+        const newLimit = event.target.value;
+        window.location.href = `/admin/sales-report?filter=<%= selectedFilter %>&limit=${newLimit}<%= startDate ? '&startDate=' + startDate : '' %><%= endDate ? '&endDate=' + endDate : '' %>`;
+      });
+
+      function downloadReport(format) {
+        const filter = document.getElementById('timeFilter').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        let url = `/admin/sales-report/download?format=${format}&filter=${filter}`;
+        
+        if (filter === 'custom' && startDate && endDate) {
+          url += `&startDate=${startDate}&endDate=${endDate}`;
+        }
+        
+        window.location.href = url;
+      }
+    </script>
+  </main>
+</body>
+</html> 

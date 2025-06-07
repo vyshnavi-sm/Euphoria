@@ -2,6 +2,7 @@ const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const Brand = require("../../models/brandSchema");
 const User = require("../../models/userSchema");
+const { ProductOffer, CategoryOffer } = require('../../models/offerSchema');
 const fs = require("fs");
 const path = require("path");
 const sharp = require("sharp");
@@ -68,17 +69,21 @@ const addProducts = async(req, res) => {
         }
 
         // Validate images
-        if (!req.files || req.files.length === 0) {
-            return res.redirect("/admin/addProducts?error=At least one product image is required");
+        if (!req.files || req.files.length < 4) {
+            // If no files or less than 4 files are uploaded, send an error.
+            const errorMessage = !req.files || req.files.length === 0 
+                ? "At least 4 product images are required." 
+                : `Please upload at least 4 product images. You uploaded ${req.files.length}.`;
+            return res.redirect("/admin/addProducts?error=" + encodeURIComponent(errorMessage));
         }
 
         // Check if product exists
         const productExists = await Product.findOne({
-            productName: products.productName,
+            productName: products.productName.trim(),
         });
 
         if(productExists) {
-            return res.redirect("/admin/addProducts?error=Product already exists, please try with another name");
+            return res.redirect("/admin/addProducts?error=" + encodeURIComponent("Product with this name already exists, please try with another name."));
         }
 
         const images = [];
@@ -215,115 +220,59 @@ const getAllProducts = async (req, res) => {
             };
         }
 
-        // Aggregate pipeline to get products with their latest order date and order count
-        const aggregatePipeline = [
-            { $match: query },
-            {
-                $lookup: {
-                    from: 'orders',
-                    let: { productId: '$_id' },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $in: ['$$productId', {
-                                        $map: {
-                                            input: '$orderedItems',
-                                            as: 'item',
-                                            in: '$$item.product'
-                                        }
-                                    }]
-                                }
-                            }
-                        },
-                        {
-                            $sort: { createdAt: -1 }
-                        },
-                        {
-                            $limit: 1
-                        }
-                    ],
-                    as: 'lastOrder'
-                }
-            },
-            {
-                $lookup: {
-                    from: 'orders',
-                    let: { productId: '$_id' },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $in: ['$$productId', {
-                                        $map: {
-                                            input: '$orderedItems',
-                                            as: 'item',
-                                            in: '$$item.product'
-                                        }
-                                    }]
-                                }
-                            }
-                        },
-                        {
-                            $count: 'totalOrders'
-                        }
-                    ],
-                    as: 'orderCount'
-                }
-            },
-            {
-                $addFields: {
-                    lastOrderDate: {
-                        $ifNull: [
-                            { $arrayElemAt: ['$lastOrder.createdAt', 0] },
-                            new Date('1970-01-01')
-                        ]
-                    },
-                    totalOrderCount: {
-                        $ifNull: [
-                            { $arrayElemAt: ['$orderCount.totalOrders', 0] },
-                            0
-                        ]
-                    }
-                }
-            },
-            {
-                $sort: {
-                    createdAt: -1,
-                    lastOrderDate: -1,
-                    totalOrderCount: -1
-                }
-            },
-            { $skip: skip },
-            { $limit: limit }
-        ];
+        // Fetch products with pagination and search
+        const products = await Product.find(query)
+            .populate('category brand')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit);
 
-        // Execute aggregation
-        const productsAggregation = await Product.aggregate(aggregatePipeline);
-
-        // Populate the brand and category fields
-        const products = await Product.populate(productsAggregation, [
-            { path: 'brand' },
-            { path: 'category' }
-        ]);
-
-        // Get total count for pagination
-        const totalCountPipeline = [
-            { $match: query },
-            { $count: 'total' }
-        ];
-        
-        const totalCountResult = await Product.aggregate(totalCountPipeline);
-        const totalProducts = totalCountResult.length > 0 ? totalCountResult[0].total : 0;
+        const totalProducts = await Product.countDocuments(query);
         const totalPages = Math.ceil(totalProducts / limit);
+        const currentPage = page;
+
+        // --- Offer Calculation --- 
+        const currentDate = new Date();
+
+        for (const product of products) {
+            // Find active product offer
+            const productOffer = await ProductOffer.findOne({
+                product: product._id,
+                isActive: true,
+                startDate: { $lte: currentDate },
+                endDate: { $gte: currentDate }
+            });
+
+            // Find active category offer
+            const categoryOffer = await CategoryOffer.findOne({
+                category: product.category._id,
+                isActive: true,
+                startDate: { $lte: currentDate },
+                endDate: { $gte: currentDate }
+            });
+
+            // Determine the highest discount
+            let appliedDiscount = 0;
+            if (productOffer) {
+                appliedDiscount = Math.max(appliedDiscount, productOffer.discountPercentage);
+            }
+            if (categoryOffer) {
+                appliedDiscount = Math.max(appliedDiscount, categoryOffer.discountPercentage);
+            }
+
+            product.appliedDiscount = appliedDiscount; // Add appliedDiscount to the product object
+        }
+        // --- End Offer Calculation ---
 
         res.render("product", {
-            data: products,
-            currentPage: page,
-            totalPages: totalPages,
-            search: search,
-            successMessage: successMessage
+            pro: products,
+            currentPage,
+            totalPages,
+            search,
+            successMessage,
+            errorMessage: req.query.error
         });
+
     } catch (error) {
         console.error("Error fetching products:", error);
         res.redirect("/pageerror");
@@ -333,22 +282,45 @@ const getAllProducts = async (req, res) => {
 const blockProduct = async (req, res) => {
     try {
         let id = req.query.id;
-        await Product.updateOne({_id: id}, {$set: {isBlocked: true}});
-        res.redirect("/admin/products?success=Product blocked successfully");
+        const product = await Product.findById(id);
+        
+        if (!product) {
+            return res.redirect("/admin/products?error=Product not found");
+        }
+
+        product.isBlocked = true;
+        await product.save();
+
+        // Remove product from all user carts
+        const Cart = require('../../models/cartSchema');
+        await Cart.updateMany(
+            { 'items.productId': id },
+            { $pull: { items: { productId: id } } }
+        );
+
+        res.redirect("/admin/products?success=Product blocked successfully and removed from all user carts");
     } catch (error) {
         console.error("Error blocking product:", error);
-        res.redirect("/pageerror");
+        res.redirect("/admin/products?error=Error blocking product");
     }
 };
 
 const unblockProduct = async (req, res) => {
     try {
         let id = req.query.id;
-        await Product.updateOne({_id: id}, {$set: {isBlocked: false}});
+        const product = await Product.findById(id);
+        
+        if (!product) {
+            return res.redirect("/admin/products?error=Product not found");
+        }
+
+        product.isBlocked = false;
+        await product.save();
+
         res.redirect("/admin/products?success=Product unblocked successfully");
     } catch (error) {
         console.error("Error unblocking product:", error);
-        res.redirect("/pageerror");
+        res.redirect("/admin/products?error=Error unblocking product");
     }
 };
 
@@ -381,18 +353,18 @@ const editProduct = async (req, res) => {
         
         // Check if product exists with same name (excluding current product)
         const existingProduct = await Product.findOne({
-            productName: data.productName,
+            productName: data.productName.trim(),
             _id: {$ne: id}
         });
 
         if (existingProduct) {
-            return res.redirect(`/admin/editProduct?id=${id}&error=Product with this name already exists`);
+            return res.redirect(`/admin/editProduct?id=${id}&error=${encodeURIComponent("Product with this name already exists.")}`);
         }
 
         // Validate quantity
         const quantity = parseInt(data.quantity);
         if (quantity < 0) {
-            return res.redirect(`/admin/editProduct?id=${id}&error=Product quantity cannot be negative`);
+            return res.redirect(`/admin/editProduct?id=${id}&error=${encodeURIComponent("Product quantity cannot be negative.")}`);
         }
 
         // Find category and brand by name and get their IDs
@@ -400,72 +372,56 @@ const editProduct = async (req, res) => {
         const brand = await Brand.findOne({brandName: data.brand});
 
         if (!category || !brand) {
-            return res.redirect(`/admin/editProduct?id=${id}&error=Invalid category or brand`);
+            return res.redirect(`/admin/editProduct?id=${id}&error=${encodeURIComponent("Invalid category or brand.")}`);
         }
 
         // Get existing product
         const product = await Product.findById(id);
         if (!product) {
-            return res.redirect(`/admin/editProduct?id=${id}&error=Product not found`);
+            return res.redirect(`/admin/editProduct?id=${id}&error=${encodeURIComponent("Product not found.")}`);
         }
+
+        // Update product status based on quantity
+        const newStatus = quantity === 0 ? "out of stock" : "Available";
+        const isBlocked = data.isBlocked === 'on';
 
         // Process new images if any
         let images = [...product.productImage];
-        if (req.files && req.files.length > 0) {
-            const uploadDir = path.resolve(process.cwd(), 'public', 'uploads', 'product-images');
-            
-            // Ensure directory exists
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
+        const newImagesCount = req.files ? req.files.length : 0;
 
-            // Process each uploaded file
-            for (let i = 0; i < req.files.length; i++) {
-                const file = req.files[i];
-                if (!file || !file.originalname) continue;
-
-                const filename = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
-                const outputPath = path.join(uploadDir, filename);
-                
-                // Process image with Sharp
-                await sharp(file.path)
-                    .resize(440, 440, {
-                        fit: 'cover',
-                        withoutEnlargement: true
-                    })
-                    .toFile(outputPath);
-                
-                // Delete temporary file
-                if (fs.existsSync(file.path)) {
-                    fs.unlinkSync(file.path);
-                }
-                
-                images.push(filename);
-            }
+        // Validate maximum number of images
+        if (images.length + newImagesCount > 4) {
+             return res.redirect(`/admin/editProduct?id=${id}&error=${encodeURIComponent(`You can only have a maximum of 4 product images. You currently have ${images.length} and are trying to add ${newImagesCount}.`)}`);
         }
 
-        // Update product
-        const updatedProduct = await Product.findByIdAndUpdate(id, {
-            productName: data.productName,
-            description: data.description,
-            brand: brand._id,
-            category: category._id,
-            regularPrice: parseFloat(data.regularPrice) || 0,
-            salePrice: parseFloat(data.salePrice) || 0,
-            quantity: parseInt(data.quantity) || 1,
-            color: data.color,
-            productImage: images
-        }, { new: true });
+        // Update product fields
+        product.productName = data.productName.trim();
+        product.description = data.description.trim();
+        product.category = category._id;
+        product.brand = brand._id;
+        product.regularPrice = parseFloat(data.regularPrice);
+        product.salePrice = parseFloat(data.salePrice);
+        product.quantity = quantity;
+        product.status = newStatus;
+        product.color = data.color.trim();
+        product.isBlocked = isBlocked;
 
-        if (!updatedProduct) {
-            return res.redirect(`/admin/editProduct?id=${id}&error=Failed to update product`);
+        // Save the updated product
+        await product.save();
+
+        // If product is blocked or out of stock, remove it from all user carts
+        if (isBlocked || quantity === 0) {
+            const Cart = require('../../models/cartSchema');
+            await Cart.updateMany(
+                { 'items.productId': id },
+                { $pull: { items: { productId: id } } }
+            );
         }
 
-        return res.redirect("/admin/products?success=Product updated successfully");
-
-} catch (error) {
-        console.error("Error updating product:", error);
-        return res.redirect(`/admin/editProduct?id=${req.params.id}&error=${encodeURIComponent(error.message)}`);
+        res.redirect('/admin/products?success=Product updated successfully');
+    } catch (error) {
+        console.error('Error updating product:', error);
+        res.redirect(`/admin/editProduct?id=${id}&error=${encodeURIComponent(error.message)}`);
     }
 };
 
@@ -514,6 +470,93 @@ const deleteSingleImage = async (req, res) => {
     }
 };
 
+const applyProductOffer = async (req, res) => {
+    try {
+        const { productId, discountPercentage, startDate, endDate } = req.body;
+
+        // Validate input
+        if (!productId || !discountPercentage || !startDate || !endDate) {
+            return res.status(400).json({ success: false, message: 'All fields are required' });
+        }
+
+        // Validate discount percentage
+        const discount = parseFloat(discountPercentage);
+        if (isNaN(discount) || discount < 0 || discount > 100) {
+            return res.status(400).json({ success: false, message: 'Discount percentage must be between 0 and 100' });
+        }
+
+        // Validate dates
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return res.status(400).json({ success: false, message: 'Invalid date format' });
+        }
+        if (start >= end) {
+            return res.status(400).json({ success: false, message: 'Start date must be before end date' });
+        }
+
+        // Check if product exists
+        const product = await Product.findById(productId);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Create new product offer
+        const newOffer = new ProductOffer({
+            product: productId,
+            discountPercentage: discount,
+            startDate: start,
+            endDate: end,
+            isActive: true
+        });
+
+        await newOffer.save();
+
+        // Update product's offer discount
+        product.offerDiscount = discount;
+        await product.save();
+
+        res.json({ success: true, message: 'Offer applied successfully' });
+    } catch (error) {
+        console.error('Error applying offer:', error);
+        res.status(500).json({ success: false, message: 'Failed to apply offer' });
+    }
+};
+
+const removeProductOffer = async (req, res) => {
+    try {
+        const productId = req.body.productId;
+        await Product.findByIdAndUpdate(productId, { offerDiscount: 0 });
+        res.json({ success: true, message: 'Offer removed successfully' });
+    } catch (error) {
+        console.error('Error removing offer:', error);
+        res.status(500).json({ success: false, message: 'Failed to remove offer' });
+    }
+};
+
+const checkDuplicateProductName = async (req, res) => {
+    try {
+        const { productName, productId } = req.query;
+        let query = { productName: productName.trim() };
+
+        // If productId is provided (for edit page), exclude the current product
+        if (productId) {
+            query._id = { $ne: productId };
+        }
+
+        const existingProduct = await Product.findOne(query);
+
+        if (existingProduct) {
+            res.json({ isDuplicate: true, message: 'Product with this name already exists.' });
+        } else {
+            res.json({ isDuplicate: false });
+        }
+    } catch (error) {
+        console.error('Error checking duplicate product name:', error);
+        res.status(500).json({ isDuplicate: false, message: 'Error checking duplicate name.' });
+    }
+};
+
 module.exports = {
     getProductPage,
     addProducts,
@@ -522,5 +565,8 @@ module.exports = {
     unblockProduct,
     getEditProduct,
     editProduct,
-    deleteSingleImage
+    deleteSingleImage,
+    applyProductOffer,
+    removeProductOffer,
+    checkDuplicateProductName
 };
