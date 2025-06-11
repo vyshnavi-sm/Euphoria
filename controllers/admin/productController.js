@@ -512,11 +512,19 @@ const applyProductOffer = async (req, res) => {
 
         await newOffer.save();
 
-        // Update product's offer discount
+        // Calculate new sale price based on discount
+        const discountedPrice = product.regularPrice * (1 - discount/100);
+        
+        // Update product's offer discount and sale price
         product.offerDiscount = discount;
+        product.salePrice = Math.round(discountedPrice * 100) / 100; // Round to 2 decimal places
         await product.save();
 
-        res.json({ success: true, message: 'Offer applied successfully' });
+        res.json({ 
+            success: true, 
+            message: 'Offer applied successfully',
+            newSalePrice: product.salePrice
+        });
     } catch (error) {
         console.error('Error applying offer:', error);
         res.status(500).json({ success: false, message: 'Failed to apply offer' });
@@ -526,8 +534,22 @@ const applyProductOffer = async (req, res) => {
 const removeProductOffer = async (req, res) => {
     try {
         const productId = req.body.productId;
-        await Product.findByIdAndUpdate(productId, { offerDiscount: 0 });
-        res.json({ success: true, message: 'Offer removed successfully' });
+        const product = await Product.findById(productId);
+        
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+
+        // Reset offer discount and set sale price equal to regular price
+        product.offerDiscount = 0;
+        product.salePrice = product.regularPrice;
+        await product.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Offer removed successfully',
+            newSalePrice: product.salePrice
+        });
     } catch (error) {
         console.error('Error removing offer:', error);
         res.status(500).json({ success: false, message: 'Failed to remove offer' });

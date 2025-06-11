@@ -255,7 +255,10 @@ exports.generateSalesReport = async (req, res) => {
         doc.text('Items:');
         order.orderedItems.forEach(item => {
           if (item.product) {
-            doc.text(`- ${item.product.name} (Qty: ${item.quantity})`);
+            const productName = item.product.name || 'Product Name N/A';
+            doc.text(`- ${productName} (Qty: ${item.quantity})`);
+          } else {
+            doc.text(`- Product Details N/A (Qty: ${item.quantity})`);
           }
         });
         doc.moveDown();

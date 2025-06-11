@@ -93,17 +93,18 @@
                         <thead style="background-color: #8B5E3C; color: white;">
                             <tr>
                                 <th>No</th>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Status</th>
-                    <th>List/Unlist</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>List/Unlist</th>
+                                <th>Offer</th>
                                 <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                    <% if (cat && cat.length > 0) { %>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (cat && cat.length > 0) { %>
                                 <% cat.forEach((category, index) => { %>
-                                    <tr>
+                                    <tr data-category-id="<%= category._id %>">
                                         <td><%= index + 1 %></td>
                                         <td><%= category.name %></td>
                                         <td><%= category.description %></td>
@@ -111,27 +112,42 @@
                                             <span class="badge <%= category.isListed ? 'bg-success' : 'bg-danger' %>">
                                                 <%= category.isListed ? 'Listed' : 'Unlisted' %>
                                             </span>
-                              </td>
+                                        </td>
                                         <td>
                                             <% if (category.isListed) { %>
                                                 <a href="/admin/UnlistCategory?id=<%= category._id %>" class="btn btn-sm text-white" style="background-color: #A0522D;">Unlist</a>
                                             <% } else { %>
                                                 <a href="/admin/listCategory?id=<%= category._id %>" class="btn btn-sm text-white" style="background-color: #6B8E23;">List</a>
                                             <% } %>
-                            </td>
+                                        </td>
+                                        <td>
+                                            <% 
+                                                const activeOffer = category.activeOffer;
+                                                if (activeOffer) { 
+                                            %>
+                                                <span class="badge bg-success"><%= activeOffer.discountPercentage %>% OFF</span>
+                                                <button onclick="removeCategoryOffer('<%= category._id %>')" class="btn btn-sm btn-remove">
+                                                    <i class="fas fa-times"></i> Remove
+                                                </button>
+                                            <% } else { %>
+                                                <button onclick="showCategoryOfferModal('<%= category._id %>', '<%= category.name %>')" class="btn btn-sm btn-offer">
+                                                    <i class="fas fa-tag"></i> Add Offer
+                                                </button>
+                                            <% } %>
+                                        </td>
                                         <td>
                                             <a href="/admin/editCategory?id=<%= category._id %>" class="btn btn-info btn-sm">Edit</a>
-                            </td>
-                          </tr>
+                                        </td>
+                                    </tr>
                                 <% }); %>
-                      <% } else { %>
+                            <% } else { %>
                                 <tr>
-                                    <td colspan="6" class="text-center">No categories found</td>
-                        </tr>
+                                    <td colspan="7" class="text-center">No categories found</td>
+                                </tr>
                             <% } %>
-                </tbody>
-              </table>
-            </div>
+                        </tbody>
+                    </table>
+                </div>
 
                 <!-- Pagination -->
                 <div class="d-flex justify-content-center mt-4">
@@ -188,114 +204,141 @@
     </div>
 </div>
 
+<!-- Category Offer Modal -->
+<div class="modal fade" id="categoryOfferModal" tabindex="-1" aria-labelledby="categoryOfferModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryOfferModalLabel">Add Category Offer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryOfferForm">
+                    <input type="hidden" id="categoryId" name="categoryId">
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">Category</label>
+                        <input type="text" class="form-control" id="categoryName" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="discountPercentage" class="form-label">Discount Percentage</label>
+                        <input type="number" class="form-control" id="discountPercentage" name="discountPercentage" min="0" max="100" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="startDate" class="form-label">Start Date</label>
+                        <input type="datetime-local" class="form-control" id="startDate" name="startDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="endDate" class="form-label">End Date</label>
+                        <input type="datetime-local" class="form-control" id="endDate" name="endDate" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="applyCategoryOffer()">Apply Offer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Required Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-        // Initialize Bootstrap modal
-        const addCategoryModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
+    // Initialize Bootstrap modal
+    const addCategoryModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
 
-        const unlistButtons = document.querySelectorAll("[href*='UnlistCategory']");
-        const listButtons = document.querySelectorAll("[href*='listCategory']");
-
+    const unlistButtons = document.querySelectorAll("[href*='UnlistCategory']");
     unlistButtons.forEach(button => {
-        button.addEventListener("click", function (event) {
-            event.preventDefault();
-            const unlistUrl = this.getAttribute("href");
-
+        button.addEventListener("click", function(e) {
+            e.preventDefault();
+            const href = this.getAttribute("href");
             Swal.fire({
                 title: "Are you sure?",
-                text: "You are about to unlist this category!",
+                text: "This will unlist the category!",
                 icon: "warning",
                 showCancelButton: true,
-                    confirmButtonColor: "#8B0000",
-                    cancelButtonColor: "#5C4033",
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#3085d6",
                 confirmButtonText: "Yes, unlist it!"
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = unlistUrl;
+                    window.location.href = href;
                 }
             });
-        });
-    });
-
-    listButtons.forEach(button => {
-        button.addEventListener("click", function (event) {
-            event.preventDefault();
-            const listUrl = this.getAttribute("href");
-
-            Swal.fire({
-                title: "Are you sure?",
-                text: "You are about to list this category again!",
-                icon: "warning",
-                showCancelButton: true,
-                    confirmButtonColor: "#6B8E23",
-                    cancelButtonColor: "#5C4033",
-                confirmButtonText: "Yes, list it!"
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = listUrl;
-                }
         });
     });
 });
 
-        document.getElementById("addCategoryForm").addEventListener("submit", handleFormSubmit);
+function showCategoryOfferModal(categoryId, categoryName) {
+    document.getElementById('categoryId').value = categoryId;
+    document.getElementById('categoryName').value = categoryName;
+    const modal = new bootstrap.Modal(document.getElementById('categoryOfferModal'));
+    modal.show();
+}
 
-        function handleFormSubmit(event) {
-        event.preventDefault();
-            if (!validateForm()) return;
+async function applyCategoryOffer() {
+    const form = document.getElementById('categoryOfferForm');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
 
-            const name = document.getElementById("categoryName").value;
-            const description = document.getElementById("description").value;
-        const isListed = true;
+    try {
+        const response = await fetch('/admin/categories/applyOffer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
 
-            fetch('/admin/addCategory', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-              body: JSON.stringify({ name, description, isListed })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                    throw new Error(err.error);
-                    });
-            }
-            return response.json();
-        })
-            .then(() => {
-                // Close the modal
-                addCategoryModal.hide();
-                // Reload the page
-            location.reload();
-        })
-            .catch(error => {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: error.message === "Category already exists" ? "Category already exists" : "An error occurred while adding the category"
-                });
-            });
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(result.message, 'success');
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('categoryOfferModal'));
+            modal.hide();
+            // Reload after a short delay to update all UI elements
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showToast(result.message, 'error');
         }
+    } catch (error) {
+        console.error('Error applying category offer:', error);
+        showToast('Error applying category offer', 'error');
+    }
+}
 
-        function validateForm() {
-            const name = document.getElementById("categoryName").value.trim();
-            const description = document.getElementById("description").value.trim();
-            if (!name || !description) {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: !name ? "Category name is required" : "Description is required"
-                });
-                return false;
-            }
-            return true;
+async function removeCategoryOffer(categoryId) {
+    if (!confirm('Are you sure you want to remove this category offer?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/admin/categories/removeOffer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ categoryId })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(result.message, 'success');
+            // Reload after a short delay to update all UI elements
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showToast(result.message, 'error');
         }
-    });
+    } catch (error) {
+        console.error('Error removing category offer:', error);
+        showToast('Error removing category offer', 'error');
+    }
+}
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <%- include("../../views/partials/admin/footer") %>

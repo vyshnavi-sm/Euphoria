@@ -183,7 +183,7 @@ function startOTPTimer() {
     }
     
     timeLeft = 60;
-    resendBtn.classList.remove('active');
+    resendBtn.classList.add('active'); // Initially disable the resend button
     
     timerInterval = setInterval(() => {
         const minutes = Math.floor(timeLeft / 60);
@@ -194,7 +194,7 @@ function startOTPTimer() {
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             timerDisplay.textContent = 'Verification code expired';
-            resendBtn.classList.add('active');
+            resendBtn.classList.remove('active'); // Enable the resend button only after timer expires
         }
         
         timeLeft--;
@@ -203,9 +203,14 @@ function startOTPTimer() {
 
 async function resendOTP() {
     const resendBtn = document.getElementById('resendBtn');
-    if (resendBtn.classList.contains('active')) return;
-    
-    resendBtn.classList.remove('active');
+    if (resendBtn.classList.contains('active')) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Please Wait',
+            text: 'You can resend the verification code after the timer expires'
+        });
+        return;
+    }
     
     try {
         const response = await fetch('/resend-change-email-otp', {
@@ -225,14 +230,13 @@ async function resendOTP() {
                 timer: 2000,
                 showConfirmButton: false
             });
-            startOTPTimer();
+            startOTPTimer(); // This will disable the button again and start the timer
         } else {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
                 text: data.message || 'Failed to resend verification code'
             });
-            resendBtn.classList.add('active');
         }
     } catch (error) {
         console.error('Error resending OTP:', error);
@@ -241,7 +245,6 @@ async function resendOTP() {
             title: 'Error',
             text: 'An error occurred while resending verification code'
         });
-        resendBtn.classList.add('active');
     }
 }
 

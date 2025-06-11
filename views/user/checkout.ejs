@@ -447,6 +447,31 @@
       background-color: var(--primary-dark);
       color: var(--text-light);
     }
+
+    .coupon-invalid {
+      filter: blur(1px);
+      opacity: 0.7;
+      pointer-events: none;
+    }
+    
+    .coupon-invalid:hover {
+      filter: blur(1px);
+    }
+
+    .payment-option.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .payment-option.disabled label {
+      cursor: not-allowed;
+    }
+    
+    .text-danger {
+      color: #dc3545;
+      font-size: 0.8em;
+      margin-left: 5px;
+    }
   </style>
 </head>
 <body>
@@ -565,9 +590,11 @@
             <div class="available-coupons-section mt-4">
               <h6 class="section-heading" style="font-size: 18px; margin-bottom: 15px;">Available Coupons</h6>
               <ul class="list-group">
-                <% availableCoupons.forEach(coupon => { %>
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
+                <% availableCoupons.forEach(coupon => { 
+                  const isValid = coupon.minOrderAmount <= subtotal;
+                %>
+                  <li class="list-group-item d-flex justify-content-between align-items-center <%= !isValid ? 'coupon-invalid' : '' %>">
+                    <div class="<%= !isValid ? 'text-muted' : '' %>">
                       <strong><%= coupon.code %></strong>
                       - <%= coupon.discountType === 'percentage' ? coupon.discountValue + '%' : '₹' + coupon.discountValue.toFixed(2) %> off
                       <% if (coupon.minOrderAmount > 0) { %>
@@ -577,7 +604,11 @@
                           <small class="text-muted">(Max. discount: ₹<%= coupon.maxDiscountAmount.toFixed(2) %>)</small>
                       <% } %>
                     </div>
-                    <button class="btn btn-sm btn-outline-secondary apply-available-coupon" data-coupon-code="<%= coupon.code %>">Apply</button>
+                    <button class="btn btn-sm <%= isValid ? 'btn-outline-secondary' : 'btn-outline-secondary disabled' %> apply-available-coupon" 
+                            data-coupon-code="<%= coupon.code %>"
+                            <%= !isValid ? 'disabled' : '' %>>
+                      Apply
+                    </button>
                   </li>
                 <% }) %>
               </ul>
@@ -613,43 +644,31 @@
 
       <div class="payment-method">
         <h5 class="section-heading">Payment Method</h5>
-        <div class="payment-option" onclick="selectPayment('cod')">
-          <label class="form-check-label" for="paymentCOD">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="paymentCOD" value="cod" checked>
-            <span class="payment-icon">
+        <div class="payment-options">
+          <div class="payment-option <%= total > 1000 ? 'disabled' : '' %>">
+            <input type="radio" name="paymentMethod" id="cod" value="cod" <%= total > 1000 ? 'disabled' : '' %>>
+            <label for="cod">
               <i class="fas fa-money-bill-wave"></i>
-            </span>
-            <div>
-              <span class="payment-title">Cash on Delivery</span>
-              <p class="mb-0 text-muted small">Pay when your order arrives</p>
-            </div>
-          </label>
-        </div>
-        
-        <div class="payment-option" onclick="selectPayment('razorpay')">
-          <label class="form-check-label" for="paymentRazorpay">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="paymentRazorpay" value="razorpay">
-            <span class="payment-icon">
+              Cash on Delivery
+              <% if (total > 1000) { %>
+                <span class="text-danger">(Not available for orders above ₹1000)</span>
+              <% } %>
+            </label>
+          </div>
+          <div class="payment-option">
+            <input type="radio" name="paymentMethod" id="razorpay" value="razorpay" checked>
+            <label for="razorpay">
               <i class="fas fa-credit-card"></i>
-            </span>
-            <div>
-              <span class="payment-title">Pay with Razorpay</span>
-              <p class="mb-0 text-muted small">Credit/Debit Card, UPI, Net Banking</p>
-            </div>
-          </label>
-        </div>
-
-        <div class="payment-option" onclick="selectPayment('wallet')">
-          <label class="form-check-label" for="paymentWallet">
-            <input class="form-check-input" type="radio" name="paymentMethod" id="paymentWallet" value="wallet">
-            <span class="payment-icon">
+             Razorpay Payment
+            </label>
+          </div>
+          <div class="payment-option">
+            <input type="radio" name="paymentMethod" id="wallet" value="wallet">
+            <label for="wallet">
               <i class="fas fa-wallet"></i>
-            </span>
-            <div>
-              <span class="payment-title">Pay with Wallet</span>
-              <p class="mb-0 text-muted small">Available Balance: ₹<%= user.wallet ? user.wallet.toFixed(2) : '0.00' %></p>
-            </div>
-          </label>
+              Wallet
+            </label>
+          </div>
         </div>
       </div>
 
@@ -766,7 +785,34 @@
                 const verifyData = await verifyResponse.json();
 
                 if (verifyData.success) {
-                  window.location.href = '/user/order-success/' + orderData.orderId;
+                  // Only place the order after successful payment verification
+                  const placeOrderResponse = await fetch('/user/place-order', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                      addressId: selectedAddressData._id,
+                      address: {
+                        name: selectedAddressData.name,
+                        address: selectedAddressData.addressType,
+                        city: selectedAddressData.city,
+                        state: selectedAddressData.state,
+                        pincode: selectedAddressData.pincode,
+                        phone: selectedAddressData.phone
+                      },
+                      paymentMethod: 'razorpay',
+                      paymentId: response.razorpay_payment_id
+                    })
+                  });
+
+                  const placeOrderData = await placeOrderResponse.json();
+
+                  if (placeOrderData.success) {
+                    window.location.href = '/user/order-success/' + placeOrderData.orderId;
+                  } else {
+                    window.location.href = '/user/order-success/' + orderData.orderId;
+                  }
                 } else {
                   window.location.href = '/user/payment-failed/' + orderData.orderId;
                 }
@@ -782,6 +828,12 @@
             },
             theme: {
               color: '#5D4037'
+            },
+            modal: {
+              ondismiss: function() {
+                // Handle payment modal dismissal
+                window.location.href = '/user/payment-failed/' + orderData.orderId;
+              }
             }
           };
 

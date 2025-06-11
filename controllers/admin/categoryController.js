@@ -1,4 +1,6 @@
 const Category = require("../../models/categorySchema");
+const Product = require("../../models/productSchema");
+const { CategoryOffer } = require('../../models/offerSchema');
 
 // 🛠 TEMPORARY FIX ROUTE: Patch old docs missing createdAt
 const fixOldCategories = async (req, res) => {
@@ -149,6 +151,107 @@ const editCategory = async (req, res) => {
     }
 };
 
+const applyCategoryOffer = async (req, res) => {
+    try {
+        const { categoryId, discountPercentage, startDate, endDate } = req.body;
+
+        // Validate input
+        if (!categoryId || !discountPercentage || !startDate || !endDate) {
+            return res.status(400).json({ success: false, message: 'All fields are required' });
+        }
+
+        // Validate discount percentage
+        const discount = parseFloat(discountPercentage);
+        if (isNaN(discount) || discount < 0 || discount > 100) {
+            return res.status(400).json({ success: false, message: 'Discount percentage must be between 0 and 100' });
+        }
+
+        // Validate dates
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+            return res.status(400).json({ success: false, message: 'Invalid date format' });
+        }
+        if (start >= end) {
+            return res.status(400).json({ success: false, message: 'Start date must be before end date' });
+        }
+
+        // Check if category exists
+        const category = await Category.findById(categoryId);
+        if (!category) {
+            return res.status(404).json({ success: false, message: 'Category not found' });
+        }
+
+        // Create new category offer
+        const newOffer = new CategoryOffer({
+            category: categoryId,
+            discountPercentage: discount,
+            startDate: start,
+            endDate: end,
+            isActive: true
+        });
+
+        await newOffer.save();
+
+        // Update all products in this category
+        const products = await Product.find({ category: categoryId });
+        for (const product of products) {
+            // Calculate new sale price based on discount
+            const discountedPrice = product.regularPrice * (1 - discount/100);
+            product.salePrice = Math.round(discountedPrice * 100) / 100; // Round to 2 decimal places
+            await product.save();
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Category offer applied successfully',
+            updatedProducts: products.length
+        });
+    } catch (error) {
+        console.error('Error applying category offer:', error);
+        res.status(500).json({ success: false, message: 'Failed to apply category offer' });
+    }
+};
+
+const removeCategoryOffer = async (req, res) => {
+    try {
+        const { categoryId } = req.body;
+
+        // Check if category exists
+        const category = await Category.findById(categoryId);
+        if (!category) {
+            return res.status(404).json({ success: false, message: 'Category not found' });
+        }
+
+        // Find and deactivate the active category offer
+        const activeOffer = await CategoryOffer.findOne({
+            category: categoryId,
+            isActive: true
+        });
+
+        if (activeOffer) {
+            activeOffer.isActive = false;
+            await activeOffer.save();
+        }
+
+        // Update all products in this category to remove the discount
+        const products = await Product.find({ category: categoryId });
+        for (const product of products) {
+            product.salePrice = product.regularPrice;
+            await product.save();
+        }
+
+        res.json({ 
+            success: true, 
+            message: 'Category offer removed successfully',
+            updatedProducts: products.length
+        });
+    } catch (error) {
+        console.error('Error removing category offer:', error);
+        res.status(500).json({ success: false, message: 'Failed to remove category offer' });
+    }
+};
+
 module.exports = {
     categoryInfo,
     addCategory,
@@ -156,5 +259,7 @@ module.exports = {
     getUnlistCategory,
     getEditCategory,
     editCategory,
-    fixOldCategories, 
+    fixOldCategories,
+    applyCategoryOffer,
+    removeCategoryOffer
 };

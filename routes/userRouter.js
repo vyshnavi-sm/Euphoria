@@ -108,15 +108,7 @@ router.get("/user/orders/:orderId/invoice", userAuth, orderController.downloadIn
 // Payment routes
 router.post('/user/create-razorpay-order', userAuth, paymentController.createRazorpayOrder);
 router.post('/user/verify-razorpay-payment', userAuth, paymentController.verifyRazorpayPayment);
-router.get('/user/payment-failed/:orderId', userAuth, async (req, res) => {
-    try {
-        const { orderId } = req.params;
-        res.render('user/payment-failed', { orderId });
-    } catch (error) {
-        console.error('Error loading payment failed page:', error);
-        res.redirect('/user/orders');
-    }
-});
+router.get('/user/payment-failed/:orderId', userAuth, paymentController.handlePaymentFailure);
 
 // Referral Routes
 router.get("/referral", userAuth, (req, res) => {

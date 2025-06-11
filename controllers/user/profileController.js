@@ -176,10 +176,8 @@ const getResetPassPage = async (req,res)=>{
 
 const resendOtp = async (req,res)=>{
     try {
-        const otp = generateOtp();
-        req.session.userOtp = otp;
-        const email = req.session.email;
-        console.log("Resend OTP to email:",email);
+        // Get email from either emailToUpdate (for change email) or email (for forgot password)
+        const email = req.session.emailToUpdate || req.session.email;
         
         if (!email) {
             return res.status(400).json({
@@ -187,6 +185,9 @@ const resendOtp = async (req,res)=>{
                 message: "Session expired. Please start over."
             });
         }
+        
+        const otp = generateOtp();
+        req.session.userOtp = otp;
         
         const emailSent = await sendVerificationEmail(email,otp);
         if(emailSent){

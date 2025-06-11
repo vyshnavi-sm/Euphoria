@@ -808,6 +808,7 @@
                               <th>Description</th>
                               <th>Type</th>
                               <th>Amount</th>
+                              <th>Status</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -815,7 +816,16 @@
                               <% walletTransactions.forEach(transaction => { %>
                                 <tr>
                                   <td><%= new Date(transaction.createdAt).toLocaleString('en-IN') %></td>
-                                  <td><%= transaction.description %></td>
+                                  <td>
+                                    <% if (transaction.description.includes('cancelled order')) { %>
+                                      <i class="fas fa-times-circle text-danger"></i>
+                                    <% } else if (transaction.description.includes('item return')) { %>
+                                      <i class="fas fa-undo text-warning"></i>
+                                    <% } else if (transaction.description.includes('cancelled item')) { %>
+                                      <i class="fas fa-ban text-danger"></i>
+                                    <% } %>
+                                    <%= transaction.description %>
+                                  </td>
                                   <td>
                                     <span class="badge bg-<%= transaction.type === 'credit' ? 'success' : 'danger' %>">
                                       <%= transaction.type === 'credit' ? 'Credit' : 'Debit' %>
@@ -824,11 +834,22 @@
                                   <td class="<%= transaction.type === 'credit' ? 'text-success' : 'text-danger' %>">
                                     <%= transaction.type === 'credit' ? '+' : '-' %>₹<%= transaction.amount.toFixed(2) %>
                                   </td>
+                                  <td>
+                                    <% if (transaction.description.includes('cancelled order')) { %>
+                                      <span class="badge bg-danger">Order Cancelled</span>
+                                    <% } else if (transaction.description.includes('item return')) { %>
+                                      <span class="badge bg-warning">Item Returned</span>
+                                    <% } else if (transaction.description.includes('cancelled item')) { %>
+                                      <span class="badge bg-danger">Item Cancelled</span>
+                                    <% } else { %>
+                                      <span class="badge bg-info">Processed</span>
+                                    <% } %>
+                                  </td>
                                 </tr>
                               <% }) %>
                             <% } else { %>
                               <tr>
-                                <td colspan="4" class="text-center">No transactions found</td>
+                                <td colspan="5" class="text-center">No wallet transactions found</td>
                               </tr>
                             <% } %>
                           </tbody>

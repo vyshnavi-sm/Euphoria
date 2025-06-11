@@ -251,7 +251,7 @@
         <tbody>
             <% if (pro && pro.length > 0) { %>
                 <% pro.forEach((product) => { %>
-                    <tr class="<%= product.status === 'Cancelled' ? 'product-row-cancelled' : '' %>">
+                    <tr class="<%= product.status === 'Cancelled' ? 'product-row-cancelled' : '' %>" data-product-id="<%= product._id %>">
                         <td>
                             <%= product.productName %>
                             <% if (product.status === 'Cancelled') { %>
@@ -449,7 +449,19 @@
             const result = await response.json();
             
             if (result.success) {
+                // Update the sale price in the table without reloading
+                const row = document.querySelector(`tr[data-product-id="${data.productId}"]`);
+                if (row) {
+                    const salePriceCell = row.querySelector('td:nth-child(5)');
+                    if (salePriceCell) {
+                        salePriceCell.textContent = `₹${result.newSalePrice}`;
+                    }
+                }
                 showToast(result.message, 'success');
+                // Close the modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('offerModal'));
+                modal.hide();
+                // Reload after a short delay to update all UI elements
                 setTimeout(() => window.location.reload(), 1500);
             } else {
                 showToast(result.message, 'error');
@@ -477,7 +489,16 @@
             const result = await response.json();
             
             if (result.success) {
+                // Update the sale price in the table without reloading
+                const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                if (row) {
+                    const salePriceCell = row.querySelector('td:nth-child(5)');
+                    if (salePriceCell) {
+                        salePriceCell.textContent = `₹${result.newSalePrice}`;
+                    }
+                }
                 showToast(result.message, 'success');
+                // Reload after a short delay to update all UI elements
                 setTimeout(() => window.location.reload(), 1500);
             } else {
                 showToast(result.message, 'error');

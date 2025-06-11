@@ -10,20 +10,18 @@ const getAllOrders = async (req, res) => {
         const limit = parseInt(req.query.limit) || 20;
         const search = req.query.search || '';
         const status = req.query.status || '';
-        const sortBy = req.query.sortBy || 'createdAt'; // Default sort by order creation date
-        const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+        const sortBy = req.query.sortBy || 'createdAt';
+        const sortOrder = req.query.sortOrder || 'desc';
 
         let query = {};
 
         // Search functionality
         if (search) {
-            query = {
-                $or: [
-                    { _id: { $regex: search, $options: 'i' } }, // Search by Order ID (which is _id)
-                    { 'addressDetails.name': { $regex: search, $options: 'i' } },
-                    { 'addressDetails.phone': { $regex: search, $options: 'i' } }
-                ]
-            };
+            query.$or = [
+                { _id: { $regex: search, $options: 'i' } },
+                { 'userId.name': { $regex: search, $options: 'i' } },
+                { 'userId.email': { $regex: search, $options: 'i' } }
+            ];
         }
 
         // Status filter
@@ -40,7 +38,7 @@ const getAllOrders = async (req, res) => {
             // When sorting by price, still keep createdAt as primary sort for recent orders
             sortObj = {
                 createdAt: -1, // PRIMARY: Always show newest first
-                totalPrice: sortOrder // SECONDARY: Then sort by price
+                totalPrice: sortOrder === 'desc' ? -1 : 1 // SECONDARY: Then sort by price
             };
         } else {
             // Default: Sort by creation date (newest first)

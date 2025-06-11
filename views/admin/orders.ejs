@@ -521,7 +521,7 @@ async function loadOrders(page = 1) {
             search: searchQuery,
             status: statusFilter,
             sortBy: sortBy,
-            sortOrder: 'desc' // Explicitly sort in descending order (newest first)
+            sortOrder: 'desc' // Always sort in descending order (newest first)
         });
         
         const response = await fetch(`/admin/api/orders?${queryParams.toString()}`);
@@ -697,6 +697,7 @@ async function updateOrderStatus(orderId, newStatus) {
         isUpdating = false;
     }
 }
+
 // Function to handle return request
 async function handleReturnRequest(orderId, action) {
     if (isUpdating) return;
@@ -760,95 +761,6 @@ async function handleReturnRequest(orderId, action) {
         showToast('Error preparing return request. Please try again.', 'error');
     } finally {
         isUpdating = false;
-    }
-}
-
-// Function to load order details
-// Updated loadOrders function to handle date correctly
-async function loadOrders(page = 1) {
-    try {
-        // Update current page
-        currentPage = page;
-        
-        // Get filter values
-        searchQuery = document.getElementById('searchInput').value;
-        statusFilter = document.getElementById('statusFilter').value;
-        sortBy = document.getElementById('sortBy').value;
-        pageSize = document.getElementById('pageSize').value;
-        
-        // Show loading indicator
-        document.getElementById('ordersTableBody').innerHTML = '<tr><td colspan="6" class="text-center">Loading orders...</td></tr>';
-        
-        // Construct query parameters
-        const queryParams = new URLSearchParams({
-            page: page,
-            limit: pageSize,
-            search: searchQuery,
-            status: statusFilter,
-            sortBy: sortBy,
-            sortOrder: 'desc' // Always sort in descending order (newest first)
-        });
-        
-        const response = await fetch(`/admin/api/orders?${queryParams.toString()}`);
-        
-        if (!response.ok) {
-            throw new Error('Failed to load orders');
-        }
-        
-        const data = await response.json();
-        
-        // Update pagination info
-        const startRecord = ((data.pagination.currentPage - 1) * data.pagination.limit) + 1;
-        const endRecord = Math.min(startRecord + data.pagination.limit - 1, data.pagination.totalOrders);
-        
-        document.getElementById('startRecord').textContent = data.pagination.totalOrders > 0 ? startRecord : 0;
-        document.getElementById('endRecord').textContent = endRecord;
-        document.getElementById('totalRecords').textContent = data.pagination.totalOrders;
-        
-        // Populate orders table
-        const tableBody = document.getElementById('ordersTableBody');
-        tableBody.innerHTML = '';
-        
-        if (!data.orders || data.orders.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="6" class="text-center">No orders found</td></tr>';
-            return;
-        }
-        
-        data.orders.forEach(order => {
-            // Format date and time properly
-            const orderDate = order.createdAt || order.createdOn;
-            const formattedDateTime = orderDate ? new Date(orderDate).toLocaleString('en-IN', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            }) : 'N/A';
-            
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${order._id}</td>
-                <td>${formattedDateTime}</td>
-                <td>${order.userId ? order.userId.name : 'N/A'}<br><small>${order.userId ? order.userId.email : 'N/A'}</small></td>
-                <td>₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</td>
-                <td>${order.status}</td>
-                <td>
-                    <a class="btn btn-sm btn-info view-details" href="/admin/orders/${order._id}">View</a>
-                </td>
-            `;
-            tableBody.appendChild(row);
-        });
-        
-        // Update pagination
-        updatePagination(data.pagination);
-        
-    } catch (error) {
-        console.error('Error loading orders:', error);
-        document.getElementById('ordersTableBody').innerHTML = 
-            '<tr><td colspan="6" class="text-center text-danger">Error loading orders. Please try again.</td></tr>';
-        showToast('Error loading orders. Please try again.', 'error');
     }
 }
 
@@ -950,18 +862,27 @@ async function loadOrderDetails(orderId) {
         showToast('Error loading order details. Please try again.', 'error');
     }
 }
+
+// Update URL with current filters
+function updateURL() {
+    const url = new URL(window.location);
+    url.searchParams.set('page', currentPage);
+    url.searchParams.set('status', statusFilter);
+    url.searchParams.set('search', searchQuery);
+    url.searchParams.set('sortBy', sortBy);
+    url.searchParams.set('limit', pageSize);
+    window.history.replaceState({}, '', url);
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-    // Set default values
+    // Always start on page 1 for initial load and ensure URL reflects it
     currentPage = 1;
     sortBy = 'createdAt'; // Set default sort to date
     document.getElementById('sortBy').value = 'createdAt';
     
-    // Get initial values from URL if present
+    // Get initial values from URL for filters (excluding page, as we want to force page 1)
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('page')) {
-        currentPage = parseInt(urlParams.get('page'));
-    }
     if (urlParams.has('status')) {
         statusFilter = urlParams.get('status');
         document.getElementById('statusFilter').value = statusFilter;
@@ -979,19 +900,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('pageSize').value = pageSize;
     }
     
-    // Load initial page with current filters
+    // Load initial page with current filters (which will be page 1 by default)
     loadOrders(currentPage);
     
-    // Update URL with current filters
-    function updateURL() {
-        const url = new URL(window.location);
-        url.searchParams.set('page', currentPage);
-        url.searchParams.set('status', statusFilter);
-        url.searchParams.set('search', searchQuery);
-        url.searchParams.set('sortBy', sortBy);
-        url.searchParams.set('limit', pageSize);
-        window.history.replaceState({}, '', url);
-    }
+    // Update URL to ensure 'page=1' is reflected in the address bar
+    updateURL();
     
     // Add event listener for search form
     document.getElementById('searchForm').addEventListener('submit', (e) => {
@@ -1115,9 +1028,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isUpdating = false;
         }
     });
-    
-    // Update URL when page loads
-    updateURL();
 });
 </script>
 
