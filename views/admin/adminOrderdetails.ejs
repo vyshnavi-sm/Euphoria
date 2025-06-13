@@ -271,6 +271,23 @@
       </div>
     </div>
 
+    <% if (order.returnItems && order.returnItems.length > 0) { %>
+        <div class="return-items-section">
+            <h6><strong>Return Items:</strong></h6>
+            <% order.returnItems.forEach((item, index) => { %>
+                <div class="return-item-detail">
+                    <strong>Return ID:</strong> RET-<%= order._id.slice(-6) %>-<%= String(index + 1).padStart(2, '0') %><br>
+                    <strong>Product:</strong> <%= item.name || 'Product' %><br>
+                    <strong>Reason:</strong> <%= item.reason || 'Not specified' %><br>
+                    <strong>Priority:</strong> <span class="badge bg-<%= item.priority === 'high' ? 'danger' : 'secondary' %>"><%= item.priority || 'normal' %></span>
+                    <% if (item.quantity) { %>
+                        <br><strong>Quantity:</strong> <%= item.quantity %>
+                    <% } %>
+                </div>
+            <% }); %>
+        </div>
+    <% } %>
+
     <div class="section-header">Customer Details</div>
     <p>
       <strong>Name:</strong> <%= order.userId.name %><br>

@@ -67,7 +67,7 @@
     }
 
     .sidebar ul li a {
-      display: block;
+      display: flex;
       padding: 15px 20px;
       color: #ccc;
       text-decoration: none;
@@ -358,17 +358,17 @@
       <div id="loadingSpinner" class="spinner"></div>
 
         <!-- Dashboard Content -->
-        <div id="dashboardContent" style="display: none;">
+        <div id="dashboardContent">
           <!-- Statistics Cards -->
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-value" id="statRevenue">₹0</div>
+              <div class="stat-value" id="statRevenue">₹<%= totalRevenue %></div>
               <div class="stat-label">Total Revenue</div>
               <%= totalRevenue %>
 
             </div>
             <div class="stat-card">
-              <div class="stat-value" id="statOrders">0</div>
+              <div class="stat-value" id="statOrders"><%= totalOrders %></div>
               <div class="stat-label">Total Orders</div>
               <%= totalOrders %>
 
@@ -380,7 +380,7 @@
 
             </div>
             <div class="stat-card">
-              <div class="stat-value" id="statSold">0</div>
+              <div class="stat-value" id="statSold"><%= productsSold %></div>
               <div class="stat-label">Products Sold</div>
             </div>
           </div>
@@ -475,69 +475,171 @@ function showLoading(show = true) {
   }
 }
 
-// Utility function to format currency
 function formatCurrency(amount) {
-  if (amount === null || amount === undefined || isNaN(amount)) {
-    return '₹0';
-  }
-  return '₹' + Math.round(amount).toLocaleString('en-IN');
-}
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
 
-// Enhanced error handling utility
-function showError(message, container = null) {
-  const errorHtml = `
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-      <i class="fas fa-exclamation-triangle me-2"></i>
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  `;
-  
-  if (container) {
-    container.innerHTML = errorHtml + container.innerHTML;
-  } else {
-    const dashboardContent = document.getElementById('dashboardContent');
-    if (dashboardContent) {
-      dashboardContent.innerHTML = errorHtml + dashboardContent.innerHTML;
-    }
-  }
-  
-  // Auto-dismiss after 8 seconds
-  setTimeout(() => {
-    const alert = document.querySelector('.alert-danger');
-    if (alert && alert.parentNode) {
-      alert.remove();
-    }
-  }, 8000);
-}
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-IN').format(num);
+        }
 
-// Enhanced success message utility
-function showSuccess(message, container = null) {
-  const successHtml = `
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-      <i class="fas fa-check-circle me-2"></i>
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  `;
-  
-  if (container) {
-    container.innerHTML = successHtml + container.innerHTML;
-  } else {
-    const dashboardContent = document.getElementById('dashboardContent');
-    if (dashboardContent) {
-      dashboardContent.innerHTML = successHtml + dashboardContent.innerHTML;
-    }
-  }
-  
-  // Auto-dismiss after 5 seconds
-  setTimeout(() => {
-    const alert = document.querySelector('.alert-success');
-    if (alert && alert.parentNode) {
-      alert.remove();
-    }
-  }, 5000);
-}
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            // Hide error after 5 seconds
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function updateStats(data) {
+            // Update statistics cards
+            document.getElementById('statRevenue').textContent = formatCurrency(data.totalRevenue || 0);
+            document.getElementById('statOrders').textContent = formatNumber(data.totalOrders || 0);
+            document.getElementById('statCustomers').textContent = formatNumber(data.activeCustomers || 0);
+            document.getElementById('statSold').textContent = formatNumber(data.productsSold || 0);
+        }
+
+        function updateTopItems(data) {
+            // Update top products
+            const productsList = document.getElementById('topProductsList');
+            if (data.topProducts && data.topProducts.length > 0) {
+                productsList.innerHTML = data.topProducts.map(product => `
+                    <li class="top-item">
+                        <span class="item-name">${product.name}</span>
+                        <div class="item-stats">
+                            <span>Sold: ${formatNumber(product.sold)}</span>
+                            <span>Revenue: ${formatCurrency(product.revenue)}</span>
+                        </div>
+                    </li>
+                `).join('');
+            } else {
+                productsList.innerHTML = '<li class="loading">No products data available</li>';
+            }
+
+            // Update top categories
+            const categoriesList = document.getElementById('topCategoriesList');
+            if (data.topCategories && data.topCategories.length > 0) {
+                categoriesList.innerHTML = data.topCategories.map(category => `
+                    <li class="top-item">
+                        <span class="item-name">${category.name}</span>
+                        <div class="item-stats">
+                            <span>Sold: ${formatNumber(category.sold)}</span>
+                            <span>Revenue: ${formatCurrency(category.revenue)}</span>
+                        </div>
+                    </li>
+                `).join('');
+            } else {
+                categoriesList.innerHTML = '<li class="loading">No categories data available</li>';
+            }
+
+            // Update top brands
+            const brandsList = document.getElementById('topBrandsList');
+            if (data.topBrands && data.topBrands.length > 0) {
+                brandsList.innerHTML = data.topBrands.map(brand => `
+                    <li class="top-item">
+                        <span class="item-name">${brand.name}</span>
+                        <div class="item-stats">
+                            <span>Sold: ${formatNumber(brand.sold)}</span>
+                            <span>Revenue: ${formatCurrency(brand.revenue)}</span>
+                        </div>
+                    </li>
+                `).join('');
+            } else {
+                brandsList.innerHTML = '<li class="loading">No brands data available</li>';
+            }
+        }
+
+        async function loadDashboardData() {
+            try {
+                const response = await fetch('/admin/dashboard/data', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/admin/login';
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('Dashboard data loaded successfully:', data);
+                    updateStats(data);
+                    updateTopItems(data);
+                    
+                    // Show dashboard content
+                    document.getElementById('dashboardContent').style.display = 'block';
+                } else {
+                    throw new Error(data.message || 'Failed to load dashboard data');
+                }
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError(`Failed to load dashboard data: ${error.message}`);
+                
+                // Show dashboard with default values
+                document.getElementById('dashboardContent').style.display = 'block';
+                updateStats({
+                    totalRevenue: 0,
+                    totalOrders: 0,
+                    activeCustomers: 0,
+                    productsSold: 0
+                });
+                updateTopItems({
+                    topProducts: [],
+                    topCategories: [],
+                    topBrands: []
+                });
+            }
+        }
+
+        async function refreshDashboard() {
+            const refreshBtn = document.querySelector('.refresh-btn');
+            const refreshText = document.getElementById('refreshText');
+            
+            // Disable button and show loading
+            refreshBtn.disabled = true;
+            refreshText.textContent = 'Refreshing...';
+            
+            try {
+                await loadDashboardData();
+                refreshText.textContent = 'Data Refreshed!';
+                
+                // Reset button text after 2 seconds
+                setTimeout(() => {
+                    refreshText.textContent = 'Refresh Data';
+                    refreshBtn.disabled = false;
+                }, 2000);
+            } catch (error) {
+                refreshText.textContent = 'Refresh Data';
+                refreshBtn.disabled = false;
+                showError('Failed to refresh dashboard data');
+            }
+        }
+
+        // Load dashboard data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Dashboard page loaded, fetching data...');
+            loadDashboardData();
+        });
+
+        // Auto-refresh every 5 minutes
+        setInterval(loadDashboardData, 300000);
 
 // Generate sample data for testing when no real data is available
 function generateSampleData(filter) {

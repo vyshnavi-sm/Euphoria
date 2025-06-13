@@ -44,6 +44,27 @@
     align-items: center;
     gap: 8px;
 }
+
+.btn-offer {
+    background-color: #28a745 !important;
+    color: white !important;
+    border: none;
+}
+
+.btn-offer:hover {
+    background-color: #218838 !important;
+}
+
+.btn-remove {
+    background-color: #dc3545 !important;
+    color: white !important;
+    border: none;
+    margin-left: 5px;
+}
+
+.btn-remove:hover {
+    background-color: #c82333 !important;
+}
   </style>
 
 
@@ -125,12 +146,14 @@
                                                 const activeOffer = category.activeOffer;
                                                 if (activeOffer) { 
                                             %>
-                                                <span class="badge bg-success"><%= activeOffer.discountPercentage %>% OFF</span>
-                                                <button onclick="removeCategoryOffer('<%= category._id %>')" class="btn btn-sm btn-remove">
-                                                    <i class="fas fa-times"></i> Remove
-                                                </button>
+                                                <div class="d-flex align-items-center justify-content-center">
+                                                    <span class="badge bg-success me-2"><%= activeOffer.discountPercentage %>% OFF</span>
+                                                    <button onclick="removeCategoryOffer('<%= category._id %>')" class="btn btn-sm btn-remove" title="Remove Offer">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </div>
                                             <% } else { %>
-                                                <button onclick="showCategoryOfferModal('<%= category._id %>', '<%= category.name %>')" class="btn btn-sm btn-offer">
+                                                <button onclick="showCategoryOfferModal('<%= category._id %>', '<%= category.name %>')" class="btn btn-sm btn-offer" title="Add Offer">
                                                     <i class="fas fa-tag"></i> Add Offer
                                                 </button>
                                             <% } %>
@@ -216,12 +239,12 @@
                 <form id="categoryOfferForm">
                     <input type="hidden" id="categoryId" name="categoryId">
                     <div class="mb-3">
-                        <label for="categoryName" class="form-label">Category</label>
-                        <input type="text" class="form-control" id="categoryName" readonly>
+                        <label for="categoryNameDisplay" class="form-label">Category</label>
+                        <input type="text" class="form-control" id="categoryNameDisplay" readonly>
                     </div>
                     <div class="mb-3">
                         <label for="discountPercentage" class="form-label">Discount Percentage</label>
-                        <input type="number" class="form-control" id="discountPercentage" name="discountPercentage" min="0" max="100" required>
+                        <input type="number" class="form-control" id="discountPercentage" name="discountPercentage" min="1" max="100" step="0.01" required>
                     </div>
                     <div class="mb-3">
                         <label for="startDate" class="form-label">Start Date</label>
@@ -246,10 +269,136 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 <script>
+
+
+// Toast function
+// Toast function
+function showToast(message, type) {
+    const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+            toast.addEventListener('mouseenter', Swal.stopTimer)
+            toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+    });
+
+    Toast.fire({
+        icon: type,
+        title: message
+    });
+}
+
+// Function to fetch and display active offers
+async function loadActiveOffers() {
+    console.log('🔍 Loading active offers...');
+    try {
+        const response = await fetch('/admin/categories/activeOffers');
+        const result = await response.json();
+        
+        console.log('📊 Active offers response:', result);
+        
+        if (result.success) {
+            console.log('✅ Found active offers:', result.offers);
+            updateOfferButtons(result.offers);
+        } else {
+            console.log('❌ No active offers or error:', result.message);
+            // Still call updateOfferButtons with empty array to reset buttons
+            updateOfferButtons([]);
+        }
+    } catch (error) {
+        console.error('💥 Error loading active offers:', error);
+        // Reset buttons on error
+        updateOfferButtons([]);
+    }
+}
+
+// Function to update the offer buttons based on active offers
+function updateOfferButtons(activeOffers) {
+    console.log('🔄 Updating offer buttons with:', activeOffers);
+    
+    // Create a map of categoryId to offer for quick lookup
+    const offerMap = new Map();
+    activeOffers.forEach(offer => {
+        if (offer.category && offer.category._id) {
+            console.log('📝 Mapping offer:', offer.category._id.toString(), '→', offer.discountPercentage + '%');
+            offerMap.set(offer.category._id.toString(), offer);
+        }
+    });
+    
+    console.log('🗺️ Offer map created:', offerMap);
+    
+    // Update all offer cells - target the correct elements
+    const rows = document.querySelectorAll('tr[data-category-id]');
+    console.log('📋 Found table rows:', rows.length);
+    
+    rows.forEach((row, index) => {
+        const categoryId = row.getAttribute('data-category-id');
+        const offer = offerMap.get(categoryId);
+        
+        console.log(`Row ${index + 1}: CategoryID=${categoryId}, HasOffer=${!!offer}`);
+        
+        // Find the offer cell (6th td - index 5)
+        const offerCell = row.children[5]; // 0-based index: No, Name, Description, Status, List/Unlist, Offer, Action
+        
+        if (!offerCell) {
+            console.error('❌ Offer cell not found for row:', index + 1);
+            return;
+        }
+        
+        if (offer) {
+            console.log(`✅ Updating row ${index + 1} with offer: ${offer.discountPercentage}%`);
+            // Category has an active offer - show percentage and remove button
+            offerCell.innerHTML = `
+                <div class="d-flex align-items-center justify-content-center">
+                    <span class="badge bg-success me-2">${offer.discountPercentage}% OFF</span>
+                    <button onclick="removeCategoryOffer('${categoryId}')" class="btn btn-sm btn-remove" title="Remove Offer">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+        } else {
+            console.log(`➕ Updating row ${index + 1} with Add Offer button`);
+            // Category has no active offer - show "Add Offer" button
+            // Get category name from the row
+            const categoryName = row.children[1].textContent.trim(); // Name is in 2nd column (index 1)
+            offerCell.innerHTML = `
+                <button onclick="showCategoryOfferModal('${categoryId}', '${categoryName}')" class="btn btn-sm btn-offer" title="Add Offer">
+                    <i class="fas fa-tag"></i> Add Offer
+                </button>
+            `;
+        }
+    });
+    
+    console.log('🎯 Offer buttons updated successfully');
+}
+
 document.addEventListener("DOMContentLoaded", function () {
+    console.log('🚀 DOM Content Loaded - Initializing...');
+    
     // Initialize Bootstrap modal
     const addCategoryModal = new bootstrap.Modal(document.getElementById('addCategoryModal'));
 
+    // Load active offers when page loads
+    console.log('📥 Loading active offers on page load...');
+    loadActiveOffers();
+
+    // Set minimum datetime for offer dates
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60000;
+    const localTime = new Date(now.getTime() - offset);
+    const minDateTime = localTime.toISOString().slice(0, 16);
+    
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    
+    if (startDateInput) startDateInput.min = minDateTime;
+    if (endDateInput) endDateInput.min = minDateTime;
+
+    // Handle unlist category buttons
     const unlistButtons = document.querySelectorAll("[href*='UnlistCategory']");
     unlistButtons.forEach(button => {
         button.addEventListener("click", function(e) {
@@ -270,21 +419,87 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     });
+
+    // Update end date minimum when start date changes
+    if (startDateInput) {
+        startDateInput.addEventListener('change', function() {
+            const startDate = this.value;
+            if (startDate && endDateInput) {
+                endDateInput.min = startDate;
+                // Clear end date if it's before the new start date
+                if (endDateInput.value && endDateInput.value < startDate) {
+                    endDateInput.value = '';
+                }
+            }
+        });
+    }
 });
 
 function showCategoryOfferModal(categoryId, categoryName) {
+    console.log('🎭 Opening offer modal for:', categoryId, categoryName);
+    
+    // Set form values
     document.getElementById('categoryId').value = categoryId;
-    document.getElementById('categoryName').value = categoryName;
+    document.getElementById('categoryNameDisplay').value = categoryName;
+    
+    // Clear previous values
+    document.getElementById('discountPercentage').value = '';
+    document.getElementById('startDate').value = '';
+    document.getElementById('endDate').value = '';
+    
+    // Reset form validation states
+    const form = document.getElementById('categoryOfferForm');
+    form.classList.remove('was-validated');
+    
+    // Show modal
     const modal = new bootstrap.Modal(document.getElementById('categoryOfferModal'));
     modal.show();
 }
 
 async function applyCategoryOffer() {
+    console.log('🎯 Applying category offer...');
+    
     const form = document.getElementById('categoryOfferForm');
     const formData = new FormData(form);
     const data = Object.fromEntries(formData.entries());
 
+    console.log('📋 Form data:', data);
+
+    // Validate form data
+    if (!data.categoryId || !data.discountPercentage || !data.startDate || !data.endDate) {
+        showToast('Please fill all fields', 'error');
+        return;
+    }
+
+    const discount = parseFloat(data.discountPercentage);
+    if (isNaN(discount) || discount <= 0 || discount > 100) {
+        showToast('Discount must be between 1 and 100', 'error');
+        return;
+    }
+
+    const startDate = new Date(data.startDate);
+    const endDate = new Date(data.endDate);
+    const now = new Date();
+    
+    if (startDate >= endDate) {
+        showToast('End date must be after start date', 'error');
+        return;
+    }
+
+    if (endDate <= now) {
+        showToast('End date must be in the future', 'error');
+        return;
+    }
+
+    // Show loading state
+    const applyButton = document.querySelector('[onclick="applyCategoryOffer()"]');
+    const originalText = applyButton.innerHTML;
+    applyButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Applying...';
+    applyButton.disabled = true;
+
     try {
+        console.log('📤 Sending offer data:', data);
+        
         const response = await fetch('/admin/categories/applyOffer', {
             method: 'POST',
             headers: {
@@ -294,29 +509,53 @@ async function applyCategoryOffer() {
         });
 
         const result = await response.json();
+        console.log('📥 Server response:', result);
         
         if (result.success) {
             showToast(result.message, 'success');
+            
             // Close the modal
             const modal = bootstrap.Modal.getInstance(document.getElementById('categoryOfferModal'));
             modal.hide();
-            // Reload after a short delay to update all UI elements
-            setTimeout(() => window.location.reload(), 1500);
+            
+            // Force reload active offers after a short delay
+            console.log('🔄 Reloading active offers after successful application...');
+            setTimeout(() => {
+                loadActiveOffers();
+            }, 1000); // Increased delay to ensure server processing is complete
         } else {
-            showToast(result.message, 'error');
+            showToast(result.message || 'Failed to apply offer', 'error');
         }
     } catch (error) {
-        console.error('Error applying category offer:', error);
-        showToast('Error applying category offer', 'error');
+        console.error('💥 Error applying category offer:', error);
+        showToast('Network error. Please try again.', 'error');
+    } finally {
+        // Reset button state
+        applyButton.innerHTML = originalText;
+        applyButton.disabled = false;
     }
 }
 
 async function removeCategoryOffer(categoryId) {
-    if (!confirm('Are you sure you want to remove this category offer?')) {
+    console.log('🗑️ Removing category offer for:', categoryId);
+    
+    const result = await Swal.fire({
+        title: 'Remove Category Offer?',
+        text: 'This will remove the offer from all products in this category.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, remove it!'
+    });
+
+    if (!result.isConfirmed) {
         return;
     }
 
     try {
+        console.log('📤 Sending remove request for category:', categoryId);
+        
         const response = await fetch('/admin/categories/removeOffer', {
             method: 'POST',
             headers: {
@@ -325,19 +564,31 @@ async function removeCategoryOffer(categoryId) {
             body: JSON.stringify({ categoryId })
         });
 
-        const result = await response.json();
+        const serverResult = await response.json();
+        console.log('📥 Remove offer response:', serverResult);
         
-        if (result.success) {
-            showToast(result.message, 'success');
-            // Reload after a short delay to update all UI elements
-            setTimeout(() => window.location.reload(), 1500);
+        if (serverResult.success) {
+            showToast(serverResult.message, 'success');
+            
+            // Force reload active offers after removal
+            console.log('🔄 Reloading active offers after removal...');
+            setTimeout(() => {
+                loadActiveOffers();
+            }, 1000);
         } else {
-            showToast(result.message, 'error');
+            showToast(serverResult.message || 'Failed to remove offer', 'error');
         }
+
     } catch (error) {
-        console.error('Error removing category offer:', error);
+        console.error('💥 Error removing category offer:', error);
         showToast('Error removing category offer', 'error');
     }
+}
+
+// Manual refresh function for debugging
+function forceRefreshOffers() {
+    console.log('🔄 Manually refreshing offers...');
+    loadActiveOffers();
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -11,6 +11,9 @@
         --text-dark: #3E2723;
         --text-light: #8D6E63;
         --shadow-color: rgba(93, 64, 55, 0.1);
+        --return-orange: #FF6B35;
+        --return-red: #E53E3E;
+        --return-blue: #3182CE;
     }
 
     .container-fluid {
@@ -19,7 +22,6 @@
         padding: 2rem;
     }
     
-
     .page-title {
         color: var(--primary-brown);
         font-weight: 600;
@@ -100,6 +102,174 @@
         background-color: var(--background-brown);
     }
 
+    /* Return Request Indicators */
+    .return-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        background-color: var(--return-orange);
+        color: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-left: 0.5rem;
+        animation: pulse 2s infinite;
+    }
+
+    .return-indicator.urgent {
+        background-color: var(--return-red);
+        animation: flash 1.5s infinite;
+    }
+
+    .return-indicator.partial {
+        background-color: var(--return-blue);
+        animation: pulse 2s infinite;
+    }
+
+    .return-icon {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+    }
+
+    /* Return Item Identifiers */
+    .return-items-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin-top: 0.5rem;
+    }
+
+    .return-item-badge {
+        background-color: #FFF3E0;
+        color: #E65100;
+        border: 1px solid #FFB74D;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .return-item-badge.priority {
+        background-color: #FFEBEE;
+        color: #C62828;
+        border-color: #EF5350;
+        animation: glow 2s infinite;
+    }
+
+    .return-item-icon {
+        width: 10px;
+        height: 10px;
+        fill: currentColor;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+    }
+
+    @keyframes flash {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    @keyframes glow {
+        0% { box-shadow: 0 0 5px rgba(239, 83, 80, 0.5); }
+        50% { box-shadow: 0 0 10px rgba(239, 83, 80, 0.8); }
+        100% { box-shadow: 0 0 5px rgba(239, 83, 80, 0.5); }
+    }
+
+    /* Enhanced Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .status-badge.pending {
+        background-color: #FFF3CD;
+        color: #856404;
+        border: 1px solid #FFEAA7;
+    }
+
+    .status-badge.processing {
+        background-color: #D1ECF1;
+        color: #0C5460;
+        border: 1px solid #B8DAFF;
+    }
+
+    .status-badge.shipped {
+        background-color: #D4EDDA;
+        color: #155724;
+        border: 1px solid #C3E6CB;
+    }
+
+    .status-badge.delivered {
+        background-color: #D4EDDA;
+        color: #155724;
+        border: 1px solid #C3E6CB;
+    }
+
+    .status-badge.cancelled {
+        background-color: #F8D7DA;
+        color: #721C24;
+        border: 1px solid #F5C6CB;
+    }
+
+    .status-badge.return-request {
+        background-color: #FFE8E1;
+        color: #D63384;
+        border: 1px solid #FF6B35;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .status-badge.return-request::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    .status-badge.returned {
+        background-color: #F8D7DA;
+        color: #721C24;
+        border: 1px solid #F5C6CB;
+    }
+
+    .status-badge.out-for-delivery {
+        background-color: #CCE5FF;
+        color: #004085;
+        border: 1px solid #99D3FF;
+    }
+
+    @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+
+    /* Row highlighting for return requests */
+    .table tbody tr.return-request-row {
+        background-color: #FFF8F5;
+        border-left: 4px solid var(--return-orange);
+    }
+
+    .table tbody tr.return-request-row:hover {
+        background-color: #FFE8E1;
+    }
+
     /* Status Select Styling */
     .status-select {
         min-width: 150px;
@@ -122,7 +292,7 @@
     .btn-warning {
         background-color: var(--light-brown);
         border-color: var(--light-brown);
-        color: var(--dark-brown);
+        color: var(--text-dark);
     }
 
     .btn-warning:hover {
@@ -247,6 +417,81 @@
         color: var(--dark-brown);
     }
 
+    /* Return Items Details */
+    .return-items-details {
+        background-color: #FFF8F5;
+        border: 1px solid #FFE0B2;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .return-items-details h6 {
+        color: var(--return-orange);
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .return-item-detail {
+        background-color: white;
+        border: 1px solid #FFE0B2;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .return-item-detail:last-child {
+        margin-bottom: 0;
+    }
+
+    .return-item-info {
+        flex: 1;
+    }
+
+    .return-item-id {
+        font-weight: 600;
+        color: var(--return-orange);
+        font-size: 0.85rem;
+    }
+
+    .return-item-name {
+        color: var(--text-dark);
+        font-size: 0.9rem;
+        margin-top: 0.25rem;
+    }
+
+    .return-item-reason {
+        color: var(--text-light);
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        font-style: italic;
+    }
+
+    .return-item-status {
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .return-item-status.pending {
+        background-color: #FFF3CD;
+        color: #856404;
+    }
+
+    .return-item-status.approved {
+        background-color: #D4EDDA;
+        color: #155724;
+    }
+
+    .return-item-status.rejected {
+        background-color: #F8D7DA;
+        color: #721C24;
+    }
+
     /* Return Request Modal */
     #returnRequestForm .form-label {
         color: var(--dark-brown);
@@ -305,6 +550,29 @@
 
     .badge.bg-danger {
         background-color: var(--primary-brown) !important;
+    }
+
+    /* Return Request Counter */
+    .return-counter {
+        background-color: var(--return-red);
+        color: white;
+        border-radius: 50%;
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: bold;
+        margin-left: 0.5rem;
+        min-width: 20px;
+        height: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        animation: bounce 1s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+        40% { transform: translateY(-5px); }
+        60% { transform: translateY(-3px); }
     }
 </style>
 
@@ -413,7 +681,7 @@
 
 <!-- Return Request Modal -->
 <div class="modal fade" id="returnRequestModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Handle Return Request</h5>
@@ -421,24 +689,39 @@
             </div>
             <div class="modal-body">
                 <form id="returnRequestForm">
-                    <div class="mb-3">
-                        <label class="form-label">Action</label>
-                        <select class="form-select" id="returnAction" required>
-                            <option value="accept">Accept Return</option>
-                            <option value="reject">Reject Return</option>
-                        </select>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Action</label>
+                            <select class="form-select" id="returnAction" required>
+                                <option value="accept">Accept Return</option>
+                                <option value="reject">Reject Return</option>
+                                <option value="partial">Partial Accept</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6" id="refundAmountSection" style="display: none;">
+                            <label class="form-label">Total Refund Amount (₹)</label>
+                            <input type="number" class="form-control" id="refundAmount" step="0.01" required>
+                            <small class="text-muted">This amount will be credited to the user's wallet</small>
+                        </div>
                     </div>
-                    <div class="mb-3" id="refundAmountSection" style="display: none;">
-                        <label class="form-label">Refund Amount (₹)</label>
-                        <input type="number" class="form-control" id="refundAmount" step="0.01" required>
-                        <small class="text-muted">This amount will be credited to the user's wallet</small>
+                    
+                    <!-- Return Items Selection -->
+                    <div id="returnItemsSection" style="display: none; margin-top: 1rem;">
+                        <h6>Select Items to Process:</h6>
+                        <div id="returnItemsList">
+                            <!-- Return items will be populated here -->
+                        </div>
                     </div>
-                    <div class="mb-3" id="rejectReasonSection" style="display: none;">
+                    
+                    <div class="mt-3" id="rejectReasonSection" style="display: none;">
                         <label class="form-label">Rejection Reason</label>
                         <textarea class="form-control" id="rejectReason" rows="3" required></textarea>
                         <small class="text-muted">Please provide a reason for rejecting the return request</small>
                     </div>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">Submit</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -454,6 +737,74 @@ let statusFilter = '';
 let searchQuery = '';
 let sortBy = 'createdAt';
 let isUpdating = false;
+
+// Function to generate return item ID
+function generateReturnItemId(orderId, itemIndex) {
+    return `RET-${orderId.slice(-6)}-${String(itemIndex + 1).padStart(2, '0')}`;
+}
+
+// Function to get status badge class and return indicator
+function getStatusInfo(status, orderedItems = []) {
+    const statusLower = status.toLowerCase().replace(/\s+/g, '-');
+    let badgeClass = `status-badge ${statusLower}`;
+    let showReturnIndicator = false;
+    let isUrgent = false;
+    let isPartial = false;
+    let returnRequestItems = [];
+
+    // Check for item-level return requests
+    if (orderedItems && orderedItems.length > 0) {
+        returnRequestItems = orderedItems.filter(item => item.status === 'Return Requested');
+        if (returnRequestItems.length > 0) {
+            showReturnIndicator = true;
+            isUrgent = returnRequestItems.some(item => item.priority === 'high');
+            isPartial = returnRequestItems.length > 0 && returnRequestItems.length < orderedItems.length;
+        }
+    }
+    // Also check for order-level return request
+    if (status === 'Return Request') {
+        showReturnIndicator = true;
+        // If order-level, you may want to use all items or a special flag
+    }
+
+    return { badgeClass, showReturnIndicator, isUrgent, isPartial, returnRequestItems };
+}
+
+// Function to create return indicator HTML
+function createReturnIndicator(isUrgent = false, isPartial = false) {
+    const urgentClass = isUrgent ? ' urgent' : isPartial ? ' partial' : '';
+    const text = isPartial ? 'PARTIAL RETURN' : 'RETURN REQ';
+    return `
+        <span class="return-indicator${urgentClass}">
+            <svg class="return-icon" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            ${text}
+        </span>
+    `;
+}
+
+// Function to create return items list HTML
+function createReturnItemsList(returnItems, orderId) {
+    if (!returnItems || returnItems.length === 0) return '';
+    
+    return `
+        <div class="return-items-list">
+            ${returnItems.map((item, index) => {
+                const itemId = generateReturnItemId(orderId, index);
+                const priorityClass = item.priority === 'high' ? ' priority' : '';
+                return `
+                    <span class="return-item-badge${priorityClass}" title="Return ID: ${itemId}&#10;Item: ${item.name || 'Product'}&#10;Reason: ${item.reason || 'Not specified'}">
+                        <svg class="return-item-icon" viewBox="0 0 24 24">
+                            <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0 0 2h1v11a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V9h1a1 1 0 0 0 0-2zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 15a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V9h10v12z"/>
+                        </svg>
+                        ${itemId}
+                    </span>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
 
 // Function to show toast notifications
 function showToast(message, type = 'success') {
@@ -562,15 +913,42 @@ async function loadOrders(page = 1) {
                 hour12: true
             }) : 'N/A';
             
+            // Get status information with return items
+            const statusInfo = getStatusInfo(order.status, order.orderedItems || []);
+            
             const row = document.createElement('tr');
+            
+            // Add special class for return request rows
+            if (order.status === 'Return Request') {
+                row.classList.add('return-request-row');
+            }
+            
             row.innerHTML = `
-                <td>${order._id}</td>
-                <td>${formattedDateTime}</td>
-                <td>${order.userId ? order.userId.name : 'N/A'}<br><small>${order.userId ? order.userId.email : 'N/A'}</small></td>
-                <td>₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</td>
-                <td>${order.status}</td>
                 <td>
-                    <a class="btn btn-sm btn-info view-details" href="/admin/orders/${order._id}">View</a>
+                    ${order._id}
+                    ${statusInfo.showReturnIndicator ? createReturnIndicator(statusInfo.isUrgent, statusInfo.isPartial) : ''}
+                    ${statusInfo.showReturnIndicator ? createReturnItemsList(statusInfo.returnRequestItems, order._id) : ''}
+                </td>
+                <td>${formattedDateTime}</td>
+                <td>
+                    ${order.userId ? order.userId.name : 'N/A'}
+                    <br><small>${order.userId ? order.userId.email : 'N/A'}</small>
+                </td>
+                <td>₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</td>
+                <td>
+                    <span class="${statusInfo.badgeClass}">
+                        ${order.status}
+                        ${order.status === 'Return Request' ? '<span class="return-counter">!</span>' : ''}
+                    </span>
+                </td>
+                <td>
+                    <a class="btn btn-sm btn-info view-details" href="/admin/orders/${order._id}">
+                        View
+                        ${order.status === 'Return Request' ? 
+                            '<svg style="width: 14px; height: 14px; margin-left: 5px;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>' : 
+                            ''
+                        }
+                    </a>
                 </td>
             `;
             tableBody.appendChild(row);
@@ -733,9 +1111,7 @@ async function handleReturnRequest(orderId, action) {
         } else {
             refundSection.style.display = 'none';
             rejectSection.style.display = 'block';
-            refundInput.required = false;
             rejectInput.required = true;
-            refundInput.value = '';
         }
         
         // Add event listener for action change
@@ -749,7 +1125,6 @@ async function handleReturnRequest(orderId, action) {
             } else {
                 refundSection.style.display = 'none';
                 rejectSection.style.display = 'block';
-                refundInput.required = false;
                 rejectInput.required = true;
             }
         });
@@ -764,7 +1139,7 @@ async function handleReturnRequest(orderId, action) {
     }
 }
 
-// Updated loadOrderDetails function to fix the view button functionality
+// Function to load order details
 async function loadOrderDetails(orderId) {
     try {
         const response = await fetch(`/admin/api/orders/${orderId}`);
@@ -788,12 +1163,35 @@ async function loadOrderDetails(orderId) {
             hour12: true
         }) : 'N/A';
         
+        // Generate return items details if they exist
+        let returnItemsHtml = '';
+        if (order.returnItems && order.returnItems.length > 0) {
+            returnItemsHtml = `
+                <div class="return-items-section">
+                    <h6><strong>Return Items:</strong></h6>
+                    ${order.returnItems.map((item, index) => {
+                        const itemId = generateReturnItemId(order._id, index);
+                        return `
+                            <div class="return-item-detail">
+                                <strong>Item ID:</strong> ${itemId}<br>
+                                <strong>Product:</strong> ${item.name || 'Product'}<br>
+                                <strong>Reason:</strong> ${item.reason || 'Not specified'}<br>
+                                <strong>Priority:</strong> <span class="badge bg-${item.priority === 'high' ? 'danger' : 'secondary'}">${item.priority || 'normal'}</span>
+                                ${item.quantity ? `<br><strong>Quantity:</strong> ${item.quantity}` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+        
         modalContent.innerHTML = `
             <div class="order-details">
                 <p><strong>Order ID:</strong> ${order._id}</p>
                 <p><strong>Date:</strong> ${formattedDate}</p>
                 <p><strong>Status:</strong> <span class="badge bg-${order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' || order.status === 'Returned' ? 'danger' : order.status === 'Out for Delivery' ? 'info' : 'warning'}">${order.status}</span></p>
                 <p><strong>Total Amount:</strong> ₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</p>
+                ${returnItemsHtml}
                 ${order.status === 'Delivered' ? 
                     `<p><strong>Delivered On:</strong> ${new Date(order.updatedAt).toLocaleString('en-IN', {
                         year: 'numeric',
@@ -807,6 +1205,7 @@ async function loadOrderDetails(orderId) {
                     `<p><strong>Status:</strong> Order has been shipped and is in transit</p>` :
                     order.status === 'Out for Delivery' ?
                     `<p><strong>Status:</strong> Order is out for delivery</p>` :
+                    order.estimatedDeliveryDate ?
                     `<p><strong>Estimated Delivery:</strong> ${new Date(order.estimatedDeliveryDate).toLocaleString('en-IN', {
                         year: 'numeric',
                         month: 'long',
@@ -814,7 +1213,7 @@ async function loadOrderDetails(orderId) {
                         hour: '2-digit',
                         minute: '2-digit',
                         hour12: true
-                    })}</p>`
+                    })}</p>` : ''
                 }
             </div>
         `;

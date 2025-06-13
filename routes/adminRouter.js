@@ -59,10 +59,12 @@ router.post("/editProduct/:id",adminAuth,uploads.array("images",4),productContro
 router.post("/deleteImage",adminAuth,productController.deleteSingleImage);
 
 // Offer Management for Products
+
 router.post("/products/applyOffer", adminAuth, productController.applyProductOffer);
 router.post("/products/removeOffer", adminAuth, productController.removeProductOffer);
 
 // Offer Management for Categories
+router.get('/categories/activeOffers', adminAuth, categoryController.getActiveOffers);
 router.post("/categories/applyOffer", adminAuth, categoryController.applyCategoryOffer);
 router.post("/categories/removeOffer", adminAuth, categoryController.removeCategoryOffer);
 
