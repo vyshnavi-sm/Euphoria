@@ -180,13 +180,15 @@ exports.generateSalesReport = async (req, res) => {
     const orders = await Order.find(query)
       .populate({
         path: 'orderedItems.product',
-        select: 'name price images category'
+        select: 'productName salePrice '
       })
       .populate({
         path: 'userId',
         select: 'name email'
       })
       .sort({ createdAt: -1, createdOn: -1 });
+
+
 
     // Process orders
     const processedOrders = orders.map(order => {
@@ -267,10 +269,11 @@ exports.generateSalesReport = async (req, res) => {
           let productName = 'Unknown Product';
           let quantity = item.quantity || 1;
 
+
           // Try multiple ways to get the product name
           if (item.product && typeof item.product === 'object') {
             // Product is populated
-            productName = item.product.name || item.product.productName || 'Unknown Product';
+            productName = item.product.name || item.product.productName  || 'Unknown Product';
           } else if (item.productName) {
             // Direct product name field
             productName = item.productName;

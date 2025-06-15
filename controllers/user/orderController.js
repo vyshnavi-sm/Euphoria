@@ -31,11 +31,21 @@ const getUserOrders = async (req, res) => {
         }
 
         // Fetch user orders with sorting and pagination applied by the database
-        const orders = await Order.find(query)
-            .populate('orderedItems.product')
-            .sort({ createdOn: -1 }) // Always sort by newest first
-            .skip(skip)
-            .limit(limit);
+       const orders = await Order.find(query)
+    .populate('orderedItems.product')
+    .sort({ createdOn: -1 })
+    .skip(skip)
+    .limit(limit);
+
+// Apply delivery charge logic
+    orders.forEach(order => {
+        if (order.totalPrice < 1000) {
+            order.deliveryCharge = 50;
+        } else {
+            order.deliveryCharge = 0;
+        }
+    });
+
 
         // Get the total count of orders matching the search query for pagination
         const totalOrders = await Order.countDocuments(query);
@@ -79,6 +89,8 @@ const getSingleOrder = async (req, res) => {
         if (!order) {
             return res.redirect('/user/orders');
         }
+        order.deliveryCharge = order.totalPrice < 1000 ? 50 : 0;
+
 
         console.log('Fetched order details for user:', order._id);
         console.log('Order status:', order.status);
@@ -98,50 +110,28 @@ const getSingleOrder = async (req, res) => {
 const cancelOrder = async (req, res) => {
     try {
         const { orderId } = req.params;
-        const { reason } = req.body;
-        const userId = req.session.user;
+        const userId = req.session.user_id;
 
-        if (!userId) {
-            return res.json({ success: false, message: 'User not logged in' });
-        }
-
-        if (!reason || reason.trim() === '') {
-            return res.json({ success: false, message: 'Cancellation reason is required' });
-        }
-
-        // Find the order without populating first to verify it exists
-        const order = await Order.findOne({
-            _id: orderId,
-            userId: userId
-        });
+        const order = await Order.findById(orderId)
+            .populate('orderedItems.product');
 
         if (!order) {
-            return res.json({ success: false, message: 'Order not found' });
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        // Check if order is in a cancellable state
-        if (!['Processing', 'Pending'].includes(order.status)) {
-            return res.json({ success: false, message: 'Cannot cancel order in current status' });
+        if (order.userId.toString() !== userId) {
+            return res.status(403).json({ success: false, message: 'Not authorized to cancel this order' });
         }
 
-        // Populate the order to access product details
-        await order.populate('orderedItems.product');
-
-        // Update product stock for each item
-        for (const item of order.orderedItems) {
-            // Make sure product exists before updating stock
-            if (item.product && item.product._id) {
-                const product = await Product.findById(item.product._id);
-                if (product) {
-                    product.quantity += item.quantity;
-                    await product.save();
-                }
-            }
+        if (order.status !== 'Processing' && order.status !== 'Confirmed') {
+            return res.status(400).json({ success: false, message: 'Order cannot be cancelled in its current status' });
         }
 
         // Update order status
         order.status = 'Cancelled';
-        order.cancellationReason = reason.trim();
+        order.orderedItems.forEach(item => {
+            item.status = 'Cancelled';
+        });
 
         // Process refund to wallet if payment was made
         if (order.paymentStatus === 'Paid') {
@@ -175,47 +165,34 @@ const cancelItem = async (req, res) => {
     try {
         const { orderId, itemId } = req.params;
         const { reason } = req.body;
-        const userId = req.session.user;
+        const userId = req.session.user_id;
 
-        if (!userId) {
-            return res.json({ success: false, message: 'User not logged in' });
-        }
-
-        if (!reason || reason.trim() === '') {
-            return res.json({ success: false, message: 'Cancellation reason is required' });
-        }
-
-        const order = await Order.findOne({ _id: orderId, userId });
+        const order = await Order.findById(orderId)
+            .populate('orderedItems.product');
 
         if (!order) {
-            return res.json({ success: false, message: 'Order not found' });
+            return res.status(404).json({ success: false, message: 'Order not found' });
         }
 
-        if (!['Processing', 'Pending'].includes(order.status)) {
-            return res.json({ success: false, message: 'Cannot cancel item in current order status' });
+        if (order.userId.toString() !== userId) {
+            return res.status(403).json({ success: false, message: 'Not authorized to cancel items in this order' });
         }
 
-        await order.populate('orderedItems.product');
+        if (order.status !== 'Processing' && order.status !== 'Confirmed') {
+            return res.status(400).json({ success: false, message: 'Items cannot be cancelled in the current order status' });
+        }
 
         const item = order.orderedItems.id(itemId);
         if (!item) {
-            return res.json({ success: false, message: 'Item not found in order' });
+            return res.status(404).json({ success: false, message: 'Item not found in order' });
         }
 
         if (item.status === 'Cancelled') {
-            return res.json({ success: false, message: 'Item is already cancelled' });
+            return res.status(400).json({ success: false, message: 'Item is already cancelled' });
         }
 
-        // Update product stock
-        if (item.product && item.product._id) {
-            const product = await Product.findById(item.product._id);
-            if (product) {
-                product.quantity += item.quantity;
-                await product.save();
-            }
-        }
-
-        const cancelledItemTotal = item.price * item.quantity;
+        // Calculate the total for the cancelled item
+        const cancelledItemTotal = item.product.salePrice * item.quantity;
 
         // Process refund to wallet if payment was made
         if (order.paymentStatus === 'Paid') {
@@ -260,17 +237,7 @@ const cancelItem = async (req, res) => {
 
         await order.save();
 
-        return res.json({
-            success: true,
-            message: 'Item cancelled successfully',
-            updatedOrder: {
-                totalPrice: order.totalPrice,
-                finalAmount: order.finalAmount,
-                tax: order.tax,
-                itemId: itemId,
-                cancelledItemTotal: cancelledItemTotal
-            }
-        });
+        return res.json({ success: true, message: 'Item cancelled successfully' });
     } catch (error) {
         console.error('Error cancelling item:', error);
         return res.status(500).json({ success: false, message: 'Error cancelling item', error: error.message });
@@ -476,6 +443,7 @@ module.exports = {
     downloadInvoice,
     getOrderDetails,
 };
+
 
 
 

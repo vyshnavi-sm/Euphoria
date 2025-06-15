@@ -382,6 +382,7 @@
             <div class="stat-card">
               <div class="stat-value" id="statSold"><%= productsSold %></div>
               <div class="stat-label">Products Sold</div>
+              <%= productsSold %>
             </div>
           </div>
 
@@ -428,941 +429,438 @@
             </div>
           </div>
         </div>
-
-        <!-- Ledger Generator -->
-        <div class="dashboard-card">
-          <div class="d-flex justify-content-between align-items-center flex-wrap">
-            <div class="mb-3">
-              <h4><i class="fas fa-book me-2"></i>Ledger Book Generator</h4>
-              <p class="text-muted mb-0">Generate comprehensive financial reports</p>
-            </div>
-            <div class="d-flex gap-2 flex-wrap">
-              <select id="ledgerPeriod" class="form-select" style="width:auto;">
-                <option value="current_month">Current Month</option>
-                <option value="last_month">Last Month</option>
-                <option value="quarter">This Quarter</option>
-                <option value="year">This Year</option>
-                <option value="custom">Custom Range</option>
-              </select>
-              <button class="btn btn-generate" onclick="generateLedger()">
-                <i class="fas fa-download me-2"></i>Generate Ledger
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-  let salesChart;
-let currentFilter = 'daily';
+  // Initialize dashboard data
 let dashboardData = null;
-let refreshInterval = null;
+  let salesChart = null;
 
-// Utility function to show/hide loading
-function showLoading(show = true) {
-  const spinner = document.getElementById('loadingSpinner');
-  const content = document.getElementById('dashboardContent');
-  
-  if (show) {
-    if (spinner) spinner.style.display = 'block';
-    if (content) content.style.display = 'none';
-  } else {
-    if (spinner) spinner.style.display = 'none';
-    if (content) content.style.display = 'block';
-  }
-}
-
+  // Format currency
 function formatCurrency(amount) {
             return new Intl.NumberFormat('en-IN', {
                 style: 'currency',
                 currency: 'INR',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
+          minimumFractionDigits: 2
             }).format(amount);
         }
 
+  // Format numbers
         function formatNumber(num) {
             return new Intl.NumberFormat('en-IN').format(num);
         }
 
-        function showError(message) {
-            const errorDiv = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            errorText.textContent = message;
-            errorDiv.style.display = 'block';
-            
-            // Hide error after 5 seconds
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000);
-        }
+  // Show loading state
+  function showLoading(show) {
+      const spinner = document.getElementById('loadingSpinner');
+      const content = document.getElementById('dashboardContent');
+      if (spinner && content) {
+          spinner.style.display = show ? 'block' : 'none';
+          content.style.display = show ? 'none' : 'block';
+      }
+  }
 
-        function updateStats(data) {
+  // Show error message
+  function showError(message, container = document.querySelector('.main-content')) {
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+      errorDiv.innerHTML = `
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      container.insertBefore(errorDiv, container.firstChild);
+  }
+
+  // Show success message
+  function showSuccess(message, container = document.querySelector('.main-content')) {
+      const successDiv = document.createElement('div');
+      successDiv.className = 'alert alert-success alert-dismissible fade show';
+      successDiv.innerHTML = `
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      container.insertBefore(successDiv, container.firstChild);
+  }
+
             // Update statistics cards
-            document.getElementById('statRevenue').textContent = formatCurrency(data.totalRevenue || 0);
-            document.getElementById('statOrders').textContent = formatNumber(data.totalOrders || 0);
-            document.getElementById('statCustomers').textContent = formatNumber(data.activeCustomers || 0);
-            document.getElementById('statSold').textContent = formatNumber(data.productsSold || 0);
+  function updateStats(data) {
+      document.getElementById('statRevenue').textContent = formatCurrency(data.totalRevenue);
+      document.getElementById('statOrders').textContent = formatNumber(data.totalOrders);
+      document.getElementById('statCustomers').textContent = formatNumber(data.activeCustomers);
+      document.getElementById('statSold').textContent = formatNumber(data.productsSold);
         }
 
+  // Update top items lists
         function updateTopItems(data) {
             // Update top products
-            const productsList = document.getElementById('topProductsList');
+      const productsList = document.getElementById('topProducts');
             if (data.topProducts && data.topProducts.length > 0) {
-                productsList.innerHTML = data.topProducts.map(product => `
-                    <li class="top-item">
-                        <span class="item-name">${product.name}</span>
-                        <div class="item-stats">
-                            <span>Sold: ${formatNumber(product.sold)}</span>
-                            <span>Revenue: ${formatCurrency(product.revenue)}</span>
+          productsList.innerHTML = data.topProducts.map((product, index) => `
+              <div class="list-item">
+                  <div class="d-flex align-items-center">
+                      <div class="list-rank">${index + 1}</div>
+                      <div class="ms-3">
+                          <h6 class="mb-1" title="${product.name}">${product.name}</h6>
+                          <small class="text-muted">Sold: ${formatNumber(product.sold)}</small>
                         </div>
-                    </li>
+                  </div>
+                  <div class="text-end">
+                      <div class="fw-bold">${formatCurrency(product.revenue)}</div>
+                      <small class="text-muted">${formatCurrency(product.revenue / Math.max(product.sold, 1))}/unit</small>
+                  </div>
+              </div>
                 `).join('');
             } else {
-                productsList.innerHTML = '<li class="loading">No products data available</li>';
+          productsList.innerHTML = '<p class="text-muted text-center py-3">No products data available</p>';
             }
 
             // Update top categories
-            const categoriesList = document.getElementById('topCategoriesList');
+      const categoriesList = document.getElementById('topCategories');
             if (data.topCategories && data.topCategories.length > 0) {
-                categoriesList.innerHTML = data.topCategories.map(category => `
-                    <li class="top-item">
-                        <span class="item-name">${category.name}</span>
-                        <div class="item-stats">
-                            <span>Sold: ${formatNumber(category.sold)}</span>
-                            <span>Revenue: ${formatCurrency(category.revenue)}</span>
+          categoriesList.innerHTML = data.topCategories.map((category, index) => `
+              <div class="list-item">
+                  <div class="d-flex align-items-center">
+                      <div class="list-rank">${index + 1}</div>
+                      <div class="ms-3">
+                          <h6 class="mb-1" title="${category.name}">${category.name}</h6>
+                          <small class="text-muted">Sold: ${formatNumber(category.sold)}</small>
                         </div>
-                    </li>
+                  </div>
+                  <div class="text-end">
+                      <div class="fw-bold">${formatCurrency(category.revenue)}</div>
+                      <small class="text-muted">${formatCurrency(category.revenue / Math.max(category.sold, 1))}/unit</small>
+                  </div>
+              </div>
                 `).join('');
             } else {
-                categoriesList.innerHTML = '<li class="loading">No categories data available</li>';
+          categoriesList.innerHTML = '<p class="text-muted text-center py-3">No categories data available</p>';
             }
 
             // Update top brands
-            const brandsList = document.getElementById('topBrandsList');
+      const brandsList = document.getElementById('topBrands');
             if (data.topBrands && data.topBrands.length > 0) {
-                brandsList.innerHTML = data.topBrands.map(brand => `
-                    <li class="top-item">
-                        <span class="item-name">${brand.name}</span>
-                        <div class="item-stats">
-                            <span>Sold: ${formatNumber(brand.sold)}</span>
-                            <span>Revenue: ${formatCurrency(brand.revenue)}</span>
+          brandsList.innerHTML = data.topBrands.map((brand, index) => `
+              <div class="list-item">
+                  <div class="d-flex align-items-center">
+                      <div class="list-rank">${index + 1}</div>
+                      <div class="ms-3">
+                          <h6 class="mb-1" title="${brand.name}">${brand.name}</h6>
+                          <small class="text-muted">Sold: ${formatNumber(brand.sold)}</small>
                         </div>
-                    </li>
+                  </div>
+                  <div class="text-end">
+                      <div class="fw-bold">${formatCurrency(brand.revenue)}</div>
+                      <small class="text-muted">${formatCurrency(brand.revenue / Math.max(brand.sold, 1))}/unit</small>
+                  </div>
+              </div>
                 `).join('');
             } else {
-                brandsList.innerHTML = '<li class="loading">No brands data available</li>';
+          brandsList.innerHTML = '<p class="text-muted text-center py-3">No brands data available</p>';
             }
         }
 
-        async function loadDashboardData() {
-            try {
-                const response = await fetch('/admin/dashboard/data', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        window.location.href = '/admin/login';
-                        return;
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                
-                if (data.success) {
-                    console.log('Dashboard data loaded successfully:', data);
-                    updateStats(data);
-                    updateTopItems(data);
-                    
-                    // Show dashboard content
-                    document.getElementById('dashboardContent').style.display = 'block';
-                } else {
-                    throw new Error(data.message || 'Failed to load dashboard data');
-                }
-            } catch (error) {
-                console.error('Error loading dashboard data:', error);
-                showError(`Failed to load dashboard data: ${error.message}`);
-                
-                // Show dashboard with default values
-                document.getElementById('dashboardContent').style.display = 'block';
-                updateStats({
-                    totalRevenue: 0,
-                    totalOrders: 0,
-                    activeCustomers: 0,
-                    productsSold: 0
-                });
-                updateTopItems({
-                    topProducts: [],
-                    topCategories: [],
-                    topBrands: []
-                });
-            }
-        }
-
-        async function refreshDashboard() {
-            const refreshBtn = document.querySelector('.refresh-btn');
-            const refreshText = document.getElementById('refreshText');
-            
-            // Disable button and show loading
-            refreshBtn.disabled = true;
-            refreshText.textContent = 'Refreshing...';
-            
-            try {
-                await loadDashboardData();
-                refreshText.textContent = 'Data Refreshed!';
-                
-                // Reset button text after 2 seconds
-                setTimeout(() => {
-                    refreshText.textContent = 'Refresh Data';
-                    refreshBtn.disabled = false;
-                }, 2000);
-            } catch (error) {
-                refreshText.textContent = 'Refresh Data';
-                refreshBtn.disabled = false;
-                showError('Failed to refresh dashboard data');
-            }
-        }
-
-        // Load dashboard data when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Dashboard page loaded, fetching data...');
-            loadDashboardData();
-        });
-
-        // Auto-refresh every 5 minutes
-        setInterval(loadDashboardData, 300000);
-
-// Generate sample data for testing when no real data is available
-function generateSampleData(filter) {
-  const now = new Date();
-  let labels = [];
-  let data = [];
-  
-  switch (filter) {
-    case 'daily':
-      // Last 30 days instead of 7 for better visualization
-      for (let i = 29; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
-        labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-        data.push(Math.floor(Math.random() * 50000) + 10000);
+  // Initialize sales chart
+  function initChart(data, filter = 'daily') {
+      const ctx = document.getElementById('salesChart').getContext('2d');
+      
+      if (salesChart) {
+          salesChart.destroy();
       }
-      break;
-      
-    case 'weekly':
-      // Last 12 weeks
-      for (let i = 11; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - (i * 7));
-        const weekStart = new Date(date);
-        weekStart.setDate(date.getDate() - date.getDay());
-        labels.push(`Week ${Math.ceil((weekStart.getDate()) / 7)}`);
-        data.push(Math.floor(Math.random() * 200000) + 50000);
+
+      let chartData;
+      switch (filter) {
+        case 'daily':
+          chartData = data.salesChartData;
+          break;
+        case 'weekly':
+          chartData = data.weeklyData;
+          break;
+        case 'monthly':
+          chartData = data.monthlyData;
+          break;
+        case 'yearly':
+          chartData = data.yearlyData;
+          break;
+        default:
+          chartData = data.salesChartData;
+          break;
       }
-      break;
-      
-    case 'monthly':
-      // Last 12 months
-      for (let i = 11; i >= 0; i--) {
-        const date = new Date(now);
-        date.setMonth(date.getMonth() - i);
-        labels.push(date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }));
-        data.push(Math.floor(Math.random() * 500000) + 100000);
-      }
-      break;
-      
-    case 'yearly':
-      // Last 5 years
-      for (let i = 4; i >= 0; i--) {
-        const year = now.getFullYear() - i;
-        labels.push(year.toString());
-        data.push(Math.floor(Math.random() * 2000000) + 500000);
-      }
-      break;
-  }
-  
-  return { labels, data };
-}
 
-// Enhanced fetch dashboard data with better error handling
-async function loadDashboard() {
-  try {
-    showLoading(true);
-    console.log('Fetching dashboard data...');
-    
-    // Add timeout to prevent hanging requests
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-    
-    const response = await fetch('/admin/dashboard-data', {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        // Session expired, redirect to login
-        window.location.href = '/admin/login';
-        return;
-      }
-      throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
-    }
-    
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      throw new Error('Invalid response format - expected JSON');
-    }
-    
-    dashboardData = await response.json();
-    console.log('Dashboard data loaded:', dashboardData);
-    
-    if (dashboardData.success === false) {
-      throw new Error(dashboardData.message || 'Failed to load dashboard data');
-    }
-    
-    // Validate data structure
-    if (!validateDashboardData(dashboardData)) {
-      throw new Error('Invalid dashboard data structure received');
-    }
-    
-    // Update UI components
-    updateStatsCards();
-    initChart();
-    populateTopLists();
-    
-    showLoading(false);
-    
-  } catch (error) {
-    console.error('Error loading dashboard:', error);
-    showLoading(false);
-    
-    if (error.name === 'AbortError') {
-      showError('Request timed out. Please check your connection and try again.');
-    } else if (error.message.includes('Failed to fetch')) {
-      showError('Network error. Please check your internet connection.');
-    } else {
-      // Use fallback data for demonstration
-      console.log('Using sample data for demonstration');
-      dashboardData = generateFallbackData();
-      
-      updateStatsCards();
-      initChart();
-      populateTopLists();
-      
-      showError(`Could not load live data: ${error.message}. Showing sample data for demonstration.`);
-    }
-  }
-}
-
-// Validate dashboard data structure
-function validateDashboardData(data) {
-  if (!data || typeof data !== 'object') return false;
-  
-  // Check required properties
-  const requiredProps = ['totalRevenue', 'totalOrders', 'activeCustomers', 'productsSold'];
-  for (const prop of requiredProps) {
-    if (data[prop] === undefined || data[prop] === null) {
-      console.warn(`Missing required property: ${prop}`);
-      data[prop] = 0; // Set default value
-    }
-  }
-  
-  // Ensure arrays exist
-  const arrayProps = ['salesChartData', 'weeklyData', 'monthlyData', 'yearlyData', 'topProducts', 'topCategories', 'topBrands'];
-  for (const prop of arrayProps) {
-    if (!Array.isArray(data[prop])) {
-      console.warn(`Invalid or missing array property: ${prop}`);
-      data[prop] = [];
-    }
-  }
-  
-  return true;
-}
-
-// Generate fallback data when server fails
-function generateFallbackData() {
-  return {
-    success: true,
-    totalRevenue: 1250000,
-    totalOrders: 450,
-    activeCustomers: 320,
-    productsSold: 1200,
-    salesChartData: [],
-    weeklyData: [],
-    monthlyData: [],
-    yearlyData: [],
-    topProducts: [
-      { name: 'Premium Coffee Blend', sold: 245, revenue: 98000 },
-      { name: 'Organic Tea Collection', sold: 189, revenue: 75600 },
-      { name: 'Artisan Chocolate Box', sold: 156, revenue: 62400 },
-      { name: 'Specialty Honey Jar', sold: 134, revenue: 53600 },
-      { name: 'Gourmet Spice Set', sold: 98, revenue: 39200 }
-    ],
-    topCategories: [
-      { name: 'Beverages', sold: 534, revenue: 213600 },
-      { name: 'Snacks & Confectionery', sold: 423, revenue: 169200 },
-      { name: 'Organic Products', sold: 312, revenue: 124800 },
-      { name: 'Spices & Condiments', sold: 245, revenue: 98000 },
-      { name: 'Health Foods', sold: 189, revenue: 75600 }
-    ],
-    topBrands: [
-      { name: 'Euphoria Premium', sold: 345, revenue: 138000 },
-      { name: 'Nature\'s Best', sold: 289, revenue: 115600 },
-      { name: 'Golden Harvest', sold: 234, revenue: 93600 },
-      { name: 'Pure Essence', sold: 178, revenue: 71200 },
-      { name: 'Artisan Select', sold: 145, revenue: 58000 }
-    ]
-  };
-}
-
-// Enhanced update statistics cards with animation
-function updateStatsCards() {
-  if (!dashboardData) return;
-  
-  const stats = [
-    { id: 'statRevenue', value: dashboardData.totalRevenue || 0, format: 'currency' },
-    { id: 'statOrders', value: dashboardData.totalOrders || 0, format: 'number' },
-    { id: 'statCustomers', value: dashboardData.activeCustomers || 0, format: 'number' },
-    { id: 'statSold', value: dashboardData.productsSold || 0, format: 'number' }
-  ];
-  
-  stats.forEach(stat => {
-    const element = document.getElementById(stat.id);
-    if (element) {
-      const formattedValue = stat.format === 'currency' 
-        ? formatCurrency(stat.value)
-        : stat.value.toLocaleString('en-IN');
-      
-      // Add animation effect
-      element.style.opacity = '0.5';
-      setTimeout(() => {
-        element.textContent = formattedValue;
-        element.style.opacity = '1';
-      }, 100);
-    }
-  });
-}
-
-// Enhanced populate top lists with better error handling
-function populateTopLists() {
-  if (!dashboardData) return;
-  
-  const lists = [
-    { id: 'topProducts', data: dashboardData.topProducts, type: 'product' },
-    { id: 'topCategories', data: dashboardData.topCategories, type: 'category' },
-    { id: 'topBrands', data: dashboardData.topBrands, type: 'brand' }
-  ];
-  
-  lists.forEach(list => {
-    populateList(list.id, list.data, list.type);
-  });
-}
-
-// Enhanced generic function to populate lists
-function populateList(containerId, data, type) {
-  const container = document.getElementById(containerId);
-  if (!container) {
-    console.warn(`Container ${containerId} not found`);
-    return;
-  }
-  
-  if (!data || !Array.isArray(data) || data.length === 0) {
-    container.innerHTML = '<p class="text-muted text-center py-3">No data available</p>';
-    return;
-  }
-
-  let html = '';
-  data.slice(0, 10).forEach((item, index) => {
-    const name = item.name || 'Unknown';
-    const sold = item.sold || 0;
-    const revenue = item.revenue || 0;
-    
-    html += `
-      <div class="list-item" data-index="${index}">
-        <div class="d-flex align-items-center">
-          <div class="list-rank">${index + 1}</div>
-          <div class="ms-3">
-            <h6 class="mb-1" title="${name}">${name}</h6>
-            <small class="text-muted">Sold: ${sold.toLocaleString('en-IN')}</small>
-          </div>
-        </div>
-        <div class="text-end">
-          <div class="fw-bold">${formatCurrency(revenue)}</div>
-          <small class="text-muted">₹${Math.round(revenue / Math.max(sold, 1)).toLocaleString('en-IN')}/unit</small>
-        </div>
-      </div>
-    `;
-  });
-  
-  container.innerHTML = html;
-}
-
-// Enhanced chart initialization with better error handling
-function initChart() {
-  const chartCanvas = document.getElementById('salesChart');
-  if (!chartCanvas) {
-    console.error('Sales chart canvas not found');
-    return;
-  }
-  
-  const ctx = chartCanvas.getContext('2d');
-  
-  // Destroy existing chart if it exists
-  if (salesChart) {
-    salesChart.destroy();
-    salesChart = null;
-  }
-
-  const chartData = getChartData(currentFilter);
-  
-  if (!chartData.labels.length || !chartData.data.length) {
-    console.warn('No chart data available');
-    return;
-  }
-  
-  try {
-    salesChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: chartData.labels,
-        datasets: [{
-          label: 'Sales Revenue',
-          data: chartData.data,
-          borderColor: '#8B4513',
-          backgroundColor: 'rgba(139, 69, 19, 0.1)',
-          borderWidth: 3,
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: '#8B4513',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 6,
-          pointHoverRadius: 8,
-          pointHoverBackgroundColor: '#654321',
-          pointHoverBorderColor: '#fff',
-          pointHoverBorderWidth: 3
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-          intersect: false,
-          mode: 'index'
+      salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: chartData.map(item => item.x),
+          datasets: [{
+            label: 'Sales',
+            data: chartData.map(item => item.y),
+            borderColor: '#5C4033',
+            backgroundColor: 'rgba(92, 64, 51, 0.1)',
+            tension: 0.4,
+            fill: true
+          }]
         },
-        plugins: {
-          legend: {
-            display: false
-          },
-          tooltip: {
-            backgroundColor: 'rgba(139, 69, 19, 0.95)',
-            titleColor: '#fff',
-            bodyColor: '#fff',
-            borderColor: '#8B4513',
-            borderWidth: 1,
-            cornerRadius: 8,
-            titleFont: {
-              size: 14,
-              weight: 'bold'
-            },
-            bodyFont: {
-              size: 13
-            },
-            padding: 12,
-            callbacks: {
-              label: function(context) {
-                return 'Revenue: ' + formatCurrency(context.parsed.y);
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            grid: {
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
               display: false
             },
-            ticks: {
-              color: '#666',
-              font: {
-                size: 12
-              },
-              maxTicksLimit: 12 // Prevent overcrowding
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return formatCurrency(context.raw);
+                }
+              }
             }
           },
-          y: {
-            grid: {
-              color: 'rgba(0,0,0,0.1)',
-              borderDash: [2, 2]
-            },
-            ticks: {
-              color: '#666',
-              font: {
-                size: 12
-              },
-              callback: function(value) {
-                return formatCurrency(value);
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return formatCurrency(value);
+                }
               }
             }
           }
-        },
-        elements: {
-          point: {
-            hoverBackgroundColor: '#8B4513'
+        }
+      });
+  }
+
+  // Change chart filter
+  function changeFilter(filter) {
+      if (!dashboardData) return;
+      
+      // Update active button
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.classList.remove('active');
+          if (btn.textContent.toLowerCase() === filter) {
+              btn.classList.add('active');
           }
-        },
-        animation: {
-          duration: 1000,
-          easing: 'easeInOutQuart'
-        }
+      });
+      
+      initChart(dashboardData, filter);
+  }
+
+  // Load dashboard data
+  async function loadDashboardData() {
+      try {
+          showLoading(true);
+          console.log('Fetching dashboard data...');
+          
+          const response = await fetch('/admin/dashboard-data', {
+              method: 'GET',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
+          }
+        });
+        
+          if (!response.ok) {
+              if (response.status === 401) {
+                  window.location.href = '/admin/login';
+                  return;
+              }
+              throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.success) {
+              console.log('Dashboard data loaded successfully:', data);
+              dashboardData = data;
+              
+              // Update UI components
+              updateStats(data);
+              updateTopItems(data);
+              initChart(data);
+              
+              // Show dashboard content
+              document.getElementById('dashboardContent').style.display = 'block';
+          } else {
+              throw new Error(data.message || 'Failed to load dashboard data');
+          }
+      } catch (error) {
+          console.error('Error loading dashboard data:', error);
+          showError(`Failed to load dashboard data: ${error.message}`);
+          
+          // Show dashboard with empty state
+          document.getElementById('dashboardContent').style.display = 'block';
+          updateStats({
+              totalRevenue: 0,
+              totalOrders: 0,
+              activeCustomers: 0,
+              productsSold: 0
+          });
+          updateTopItems({
+              topProducts: [],
+              topCategories: [],
+              topBrands: []
+          });
+      } finally {
+          showLoading(false);
       }
-    });
-  } catch (error) {
-    console.error('Error initializing chart:', error);
-    showError('Failed to initialize sales chart');
-  }
-}
-
-// Enhanced get chart data with better data processing
-function getChartData(filter) {
-  if (!dashboardData) {
-    return { labels: [], data: [] };
   }
 
-  let sourceData, labels, data;
-
-  try {
-    switch (filter) {
-      case 'daily':
-        sourceData = dashboardData.salesChartData || [];
-        if (sourceData.length === 0) {
-          return generateSampleData('daily');
-        }
-        labels = sourceData.map(item => {
+  // Refresh dashboard data
+  async function refreshDashboard() {
+      const refreshBtn = document.querySelector('.refresh-btn');
+      const refreshText = document.getElementById('refreshText');
+      
+      if (refreshBtn && refreshText) {
+          refreshBtn.disabled = true;
+          refreshText.textContent = 'Refreshing...';
+          
           try {
-            const date = new Date(item._id);
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          } catch (e) {
-            return 'Invalid Date';
-          }
-        });
-        data = sourceData.map(item => item.dailyTotal || 0);
-        break;
-
-      case 'weekly':
-        sourceData = dashboardData.weeklyData || [];
-        if (sourceData.length === 0) {
-          return generateSampleData('weekly');
-        }
-        labels = sourceData.map(item => {
-          if (item.x && item.x.includes('-W')) {
-            return `Week ${item.x.split('-W')[1]}`;
-          }
-          return 'Week';
-        });
-        data = sourceData.map(item => item.y || 0);
-        break;
-
-      case 'monthly':
-        sourceData = dashboardData.monthlyData || [];
-        if (sourceData.length === 0) {
-          return generateSampleData('monthly');
-        }
-        labels = sourceData.map(item => {
-          if (item.x && item.x.includes('-')) {
-            try {
-              const [year, month] = item.x.split('-');
-              const date = new Date(year, month - 1);
-              return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-            } catch (e) {
-              return 'Unknown';
-            }
-          }
-          return 'Unknown';
-        });
-        data = sourceData.map(item => item.y || 0);
-        break;
-
-      case 'yearly':
-        sourceData = dashboardData.yearlyData || [];
-        if (sourceData.length === 0) {
-          return generateSampleData('yearly');
-        }
-        labels = sourceData.map(item => item.x || 'Unknown');
-        data = sourceData.map(item => item.y || 0);
-        break;
-
-      default:
-        return generateSampleData('daily');
-    }
-
-    // Validate processed data
-    if (labels.length === 0 || data.length === 0 || labels.length !== data.length) {
-      console.warn('Processed chart data is invalid, using sample data');
-      return generateSampleData(filter);
-    }
-
-    return { labels, data };
-    
+              await loadDashboardData();
+              refreshText.textContent = 'Data Refreshed!';
+              
+              setTimeout(() => {
+                  refreshText.textContent = 'Refresh Data';
+                  refreshBtn.disabled = false;
+              }, 2000);
   } catch (error) {
-    console.error('Error processing chart data:', error);
-    return generateSampleData(filter);
-  }
-}
-
-// Enhanced change filter function with better UX
-function changeFilter(filter) {
-  if (currentFilter === filter) return; // No change needed
-  
-  currentFilter = filter;
-  
-  // Update button states with loading state
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.classList.remove('active');
-    btn.disabled = true;
-  });
-  
-  // Find and activate the clicked button
-  const clickedButton = Array.from(document.querySelectorAll('.filter-btn'))
-    .find(btn => btn.textContent.toLowerCase().trim() === filter.toLowerCase());
-  
-  if (clickedButton) {
-    clickedButton.classList.add('active');
-    clickedButton.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + clickedButton.textContent;
-  }
-  
-  // Update chart with animation
-  try {
-    const chartData = getChartData(filter);
-    if (salesChart && chartData.labels.length > 0) {
-      salesChart.data.labels = chartData.labels;
-      salesChart.data.datasets[0].data = chartData.data;
-      salesChart.update('active');
-    } else {
-      initChart();
-    }
-  } catch (error) {
-    console.error('Error updating chart:', error);
-    showError('Failed to update chart view');
-  }
-  
-  // Re-enable buttons and restore text
-  setTimeout(() => {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.disabled = false;
-      btn.innerHTML = btn.textContent.replace(/^\s*/, ''); // Remove spinner
-    });
-  }, 500);
-}
-
-// Enhanced generate ledger function with better validation
-async function generateLedger() {
-  const periodSelect = document.getElementById('ledgerPeriod');
-  if (!periodSelect) {
-    showError('Ledger period selector not found');
-    return;
-  }
-  
-  const period = periodSelect.value;
-  if (!period) {
-    showError('Please select a period for the ledger');
-    return;
-  }
-  
-  const button = event.target;
-  const originalText = button.innerHTML;
-  
-  // Show loading state
-  button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Generating...';
-  button.disabled = true;
-  
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    
-    const response = await fetch('/admin/generate-ledger', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({ period: period }),
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (!response.ok) {
-      if (response.status === 401) {
-        window.location.href = '/admin/login';
-        return;
+              refreshText.textContent = 'Refresh Data';
+              refreshBtn.disabled = false;
+              showError('Failed to refresh dashboard data');
+          }
       }
-      throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  // Load dashboard data when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+      console.log('Dashboard page loaded, fetching data...');
+      loadDashboardData();
+  });
+
+  // Auto-refresh every 5 minutes
+  setInterval(loadDashboardData, 300000);
+
+  // Enhanced auto-refresh functionality
+  function startAutoRefresh() {
+    // Clear existing interval
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
     }
     
-    const data = await response.json();
-    
-    if (data.success) {
-      showSuccess(`Ledger for ${period.replace('_', ' ')} has been generated successfully!`, 
-                  button.closest('.dashboard-card'));
-      
-      // Log the ledger data for debugging
-      console.log('Ledger data:', data.data);
-      
-    } else {
-      throw new Error(data.message || 'Failed to generate ledger');
-    }
-    
-  } catch (error) {
-    console.error('Error generating ledger:', error);
-    
-    if (error.name === 'AbortError') {
-      showError('Request timed out. Please try again.', button.closest('.dashboard-card'));
-    } else {
-      showError(`Failed to generate ledger: ${error.message}`, button.closest('.dashboard-card'));
-    }
-  } finally {
-    // Reset button state
-    button.innerHTML = originalText;
-    button.disabled = false;
+    // Refresh every 5 minutes
+    refreshInterval = setInterval(() => {
+      console.log('Auto-refreshing dashboard data...');
+      loadDashboardData();
+    }, 5 * 60 * 1000);
   }
-}
 
-// Enhanced auto-refresh functionality
-function startAutoRefresh() {
-  // Clear existing interval
-  if (refreshInterval) {
-    clearInterval(refreshInterval);
-  }
-  
-  // Refresh every 5 minutes
-  refreshInterval = setInterval(() => {
-    console.log('Auto-refreshing dashboard data...');
-    loadDashboard();
-  }, 5 * 60 * 1000);
-}
-
-function stopAutoRefresh() {
-  if (refreshInterval) {
-    clearInterval(refreshInterval);
-    refreshInterval = null;
-  }
-}
-
-// Enhanced responsive sidebar handling
-function toggleSidebar() {
-  const sidebar = document.querySelector('.sidebar');
-  const overlay = document.querySelector('.sidebar-overlay');
-  
-  if (!sidebar) return;
-  
-  if (window.innerWidth <= 768) {
-    const isOpen = sidebar.classList.contains('show');
-    
-    if (isOpen) {
-      sidebar.classList.remove('show');
-      if (overlay) overlay.classList.remove('show');
-    } else {
-      sidebar.classList.add('show');
-      if (overlay) overlay.classList.add('show');
+  function stopAutoRefresh() {
+    if (refreshInterval) {
+      clearInterval(refreshInterval);
+      refreshInterval = null;
     }
   }
-}
 
-// Enhanced window resize handler
-function handleResize() {
-  if (window.innerWidth > 768) {
+  // Enhanced responsive sidebar handling
+  function toggleSidebar() {
     const sidebar = document.querySelector('.sidebar');
     const overlay = document.querySelector('.sidebar-overlay');
     
-    if (sidebar) sidebar.classList.remove('show');
-    if (overlay) overlay.classList.remove('show');
+    if (!sidebar) return;
+    
+    if (window.innerWidth <= 768) {
+      const isOpen = sidebar.classList.contains('show');
+      
+      if (isOpen) {
+        sidebar.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
+      } else {
+        sidebar.classList.add('show');
+        if (overlay) overlay.classList.add('show');
+      }
+    }
   }
-  
-  // Resize chart if it exists
-  if (salesChart) {
-    salesChart.resize();
-  }
-}
 
-// Enhanced click outside handler
-function handleClickOutside(event) {
-  const sidebar = document.querySelector('.sidebar');
-  const overlay = document.querySelector('.sidebar-overlay');
-  const toggleButton = document.querySelector('.sidebar-toggle');
-  
-  if (!sidebar || window.innerWidth > 768) return;
-  
-  const isClickInsideSidebar = sidebar.contains(event.target);
-  const isClickOnToggle = toggleButton && toggleButton.contains(event.target);
-  
-  if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('show')) {
-    sidebar.classList.remove('show');
-    if (overlay) overlay.classList.remove('show');
+  // Enhanced window resize handler
+  function handleResize() {
+    if (window.innerWidth > 768) {
+      const sidebar = document.querySelector('.sidebar');
+      const overlay = document.querySelector('.sidebar-overlay');
+      
+      if (sidebar) sidebar.classList.remove('show');
+      if (overlay) overlay.classList.remove('show');
+    }
+    
+    // Resize chart if it exists
+    if (salesChart) {
+      salesChart.resize();
+    }
   }
-}
 
-// Enhanced initialization
-function initializeDashboard() {
-  console.log('Dashboard page loaded, initializing...');
-  
-  // Load dashboard data
-  loadDashboard();
-  
-  // Start auto-refresh
-  startAutoRefresh();
-  
-  // Setup event listeners
-  window.addEventListener('resize', handleResize);
-  document.addEventListener('click', handleClickOutside);
-  
-  // Handle page visibility change
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
+  // Enhanced click outside handler
+  function handleClickOutside(event) {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    const toggleButton = document.querySelector('.sidebar-toggle');
+    
+    if (!sidebar || window.innerWidth > 768) return;
+    
+    const isClickInsideSidebar = sidebar.contains(event.target);
+    const isClickOnToggle = toggleButton && toggleButton.contains(event.target);
+    
+    if (!isClickInsideSidebar && !isClickOnToggle && sidebar.classList.contains('show')) {
+      sidebar.classList.remove('show');
+      if (overlay) overlay.classList.remove('show');
+    }
+  }
+
+  // Enhanced initialization
+  function initializeDashboard() {
+    console.log('Dashboard page loaded, initializing...');
+    
+    // Load dashboard data
+        loadDashboardData();
+    
+    // Start auto-refresh
+    startAutoRefresh();
+    
+    // Setup event listeners
+    window.addEventListener('resize', handleResize);
+    document.addEventListener('click', handleClickOutside);
+    
+    // Handle page visibility change
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopAutoRefresh();
+      } else {
+        startAutoRefresh();
+        // Refresh data when page becomes visible again
+                loadDashboardData();
+      }
+    });
+    
+    // Handle online/offline events
+    window.addEventListener('online', () => {
+      showSuccess('Connection restored. Refreshing data...');
+            loadDashboardData();
+    });
+    
+    window.addEventListener('offline', () => {
+      showError('Connection lost. Data may not be up to date.');
       stopAutoRefresh();
-    } else {
-      startAutoRefresh();
-      // Refresh data when page becomes visible again
-      loadDashboard();
+    });
+  }
+
+  // Initialize dashboard when page loads
+  document.addEventListener('DOMContentLoaded', initializeDashboard);
+
+  // Cleanup on page unload
+  window.addEventListener('beforeunload', () => {
+    stopAutoRefresh();
+    if (salesChart) {
+      salesChart.destroy();
     }
   });
-  
-  // Handle online/offline events
-  window.addEventListener('online', () => {
-    showSuccess('Connection restored. Refreshing data...');
-    loadDashboard();
-  });
-  
-  window.addEventListener('offline', () => {
-    showError('Connection lost. Data may not be up to date.');
-    stopAutoRefresh();
-  });
-}
-
-// Initialize dashboard when page loads
-document.addEventListener('DOMContentLoaded', initializeDashboard);
-
-// Cleanup on page unload
-window.addEventListener('beforeunload', () => {
-  stopAutoRefresh();
-  if (salesChart) {
-    salesChart.destroy();
-  }
-});
-  </script>
+</script>
 </body>
 </html>

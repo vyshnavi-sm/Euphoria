@@ -103,7 +103,7 @@ const loadDashboard = async (req, res) => {
       await Promise.all([
         Order.countDocuments(),
         Order.aggregate([
-          { $match: { status: { $in: ["Delivered", "Returned"] } } }, // match status correctly cased
+          { $match: { status: { $in: ["Delivered", "Returned"] } } },
           {
             $group: {
               _id: null,
@@ -143,7 +143,7 @@ const loadDashboard = async (req, res) => {
   }
 };
 
-// Enhanced Dashboard Data API
+// Enhanced Dashboard Data API - FIXED VERSION
 const getDashboardData = async (req, res) => {
   try {
     if (!req.session.admin) {
@@ -153,11 +153,11 @@ const getDashboardData = async (req, res) => {
     console.log("Fetching dashboard data...");
 
     // Basic Statistics with Promise.all for better performance
-     const [totalOrders, totalRevenueAgg, activeCustomers, productsSoldAgg] =
+    const [totalOrders, totalRevenueAgg, activeCustomers, productsSoldAgg] =
       await Promise.all([
         Order.countDocuments(),
         Order.aggregate([
-          { $match: { status: { $in: ["Delivered", "Returned"] } } }, // match status correctly cased
+          { $match: { status: { $in: ["Delivered", "Returned"] } } },
           {
             $group: {
               _id: null,
@@ -166,8 +166,8 @@ const getDashboardData = async (req, res) => {
           },
         ]),
         User.countDocuments({
-        isAdmin: false,
-        isBlocked: false
+          isAdmin: false,
+          isBlocked: false
         }),
         Order.aggregate([
           { $match: { status: { $in: ["Delivered", "Returned"] } } },
@@ -184,62 +184,68 @@ const getDashboardData = async (req, res) => {
     const totalRevenue = totalRevenueAgg[0]?.sum || 0;
     const productsSold = productsSoldAgg[0]?.count || 0;
 
-    // Sales Chart Data - Daily (Last 30 days)
+    // FIXED: Daily Sales Chart Data - Last 30 days
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
 
     const salesChartData = await Order.aggregate([
       {
         $match: {
-          orderDate: { $gte: thirtyDaysAgo },
-          status: { $in: ["delivered", "completed"] },
+          createdOn: { $gte: thirtyDaysAgo },
+          status: { $in: ["Delivered", "Returned"] },
         },
       },
       {
         $group: {
           _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$orderDate" },
+            $dateToString: { format: "%Y-%m-%d", date: "$createdOn" },
           },
-          dailyTotal: { $sum: "$totalAmount" },
+          dailyTotal: { $sum: "$totalPrice" },
           orderCount: { $sum: 1 },
         },
       },
       { $sort: { _id: 1 } },
     ]);
 
-    // Fill in missing dates with zero values
+    // Fill in missing dates with zero values for daily chart
     const filledSalesData = [];
-    for (let i = 29; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0];
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
 
-      const existingData = salesChartData.find((item) => item._id === dateStr);
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      date.setHours(0, 0, 0, 0); // Start of day
+      const dateStr = date.toISOString().split('T')[0];
+
+      const existingData = salesChartData.find(item => item._id === dateStr);
       filledSalesData.push({
-        _id: dateStr,
-        dailyTotal: existingData ? existingData.dailyTotal : 0,
+        x: dateStr,
+        y: existingData ? existingData.dailyTotal : 0,
         orderCount: existingData ? existingData.orderCount : 0,
       });
     }
 
-    // Weekly Data (Last 12 weeks)
+    // FIXED: Weekly Data (Last 12 weeks)
     const twelveWeeksAgo = new Date();
     twelveWeeksAgo.setDate(twelveWeeksAgo.getDate() - 84);
+    twelveWeeksAgo.setHours(0, 0, 0, 0);
 
     const weeklyData = await Order.aggregate([
       {
         $match: {
-          orderDate: { $gte: twelveWeeksAgo },
-          status: { $in: ["delivered", "completed"] },
+          createdOn: { $gte: twelveWeeksAgo },
+          status: { $in: ["Delivered", "Returned"] },
         },
       },
       {
         $group: {
           _id: {
-            year: { $year: "$orderDate" },
-            week: { $week: "$orderDate" },
+            year: { $year: "$createdOn" },
+            week: { $week: "$createdOn" },
           },
-          y: { $sum: "$totalAmount" },
+          y: { $sum: "$totalPrice" },
           orderCount: { $sum: 1 },
         },
       },
@@ -261,26 +267,55 @@ const getDashboardData = async (req, res) => {
         },
       },
       { $sort: { "_id.year": 1, "_id.week": 1 } },
+      {
+        $project: {
+          x: 1,
+          y: 1,
+          orderCount: 1,
+          _id: 0,
+        },
+      },
     ]);
 
-    // Monthly Data (Last 12 months)
+    // Fill in missing weeks with zero values
+    const filledWeeklyData = [];
+    const currentWeek = getWeekNumber(today);
+    const weekYear = today.getFullYear();
+
+    for (let i = 11; i >= 0; i--) {
+      const weekDate = new Date(today);
+      weekDate.setDate(weekDate.getDate() - (i * 7));
+      const weekNum = getWeekNumber(weekDate);
+      const year = weekDate.getFullYear();
+      const weekKey = `${year}-W${weekNum.toString().padStart(2, '0')}`;
+
+      const existingData = weeklyData.find(item => item.x === weekKey);
+      filledWeeklyData.push({
+        x: weekKey,
+        y: existingData ? existingData.y : 0,
+        orderCount: existingData ? existingData.orderCount : 0,
+      });
+    }
+
+    // FIXED: Monthly Data (Last 12 months)
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+    twelveMonthsAgo.setHours(0, 0, 0, 0);
 
     const monthlyData = await Order.aggregate([
       {
         $match: {
-          orderDate: { $gte: twelveMonthsAgo },
-          status: { $in: ["delivered", "completed"] },
+          createdOn: { $gte: twelveMonthsAgo },
+          status: { $in: ["Delivered", "Returned"] },
         },
       },
       {
         $group: {
           _id: {
-            year: { $year: "$orderDate" },
-            month: { $month: "$orderDate" },
+            year: { $year: "$createdOn" },
+            month: { $month: "$createdOn" },
           },
-          y: { $sum: "$totalAmount" },
+          y: { $sum: "$totalPrice" },
           orderCount: { $sum: 1 },
         },
       },
@@ -302,23 +337,52 @@ const getDashboardData = async (req, res) => {
         },
       },
       { $sort: { "_id.year": 1, "_id.month": 1 } },
+      {
+        $project: {
+          x: 1,
+          y: 1,
+          orderCount: 1,
+          _id: 0,
+        },
+      },
     ]);
 
-    // Yearly Data (Last 5 years)
+    // Fill in missing months with zero values
+    const filledMonthlyData = [];
+    const currentMonth = today.getMonth() + 1;
+    const monthYear = today.getFullYear();
+
+    for (let i = 11; i >= 0; i--) {
+      const monthDate = new Date(today);
+      monthDate.setMonth(monthDate.getMonth() - i);
+      const month = monthDate.getMonth() + 1;
+      const year = monthDate.getFullYear();
+      const monthKey = `${year}-${month.toString().padStart(2, '0')}`;
+
+      const existingData = monthlyData.find(item => item.x === monthKey);
+      filledMonthlyData.push({
+        x: monthKey,
+        y: existingData ? existingData.y : 0,
+        orderCount: existingData ? existingData.orderCount : 0,
+      });
+    }
+
+    // FIXED: Yearly Data (Last 5 years)
     const fiveYearsAgo = new Date();
     fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+    fiveYearsAgo.setHours(0, 0, 0, 0);
 
     const yearlyData = await Order.aggregate([
       {
         $match: {
-          orderDate: { $gte: fiveYearsAgo },
-          status: { $in: ["delivered", "completed"] },
+          createdOn: { $gte: fiveYearsAgo },
+          status: { $in: ["Delivered", "Returned"] },
         },
       },
       {
         $group: {
-          _id: { $year: "$orderDate" },
-          y: { $sum: "$totalAmount" },
+          _id: { $year: "$createdOn" },
+          y: { $sum: "$totalPrice" },
           orderCount: { $sum: 1 },
         },
       },
@@ -328,168 +392,38 @@ const getDashboardData = async (req, res) => {
         },
       },
       { $sort: { _id: 1 } },
-    ]);
-
-    // Enhanced Top 10 Products with better error handling
-    const topProducts = await Order.aggregate([
-      { $match: { status: { $in: ["delivered", "completed"] } } },
-      { $unwind: "$items" },
-      {
-        $group: {
-          _id: "$items.productId",
-          sold: { $sum: "$items.quantity" },
-          revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
-        },
-      },
-      {
-        $lookup: {
-          from: "products",
-          localField: "_id",
-          foreignField: "_id",
-          as: "product",
-        },
-      },
-      {
-        $match: {
-          "product.0": { $exists: true }, // Only include if product exists
-        },
-      },
-      { $unwind: "$product" },
       {
         $project: {
-          name: {
-            $ifNull: ["$product.productName", "Unknown Product"],
-          },
-          sold: 1,
-          revenue: 1,
-          isActive: "$product.isBlocked",
+          x: 1,
+          y: 1,
+          orderCount: 1,
+          _id: 0,
         },
       },
-      { $sort: { sold: -1 } },
-      { $limit: 10 },
     ]);
 
-    // Enhanced Top 10 Categories
-    const topCategories = await Order.aggregate([
-      { $match: { status: { $in: ["delivered", "completed"] } } },
-      { $unwind: "$items" },
-      {
-        $lookup: {
-          from: "products",
-          localField: "items.productId",
-          foreignField: "_id",
-          as: "product",
-        },
-      },
-      {
-        $match: {
-          "product.0": { $exists: true },
-        },
-      },
-      { $unwind: "$product" },
-      {
-        $group: {
-          _id: "$product.category",
-          sold: { $sum: "$items.quantity" },
-          revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
-        },
-      },
-      {
-        $lookup: {
-          from: "categories",
-          localField: "_id",
-          foreignField: "_id",
-          as: "category",
-        },
-      },
-      {
-        $match: {
-          "category.0": { $exists: true },
-        },
-      },
-      { $unwind: "$category" },
-      {
-        $project: {
-          name: {
-            $ifNull: ["$category.name", "Unknown Category"],
-          },
-          sold: 1,
-          revenue: 1,
-          isListed: "$category.isListed",
-        },
-      },
-      { $sort: { sold: -1 } },
-      { $limit: 10 },
+    // Fill in missing years with zero values
+    const filledYearlyData = [];
+    const yearYear = today.getFullYear();
+
+    for (let i = 4; i >= 0; i--) {
+      const year = yearYear - i;
+      const yearKey = year.toString();
+
+      const existingData = yearlyData.find(item => item.x === yearKey);
+      filledYearlyData.push({
+        x: yearKey,
+        y: existingData ? existingData.y : 0,
+        orderCount: existingData ? existingData.orderCount : 0,
+      });
+    }
+
+    // Get top products, categories, and brands
+    const [topProducts, topCategories, topBrands] = await Promise.all([
+      getFallbackProducts(),
+      getFallbackCategories(),
+      getFallbackBrands()
     ]);
-
-    // Enhanced Top 10 Brands
-    const topBrands = await Order.aggregate([
-      { $match: { status: { $in: ["delivered", "completed"] } } },
-      { $unwind: "$items" },
-      {
-        $lookup: {
-          from: "products",
-          localField: "items.productId",
-          foreignField: "_id",
-          as: "product",
-        },
-      },
-      {
-        $match: {
-          "product.0": { $exists: true },
-        },
-      },
-      { $unwind: "$product" },
-      {
-        $group: {
-          _id: "$product.brand",
-          sold: { $sum: "$items.quantity" },
-          revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } },
-        },
-      },
-      {
-        $lookup: {
-          from: "brands",
-          localField: "_id",
-          foreignField: "_id",
-          as: "brand",
-        },
-      },
-      {
-        $match: {
-          "brand.0": { $exists: true },
-        },
-      },
-      { $unwind: "$brand" },
-      {
-        $project: {
-          name: {
-            $ifNull: ["$brand.brandName", "Unknown Brand"],
-          },
-          sold: 1,
-          revenue: 1,
-          isBlocked: "$brand.isBlocked",
-        },
-      },
-      { $sort: { sold: -1 } },
-      { $limit: 10 },
-    ]);
-
-    // Add fallback data if no orders exist
-    const fallbackData = {
-      topProducts:
-        topProducts.length === 0 ? await getFallbackProducts() : topProducts,
-      topCategories:
-        topCategories.length === 0
-          ? await getFallbackCategories()
-          : topCategories,
-      topBrands: topBrands.length === 0 ? await getFallbackBrands() : topBrands,
-    };
-
-    console.log("Dashboard data compiled successfully");
-    console.log(
-      `Found ${topProducts.length} products, ${topCategories.length} categories, ${topBrands.length} brands`
-    );
 
     return res.json({
       success: true,
@@ -498,12 +432,12 @@ const getDashboardData = async (req, res) => {
       activeCustomers,
       productsSold,
       salesChartData: filledSalesData,
-      weeklyData,
-      monthlyData,
-      yearlyData,
-      topProducts: fallbackData.topProducts,
-      topCategories: fallbackData.topCategories,
-      topBrands: fallbackData.topBrands,
+      weeklyData: filledWeeklyData,
+      monthlyData: filledMonthlyData,
+      yearlyData: filledYearlyData,
+      topProducts,
+      topCategories,
+      topBrands,
     });
   } catch (error) {
     console.error("getDashboardData error:", error);
@@ -515,155 +449,172 @@ const getDashboardData = async (req, res) => {
   }
 };
 
-// Fallback functions to get basic data when no orders exist
+// Helper function to get week number
+function getWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+// Get fallback products data
 const getFallbackProducts = async () => {
   try {
     const products = await Product.find({ isBlocked: false })
+      .sort({ quantity: -1 })
       .limit(10)
-      .select("productName regularPrice salePrice")
+      .select('productName quantity regularPrice salePrice')
       .lean();
 
-    return products.map((product, index) => ({
+    return products.map(product => ({
       name: product.productName,
-      sold: Math.floor(Math.random() * 50) + 1, // Random for demo
-      revenue:
-        (product.salePrice || product.regularPrice) *
-        (Math.floor(Math.random() * 50) + 1),
+      sold: product.quantity,
+      revenue: product.salePrice * product.quantity
     }));
   } catch (error) {
-    console.error("Error getting fallback products:", error);
+    console.error('Error getting fallback products:', error);
     return [];
   }
 };
 
+// Get fallback categories data
 const getFallbackCategories = async () => {
   try {
-    const categories = await Category.find({ isListed: true })
-      .limit(10)
-      .select("name")
-      .lean();
-
-    return categories.map((category, index) => ({
-      name: category.name,
-      sold: Math.floor(Math.random() * 100) + 10,
-      revenue: Math.floor(Math.random() * 50000) + 5000,
-    }));
-  } catch (error) {
-    console.error("Error getting fallback categories:", error);
-    return [];
-  }
-};
-
-const getFallbackBrands = async () => {
-  try {
-    const brands = await Brand.find({ isBlocked: false })
-      .limit(10)
-      .select("brandName")
-      .lean();
-
-    return brands.map((brand, index) => ({
-      name: brand.brandName,
-      sold: Math.floor(Math.random() * 80) + 5,
-      revenue: Math.floor(Math.random() * 40000) + 3000,
-    }));
-  } catch (error) {
-    console.error("Error getting fallback brands:", error);
-    return [];
-  }
-};
-
-// Generate Ledger Report
-const generateLedger = async (req, res) => {
-  try {
-    if (!req.session.admin) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
-    }
-
-    const { period } = req.body;
-    console.log("Generating ledger for period:", period);
-
-    let startDate, endDate;
-    const now = new Date();
-
-    // Calculate date range based on period
-    switch (period) {
-      case "current_month":
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        break;
-      case "last_month":
-        startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        endDate = new Date(now.getFullYear(), now.getMonth(), 0);
-        break;
-      case "quarter":
-        const quarter = Math.floor(now.getMonth() / 3);
-        startDate = new Date(now.getFullYear(), quarter * 3, 1);
-        endDate = new Date(now.getFullYear(), (quarter + 1) * 3, 0);
-        break;
-      case "year":
-        startDate = new Date(now.getFullYear(), 0, 1);
-        endDate = new Date(now.getFullYear(), 11, 31);
-        break;
-      default:
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    }
-
-    // Generate comprehensive ledger data
-    const ledgerData = await Order.aggregate([
+    // First try to get categories with actual sales data
+    const categoriesWithSales = await Order.aggregate([
+      { $match: { status: { $in: ["Delivered", "Returned"] } } },
+      { $unwind: "$orderedItems" },
       {
-        $match: {
-          orderDate: { $gte: startDate, $lte: endDate },
-          status: { $in: ["delivered", "completed"] },
-        },
+        $lookup: {
+          from: "products",
+          localField: "orderedItems.product",
+          foreignField: "_id",
+          as: "product"
+        }
       },
+      { $unwind: "$product" },
+      {
+        $lookup: {
+          from: "categories",
+          localField: "product.category",
+          foreignField: "_id",
+          as: "category"
+        }
+      },
+      { $unwind: "$category" },
       {
         $group: {
-          _id: {
-            $dateToString: { format: "%Y-%m-%d", date: "$orderDate" },
-          },
-          totalRevenue: { $sum: "$totalAmount" },
-          totalOrders: { $sum: 1 },
-          averageOrderValue: { $avg: "$totalAmount" },
-          orders: { $push: "$$ROOT" },
-        },
+          _id: "$category._id",
+          name: { $first: "$category.name" },
+          sold: { $sum: "$orderedItems.quantity" },
+          revenue: { $sum: { $multiply: ["$orderedItems.price", "$orderedItems.quantity"] } }
+        }
       },
-      { $sort: { _id: 1 } },
+      { $sort: { sold: -1 } },
+      { $limit: 10 }
     ]);
 
-    const summary = {
-      totalRevenue: ledgerData.reduce((sum, day) => sum + day.totalRevenue, 0),
-      totalOrders: ledgerData.reduce((sum, day) => sum + day.totalOrders, 0),
-      totalDays: ledgerData.length,
-      period: period.replace("_", " "),
-      startDate: startDate.toISOString().split("T")[0],
-      endDate: endDate.toISOString().split("T")[0],
-    };
+    if (categoriesWithSales.length > 0) {
+      return categoriesWithSales;
+    }
 
-    summary.averageOrderValue =
-      summary.totalOrders > 0 ? summary.totalRevenue / summary.totalOrders : 0;
-    summary.averageDailyRevenue =
-      summary.totalDays > 0 ? summary.totalRevenue / summary.totalDays : 0;
-
-    console.log(
-      `Ledger generated: ${summary.totalOrders} orders, ₹${summary.totalRevenue} revenue`
-    );
-
-    return res.json({
-      success: true,
-      message: `Ledger generated successfully for ${summary.period}`,
-      data: {
-        summary,
-        dailyBreakdown: ledgerData,
+    // If no sales data, get top categories by product count
+    const categories = await Category.aggregate([
+      { $match: { isListed: true } },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "category",
+          as: "products"
+        }
       },
-    });
+      {
+        $project: {
+          name: 1,
+          sold: { $size: "$products" },
+          revenue: 0
+        }
+      },
+      { $sort: { sold: -1 } },
+      { $limit: 10 }
+    ]);
+
+    return categories;
   } catch (error) {
-    console.error("generateLedger error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to generate ledger report",
-      error: error.message,
-    });
+    console.error('Error getting fallback categories:', error);
+    return [];
+  }
+};
+
+// Get fallback brands data
+const getFallbackBrands = async () => {
+  try {
+    // First try to get brands with actual sales data
+    const brandsWithSales = await Order.aggregate([
+      { $match: { status: { $in: ["Delivered", "Returned"] } } },
+      { $unwind: "$orderedItems" },
+      {
+        $lookup: {
+          from: "products",
+          localField: "orderedItems.product",
+          foreignField: "_id",
+          as: "product"
+        }
+      },
+      { $unwind: "$product" },
+      {
+        $lookup: {
+          from: "brands",
+          localField: "product.brand",
+          foreignField: "_id",
+          as: "brand"
+        }
+      },
+      { $unwind: "$brand" },
+      {
+        $group: {
+          _id: "$brand._id",
+          name: { $first: "$brand.brandName" },
+          sold: { $sum: "$orderedItems.quantity" },
+          revenue: { $sum: { $multiply: ["$orderedItems.price", "$orderedItems.quantity"] } }
+        }
+      },
+      { $sort: { sold: -1 } },
+      { $limit: 10 }
+    ]);
+
+    if (brandsWithSales.length > 0) {
+      return brandsWithSales;
+    }
+
+    // If no sales data, get top brands by product count
+    const brands = await Brand.aggregate([
+      { $match: { isBlocked: false } },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "brand",
+          as: "products"
+        }
+      },
+      {
+        $project: {
+          name: "$brandName",
+          sold: { $size: "$products" },
+          revenue: 0
+        }
+      },
+      { $sort: { sold: -1 } },
+      { $limit: 10 }
+    ]);
+
+    return brands;
+  } catch (error) {
+    console.error('Error getting fallback brands:', error);
+    return [];
   }
 };
 
@@ -671,7 +622,6 @@ const generateLedger = async (req, res) => {
 const logout = async (req, res) => {
   try {
     if (req.session) {
-      // Clear only admin session data
       delete req.session.admin;
       req.session.save((err) => {
         if (err) {
@@ -700,12 +650,9 @@ const validateAdminSession = (req, res, next) => {
     return res.redirect("/admin/login");
   }
 
-  // Update last activity
   req.session.admin.lastActivity = Date.now();
   next();
 };
-
-// Additional utility functions for better dashboard management
 
 // Get recent orders for dashboard
 const getRecentOrders = async (req, res) => {
@@ -742,7 +689,7 @@ const getLowStockProducts = async (req, res) => {
     }
 
     const lowStockProducts = await Product.find({
-      quantity: { $lt: 10 }, // Products with less than 10 in stock
+      quantity: { $lt: 10 },
       isBlocked: false,
     })
       .populate("category", "name")
@@ -770,7 +717,6 @@ module.exports = {
   login,
   loadDashboard,
   getDashboardData,
-  generateLedger,
   pageerror,
   logout,
   validateAdminSession,

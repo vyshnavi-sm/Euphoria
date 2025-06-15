@@ -170,7 +170,7 @@ const updateOrderStatus = async (req, res) => {
 
         const validStatuses = [
             'Pending', 'Processing', 'Shipped', 'Out for Delivery',
-            'Delivered', 'Cancelled', 'Return Request', 'Returned'
+            'Delivered', 'Cancelled', 'Return Request', 'Returned', 'Payment Failed'
         ];
 
         if (!validStatuses.includes(status)) {
@@ -186,12 +186,13 @@ const updateOrderStatus = async (req, res) => {
 
         // Define allowed status transitions
         const allowedTransitions = {
-            'Pending': ['Processing', 'Cancelled'],
-            'Processing': ['Shipped', 'Cancelled'],
-            'Shipped': ['Out for Delivery', 'Returned'],
-            'Out for Delivery': ['Delivered', 'Returned'],
+            'Pending': ['Processing', 'Cancelled', 'Payment Failed'],
+            'Processing': ['Shipped', 'Cancelled', 'Payment Failed'],
+            'Shipped': ['Out for Delivery', 'Returned', 'Payment Failed'],
+            'Out for Delivery': ['Delivered', 'Returned', 'Payment Failed'],
             'Delivered': ['Return Request'],
-            'Return Request': ['Returned', 'Delivered'], // Can accept or reject return request
+            'Return Request': ['Returned', 'Delivered'],
+            'Payment Failed': ['Cancelled', 'Processing'], // Allow retry or cancellation
             'Cancelled': [], // Terminal status
             'Returned': [] // Terminal status
         };
@@ -216,6 +217,15 @@ const updateOrderStatus = async (req, res) => {
                 // Only update status for items that are not cancelled, returned, or return requested
                 if (!['Returned', 'Return Requested', 'Cancelled'].includes(item.status)) {
                     item.status = 'Delivered';
+                }
+            });
+        }
+
+        // Update individual items status when order is marked as Payment Failed
+        if (status === 'Payment Failed') {
+            order.orderedItems.forEach(item => {
+                if (!['Returned', 'Return Requested', 'Cancelled'].includes(item.status)) {
+                    item.status = 'Payment Failed';
                 }
             });
         }
@@ -287,199 +297,95 @@ const handleReturnRequest = async (req, res) => {
         } else if (action === 'reject') {
             order.status = 'Delivered';
             order.returnStatus = 'Rejected';
-            order.returnProcessedDate = new Date();
-            // Preserve cancelled items' status when rejecting return
-            order.orderedItems.forEach(item => {
-                if (item.status !== 'Cancelled') {
-                    item.status = 'Delivered';
-                }
-            });
-            // Add rejection reason if provided
-            if (req.body.rejectReason) {
-                order.adminReturnRejectionReason = req.body.rejectReason.trim();
-            }
-        } else {
-            return res.status(400).json({ message: 'Invalid action specified' });
         }
 
         await order.save();
-
-        res.json({ 
-            message: `Return request ${action}ed successfully`,
-            order 
-        });
-
+        res.json({ success: true, message: `Return request ${action}ed successfully` });
     } catch (error) {
         console.error('Error handling return request:', error);
-        res.status(500).json({ message: 'Error processing return request' });
+        res.status(500).json({ success: false, message: 'Error processing return request' });
     }
 };
 
 // Handle individual item return request from admin side
 const handleItemReturnRequest = async (req, res) => {
     try {
-        console.log('--- handleItemReturnRequest function started ---');
-        console.log('Request body:', req.body);
-        console.log('Request params:', req.params);
-
         const { orderId, itemId } = req.params;
-        const { action, refundAmount } = req.body;
+        const { action, refundAmount, rejectReason } = req.body;
 
-        if (!orderId || !itemId || !action) {
-            console.log('Missing required parameters');
-            return res.status(400).json({ message: 'Missing required parameters' });
+        if (!orderId || !itemId) {
+            return res.status(400).json({ message: 'Order ID and Item ID are required' });
         }
 
-        console.log(`Processing action: ${action} for Order ID: ${orderId}, Item ID: ${itemId}`);
-
-        const order = await Order.findById(orderId).populate('orderedItems.product');
+        const order = await Order.findById(orderId)
+            .populate('userId')
+            .populate('orderedItems.product');
 
         if (!order) {
-            console.log('Order not found');
             return res.status(404).json({ message: 'Order not found' });
         }
 
-        console.log('Order found. Finding item in orderedItems array.');
         const item = order.orderedItems.id(itemId);
-
         if (!item) {
-            console.log('Item not found in order');
             return res.status(404).json({ message: 'Item not found in order' });
         }
 
-        console.log(`Item found. Current item status: ${item.status}`);
-
-        // Validate item status - should be 'Return Requested' to process
         if (item.status !== 'Return Requested') {
-            console.log(`Invalid item status for return processing: ${item.status}`);
-            return res.status(400).json({ message: `Item status is '${item.status}', cannot process return request.` });
+            return res.status(400).json({ message: 'Item is not in return request status' });
         }
 
-        console.log(`Item status is 'Return Requested'. Proceeding with ${action} action.`);
-
         if (action === 'accept') {
-            console.log('Action is accept.');
             item.status = 'Returned';
-            console.log('Item status set to Returned.');
+            item.returnStatus = 'Accepted';
 
             // Process refund if amount is provided and valid
             const refundAmt = parseFloat(refundAmount);
-            console.log('Provided refund amount:', refundAmount);
-            console.log('Parsed refund amount (refundAmt):', refundAmt);
-
             if (!isNaN(refundAmt) && refundAmt > 0 && order.userId) {
-                console.log('Refund amount is valid and user ID exists. Processing refund.');
-                 const user = await User.findById(order.userId);
-                 if(user) {
-                     console.log('User found. Current wallet amount:', user.wallet);
-                     // Ensure user.wallet is a number, defaulting to 0 if undefined/null, before adding refundAmt
-                     user.wallet = (user.wallet || 0) + refundAmt;
-                     console.log('New wallet amount:', user.wallet);
-                     await user.save();
-                     console.log('User wallet updated successfully.');
-                     // Log wallet transaction (optional but recommended)
-                      await WalletTransaction.create({
-                          userId: user._id,
-                          amount: refundAmt,
-                          type: 'credit',
-                          description: `Refund for item return (Order #${order._id}, Item ID: ${item._id})`,
-                          orderId: order._id,
-                          itemId: item._id
-                      });
-                     console.log('Wallet transaction logged.');
-                 } else {
-                     console.error('User not found for wallet update:', order.userId);
-                     // Decide how to handle this - perhaps return an error or log and continue?
-                     // For now, we'll log and continue saving the order status change.
-                 }
-            } else {
-                 console.log(`Refund not processed: Invalid amount (${refundAmt}) or missing user ID (${order.userId})`);
+                const user = await User.findById(order.userId);
+                if (user) {
+                    user.wallet = (user.wallet || 0) + refundAmt;
+                    await user.save();
+
+                    await WalletTransaction.create({
+                        userId: user._id,
+                        amount: refundAmt,
+                        type: 'credit',
+                        description: `Refund for item return (Order #${order._id}, Item ID: ${item._id})`,
+                        orderId: order._id,
+                        itemId: item._id
+                    });
+                }
             }
 
             // Update product stock
-            if (item.product) {
-                console.log('Item has a product. Updating stock.');
-                const product = await Product.findById(item.product._id);
-                 if(product) {
-                     console.log('Product found. Current quantity:', product.quantity);
-                     product.quantity += item.quantity;
-                     console.log('New quantity:', product.quantity);
-                     await product.save();
-                     console.log('Product quantity updated successfully.');
-                 } else {
-                      console.error('Product not found for quantity update:', item.product._id);
-                      // Decide how to handle this - log and continue?
-                 }
-            } else {
-                console.log('Item does not have a product association.');
+            const product = item.product;
+            if (product) {
+                product.stock += item.quantity;
+                await product.save();
             }
 
-            // Recalculate order totals if the item price was included in them
-            // This part might be optional depending on your requirements for item-level returns affecting order totals
-            console.log('Recalculating order totals...');
-            const returnedItemsTotal = order.orderedItems.reduce((total, item) => {
-                if (item.status === 'Returned' || item.status === 'Cancelled') {
-                    // Make sure item.product is populated and has salePrice
-                     if (item.product && item.product.salePrice) {
-                         return total + (item.product.salePrice * item.quantity);
-                     }
-                }
-                return total;
-            }, 0);
+            // Check if all items are returned
+            const allReturned = order.orderedItems.every(item => 
+                item.status === 'Returned' || item.status === 'Cancelled'
+            );
 
-            // Update order totals
-            // This might need adjustment if item returns should affect the overall order price displayed to the user
-             // For now, we'll keep the original logic which recalculates based on non-returned/cancelled items.
-            order.totalPrice = order.orderedItems.reduce((total, item) => {
-                if (item.status !== 'Returned' && item.status !== 'Cancelled') {
-                     // Make sure item.product is populated and has salePrice
-                     if (item.product && item.product.salePrice) {
-                         return total + (item.product.salePrice * item.quantity);
-                     }
-                }
-                return total;
-            }, 0);
-
-            // Recalculate tax and final amount based on new totalPrice
-             order.tax = order.totalPrice * 0.18; // Assuming 18% tax
-             order.finalAmount = order.totalPrice + order.tax - (order.discount || 0);
-            console.log('Order totals recalculated.');
-
+            if (allReturned) {
+                order.status = 'Returned';
+                order.returnStatus = 'Accepted';
+            }
         } else if (action === 'reject') {
-            console.log('Action is reject.');
-            // Change item status back to Delivered
             item.status = 'Delivered';
-            console.log('Item status set to Delivered.');
-             item.returnReason = undefined; // Clear user's return reason on rejection
-            // Save admin's rejection reason for the item
-            if (req.body.rejectReason) {
-                item.adminRejectionReason = req.body.rejectReason.trim();
-                console.log('Admin rejection reason added.');
+            item.returnStatus = 'Rejected';
+            if (rejectReason) {
+                item.adminRejectionReason = rejectReason;
             }
-        } else {
-            console.log('Invalid action specified:', action);
-            return res.status(400).json({ message: 'Invalid action specified' });
         }
 
-        console.log('Saving order...');
         await order.save();
-        console.log('Order saved successfully.');
-
-        res.json({ 
-            success: true,
-            message: `Item return request ${action}ed successfully`,
-            itemStatus: item.status, // Return the updated item status
-            // Include rejection reason in response if available
-            ...(action === 'reject' && item.adminRejectionReason && { adminRejectionReason: item.adminRejectionReason })
-        });
-
-        console.log('--- handleItemReturnRequest function finished successfully ---');
-
+        res.json({ success: true, message: `Item return request ${action}ed successfully` });
     } catch (error) {
-        console.error('--- Error in handleItemReturnRequest function ---');
-        console.error('Error details:', error);
-        console.error('--- End of Error in handleItemReturnRequest ---');
-        res.status(500).json({ message: 'Error processing item return request', error: error.message });
+        console.error('Error handling item return request:', error);
+        res.status(500).json({ success: false, message: 'Error processing item return request' });
     }
 };
 
@@ -540,6 +446,7 @@ const loadOrderDetailsPage = async (req, res) => {
               return 'success';
             case 'Cancelled':
             case 'Returned':
+            case 'Payment Failed':
               return 'danger';
             case 'Out for Delivery':
               return 'info';

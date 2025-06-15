@@ -65,8 +65,9 @@ const getCheckoutPage = async (req, res) => {
             ? (addressData.address.find(a => a._id.equals(req.query.addressId)) || addressData.address[0])
             : null;
             
-        const regionKey = (address && address.region) || 'local';
-        const deliveryCharge = regionCharges[regionKey] ?? fixedCharge;        
+        // Calculate delivery charge based on order total
+        const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
+        let deliveryCharge = subtotal >= 1000 ? 0 : 50;
 
         const appliedCoupon = req.session.appliedCouponId ? 
             await Coupon.findById(req.session.appliedCouponId) : null;
@@ -80,12 +81,12 @@ const getCheckoutPage = async (req, res) => {
             usedBy: { $ne: userId }
         });
 
-        const { subtotal, taxes, discount, total } = calculateOrderTotal(cart, appliedCoupon);
+        const { subtotal: calculatedSubtotal, taxes, discount, total } = calculateOrderTotal(cart, appliedCoupon, deliveryCharge);
         const finalTotal = total + deliveryCharge;
 
         res.render('user/checkout', { 
             cart,
-            subtotal,
+            subtotal: calculatedSubtotal,
             taxes,
             discount,
             total: finalTotal,
@@ -240,31 +241,15 @@ const placeOrder = async (req, res) => {
         }
 
         // 3. Get delivery charge
-        const regionCharges = {
-            'local': 50,
-            'regional': 100,
-            'national': 150
-        };
-        const fixedCharge = 75;
-        
-        // Get address details for delivery charge calculation
-        let deliveryCharge = fixedCharge;
-        if (addressId) {
-            const addressData = await Address.findOne({ userId });
-            if (addressData && addressData.address) {
-                const selectedAddress = addressData.address.find(a => a._id.equals(addressId));
-                if (selectedAddress && selectedAddress.region) {
-                    deliveryCharge = regionCharges[selectedAddress.region] || fixedCharge;
-                }
-            }
-        }
+        const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
+        let deliveryCharge = subtotal >= 1000 ? 0 : 50;
 
         // 4. Fetch applied coupon from session
         const appliedCoupon = req.session.appliedCouponId ? 
             await Coupon.findById(req.session.appliedCouponId) : null;
 
         // 5. Calculate order totals WITH delivery charge
-        const { subtotal, taxes, discount, total } = calculateOrderTotal(cart, appliedCoupon, deliveryCharge);
+        const { subtotal: calculatedSubtotal, taxes, discount, total } = calculateOrderTotal(cart, appliedCoupon, deliveryCharge);
 
         console.log('Order totals:', { subtotal, taxes, discount, deliveryCharge, total });
 
@@ -429,10 +414,59 @@ const getOrderSuccess = async (req, res) => {
     }
 };
 
+const handleRetryPayment = async (req, res) => {
+    try {
+        const { orderId } = req.query;
+        const userId = req.session.user._id;
+
+        if (!orderId) {
+            return res.redirect('/shop');
+        }
+
+        // Find the failed order
+        const failedOrder = await Order.findOne({
+            _id: orderId,
+            userId: userId,
+            paymentStatus: 'Failed'
+        }).populate('orderedItems.product');
+
+        if (!failedOrder) {
+            return res.redirect('/shop');
+        }
+
+        // Clear existing cart
+        await Cart.findOneAndUpdate(
+            { userId: userId },
+            { $set: { items: [] } }
+        );
+
+        // Add failed order items to cart
+        const cartItems = failedOrder.orderedItems.map(item => ({
+            productId: item.product._id,
+            quantity: item.quantity,
+            price: item.price,
+            totalPrice: item.price * item.quantity
+        }));
+
+        await Cart.findOneAndUpdate(
+            { userId: userId },
+            { $set: { items: cartItems } },
+            { upsert: true }
+        );
+
+        // Redirect to checkout with the orderId
+        res.redirect('/user/checkout?retryOrderId=' + orderId);
+    } catch (error) {
+        console.error('Error handling retry payment:', error);
+        res.redirect('/shop');
+    }
+};
+
 module.exports = {
     getCheckoutPage,
     placeOrder,
     getOrderSuccess,
     applyCoupon,
-    removeCoupon
+    removeCoupon,
+    handleRetryPayment
 };

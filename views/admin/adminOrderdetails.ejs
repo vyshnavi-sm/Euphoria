@@ -129,7 +129,19 @@
     .item-return-actions {
         display: flex;
         gap: 5px;
-        margin-top: 5px; /* Add some space below the status */
+        margin-top: 5px;
+    }
+
+    /* Delivery charge styling */
+    .delivery-charge-info {
+      color: #6B4E3D;
+      font-size: 0.9em;
+      margin-top: 5px;
+    }
+
+    .free-delivery {
+      color: #8B6B61;
+      font-weight: 500;
     }
   </style>
 </head>
@@ -149,6 +161,7 @@
             <option value="Shipped" <%= order.status === 'Shipped' ? 'selected' : '' %>>Shipped</option>
             <option value="Out for Delivery" <%= order.status === 'Out for Delivery' ? 'selected' : '' %>>Out for Delivery</option>
             <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
+            <option value="Payment Failed" <%= order.status === 'Payment Failed' ? 'selected' : '' %>>Payment Failed</option>
             <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
             <option value="Return Request" <%= order.status === 'Return Request' ? 'selected' : '' %>>Return Request</option>
             <option value="Returned" <%= order.status === 'Returned' ? 'selected' : '' %>>Returned</option>
@@ -261,11 +274,26 @@
         <div class="row">
           <div class="col-md-4">
             <p class="mb-2"><strong>Subtotal:</strong> ₹<%= order.totalPrice.toFixed(2) %></p>
-            <p class="mb-2"><strong>Tax (18%):</strong> ₹<%= (order.totalPrice * 0.18).toFixed(2) %></p>
+            
+            <% 
+              // Calculate subtotal as sum of product prices
+              const subtotal = order.orderedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+              const DELIVERY_CHARGE = order.deliveryCharge || 0;
+              const FREE_DELIVERY_THRESHOLD = 1000;
+              const deliveryCharge = DELIVERY_CHARGE;
+              const taxAmount = Math.round(subtotal * 0.18);
+              const finalAmountWithDelivery = subtotal + deliveryCharge + taxAmount - (order.discount || 0);
+            %>
+            
+            <p class="mb-2"><strong>Delivery Charge:</strong> ₹<%= deliveryCharge.toFixed(2) %></p>
+           
+            <p class="mb-2"><strong>Tax (18%):</strong> ₹<%= taxAmount.toFixed(2) %></p>
             <% if (order.discount > 0) { %>
               <p class="mb-2"><strong>Discount:</strong> -₹<%= order.discount.toFixed(2) %></p>
             <% } %>
-            <p class="h6 mt-2 mb-0"><strong>Final Amount:</strong> ₹<%= order.finalAmount.toFixed(2) %></p>
+            
+            <hr class="my-2">
+            <p class="h6 mt-2 mb-0"><strong>Final Amount:</strong> ₹<%= finalAmountWithDelivery.toFixed(2) %></p>
           </div>
         </div>
       </div>
@@ -390,7 +418,16 @@
     let isUpdating = false;
     let currentOrderIdForReturn = null;
     let currentReturnAction = null;
-    let currentItemForReturn = null; // Add variable for current item ID
+    let currentItemForReturn = null;
+
+    // Constants for delivery charge calculation
+    const DELIVERY_CHARGE = 50;
+    const FREE_DELIVERY_THRESHOLD = 1000;
+
+    // Function to calculate delivery charge
+    function calculateDeliveryCharge(subtotal) {
+      return subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_CHARGE;
+    }
 
     // Function to get appropriate badge class for status
     function getStatusBadgeClass(status) {
@@ -399,6 +436,7 @@
           return 'success';
         case 'Cancelled':
         case 'Returned':
+        case 'Payment Failed':
           return 'danger';
         case 'Out for Delivery':
           return 'info';
@@ -439,7 +477,7 @@
       if (isUpdating) return;
       
       isUpdating = true;
-      console.log(`Attempting to update order ${orderId} status to ${newStatus}`); // Added log
+      console.log(`Attempting to update order ${orderId} status to ${newStatus}`);
       
       try {
         const response = await fetch(`/admin/api/orders/${orderId}/status`, {
@@ -463,14 +501,14 @@
         if (statusBadge) {
           statusBadge.textContent = newStatus;
           statusBadge.className = `badge bg-${getStatusBadgeClass(newStatus)}`;
-          console.log(`Main status badge updated to: ${newStatus}`); // Added log
+          console.log(`Main status badge updated to: ${newStatus}`);
         }
         
         // Update the status dropdown
         const statusSelect = document.getElementById('orderStatus');
         if (statusSelect) {
           statusSelect.value = newStatus;
-          console.log(`Status dropdown value updated to: ${newStatus}`); // Added log
+          console.log(`Status dropdown value updated to: ${newStatus}`);
         }
         
         // Update action buttons based on new status
@@ -494,25 +532,21 @@
               <button class="btn btn-success" onclick="handleReturnRequest('${orderId}', 'accept')">Accept Return</button>
               <button class="btn btn-danger" onclick="handleReturnRequest('${orderId}', 'reject')">Reject Return</button>
             `;
-          }
+          } 
         }
         
         // Update individual item statuses based on the new overall status
         const itemRows = document.querySelectorAll('.table.table-bordered.mt-2 tbody tr');
         itemRows.forEach(row => {
-            const statusCell = row.querySelector('td:nth-child(2)'); // Second td contains the status
+            const statusCell = row.querySelector('td:nth-child(2)');
             if (statusCell) {
                 const statusBadge = statusCell.querySelector('.badge');
                 if (statusBadge) {
                     const currentItemStatus = statusBadge.textContent.trim();
-                    // console.log(`Item status found: ${currentItemStatus}. Checking if it should be updated to ${newStatus}`); // Added log
-                    // Only update if the item is not already returned, return requested, or cancelled
                     if (currentItemStatus !== 'Returned' && currentItemStatus !== 'Return Requested' && currentItemStatus !== 'Cancelled') {
                         statusBadge.textContent = newStatus;
                         statusBadge.className = `badge bg-${getStatusBadgeClass(newStatus)}`;
-                        // console.log(`Item status updated to: ${newStatus}`); // Added log
 
-                        // Remove return action UI if the new status is not 'Return Requested'
                         if (newStatus !== 'Return Requested') {
                              const itemActionsContainer = statusCell.querySelector('.item-return-actions');
                              if(itemActionsContainer) {
@@ -570,10 +604,10 @@
         const modal = new bootstrap.Modal(document.getElementById('itemReturnModal'));
         
         document.getElementById('itemReturnOrderId').value = orderId;
-        document.getElementById('itemReturnItemId').value = itemId; // Set item ID
+        document.getElementById('itemReturnItemId').value = itemId;
         document.getElementById('itemReturnAction').value = action;
         
-        currentItemForReturn = itemId; // Store item ID
+        currentItemForReturn = itemId;
         
         const refundSection = document.getElementById('itemRefundAmountSection');
         const refundInput = document.getElementById('itemRefundAmount');
@@ -582,17 +616,15 @@
         const rejectReasonSection = document.getElementById('itemRejectReasonSection');
         const rejectReasonInput = document.getElementById('itemRejectReason');
 
-        // Reset display states
         refundSection.style.display = 'none';
         refundInput.required = false;
         userReasonSection.style.display = 'none';
         rejectReasonSection.style.display = 'none';
         rejectReasonInput.required = false;
-        rejectReasonInput.value = ''; // Clear previous reason
-        userReasonText.textContent = ''; // Clear previous reason
+        rejectReasonInput.value = '';
+        userReasonText.textContent = '';
 
-        // Find the item in the order data to get its details
-        const order = JSON.parse(document.getElementById('order-data').textContent); // Assuming order data is available globally
+        const order = JSON.parse(document.getElementById('order-data').textContent);
         const item = order.orderedItems.find(item => item._id === itemId);
 
         if (item && item.status === 'Return Requested') {
@@ -603,18 +635,16 @@
         if (action === 'accept') {
             refundSection.style.display = 'block';
             refundInput.required = true;
-             // Attempt to pre-fill refund amount with item's price
              if (item) {
                  refundInput.value = (item.price * item.quantity).toFixed(2);
              } else {
-                 refundInput.value = 0; // Fallback
+                 refundInput.value = 0;
              }
         } else if (action === 'reject') {
              rejectReasonSection.style.display = 'block';
              rejectReasonInput.required = true;
         }
 
-        // Optionally display item name in modal title or body
         if (item && item.product && item.product.productName) {
              document.getElementById('itemReturnProductName').textContent = item.product.productName;
         } else {
@@ -707,50 +737,53 @@
         const rejectReason = document.getElementById('itemRejectReason').value;
 
         if (action === 'accept' && (!refundAmount || refundAmount <= 0)) {
-          if(document.getElementById('itemRefundAmount').required) {
-            showToast('Please enter a valid refund amount', 'error');
-            isUpdating = false;
-            return;
-          }
+            if(document.getElementById('itemRefundAmount').required) {
+                showToast('Please enter a valid refund amount', 'error');
+                isUpdating = false;
+                return;
+            }
         }
 
         if (action === 'reject' && !rejectReason.trim()) {
-             if(document.getElementById('itemRejectReason').required) { // Check if required
-                 showToast('Please enter a rejection reason', 'error');
-                 isUpdating = false;
-                 return;
-             }
+            if(document.getElementById('itemRejectReason').required) {
+                showToast('Please enter a rejection reason', 'error');
+                isUpdating = false;
+                return;
+            }
         }
         
         try {
-          const response = await fetch(`/admin/api/orders/${orderId}/items/${itemId}/return`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-              action,
-              refundAmount: action === 'accept' ? refundAmount : 0,
-              rejectReason: action === 'reject' ? rejectReason : undefined // Include rejection reason if action is reject
-            })
-          });
-          
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to process item return request');
-          }
-          
-          bootstrap.Modal.getInstance(document.getElementById('itemReturnModal')).hide();
-          showToast('Item return request processed successfully');
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-          
+            const response = await fetch(`/admin/api/orders/${orderId}/items/${itemId}/return`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    action,
+                    refundAmount: action === 'accept' ? refundAmount : 0,
+                    rejectReason: action === 'reject' ? rejectReason : undefined
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to process item return request');
+            }
+            
+            bootstrap.Modal.getInstance(document.getElementById('itemReturnModal')).hide();
+            showToast(data.message || 'Item return request processed successfully');
+            
+            // Reload the page after a short delay to show updated status
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+            
         } catch (error) {
-          console.error('Error processing item return request:', error);
-          showToast(error.message || 'Error processing item return request', 'error');
+            console.error('Error processing item return request:', error);
+            showToast(error.message || 'Error processing item return request', 'error');
         } finally {
-          isUpdating = false;
+            isUpdating = false;
         }
       });
 

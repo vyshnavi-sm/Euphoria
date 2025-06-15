@@ -472,6 +472,29 @@
       font-size: 0.8em;
       margin-left: 5px;
     }
+
+    /* New styles for delivery charge */
+    .free-delivery-note {
+      background-color: rgba(212, 175, 55, 0.1);
+      border: 1px solid var(--gold);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--primary-color);
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .delivery-charge-note {
+      background-color: rgba(93, 64, 55, 0.1);
+      border: 1px solid var(--primary-light);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--primary-color);
+      font-family: 'Montserrat', sans-serif;
+    }
   </style>
 </head>
 <body>
@@ -620,20 +643,51 @@
               <span>Subtotal</span>
               <span>₹<%= subtotal.toFixed(2) %></span>
             </div>
+            
+            <%
+              // Calculate delivery charge - free for orders >= 1000, otherwise 50
+              const deliveryCharge = (subtotal - (discount || 0)) >= 1000 ? 0 : 50;
+              const finalTotal = subtotal + (taxes || 0) - (discount || 0) + deliveryCharge;
+            %>
+            
+            <div class="summary-line">
+              <span>Delivery Charge</span>
+              <span>
+                <% if (deliveryCharge === 0) { %>
+                  <span style="text-decoration: line-through; color: #999;">₹50</span> FREE
+                <% } else { %>
+                  ₹<%= deliveryCharge.toFixed(2) %>
+                <% } %>
+              </span>
+            </div>
+            
             <div class="summary-line">
               <span>Taxes</span>
-              <span>₹<%= taxes.toFixed(2) %></span>
+              <span>₹<%= (taxes || 0).toFixed(2) %></span>
             </div>
+            
             <% if (discount > 0) { %>
               <div class="summary-line">
                 <span>Discount</span>
                 <span>- ₹<%= discount.toFixed(2) %></span>
               </div>
             <% } %>
+            
             <div class="summary-total">
               <span>Total</span>
-              <span>₹<%= total.toFixed(2) %></span>
+              <span>₹<%= finalTotal.toFixed(2) %></span>
             </div>
+            
+            <!-- Delivery charge notes -->
+            <% if (deliveryCharge === 0) { %>
+              <div class="free-delivery-note">
+                <i class="fas fa-truck"></i> Congratulations! You get FREE delivery on this order.
+              </div>
+            <% } else { %>
+              <div class="delivery-charge-note">
+                <i class="fas fa-info-circle"></i> Add ₹<%= (1000 - (subtotal - (discount || 0))).toFixed(2) %> more to get FREE delivery!
+              </div>
+            <% } %>
           </div>
         <% } else { %>
           <div class="alert alert-warning">
@@ -645,12 +699,16 @@
       <div class="payment-method">
         <h5 class="section-heading">Payment Method</h5>
         <div class="payment-options">
-          <div class="payment-option <%= total > 1000 ? 'disabled' : '' %>">
-            <input type="radio" name="paymentMethod" id="cod" value="cod" <%= total > 1000 ? 'disabled' : '' %>>
+          <%
+            // Update total for payment method validation
+            const totalWithDelivery = subtotal + (taxes || 0) - (discount || 0) + deliveryCharge;
+          %>
+          <div class="payment-option <%= totalWithDelivery > 1000 ? 'disabled' : '' %>">
+            <input type="radio" name="paymentMethod" id="cod" value="cod" <%= totalWithDelivery > 1000 ? 'disabled' : '' %>>
             <label for="cod">
               <i class="fas fa-money-bill-wave"></i>
               Cash on Delivery
-              <% if (total > 1000) { %>
+              <% if (totalWithDelivery > 1000) { %>
                 <span class="text-danger">(Not available for orders above ₹1000)</span>
               <% } %>
             </label>
@@ -667,6 +725,9 @@
             <label for="wallet">
               <i class="fas fa-wallet"></i>
               Wallet
+              <span class="wallet-balance" style="margin-left: 10px; color: var(--primary-color);">
+                (Balance: ₹<%= user.wallet ? user.wallet.toFixed(2) : '0.00' %>)
+              </span>
             </label>
           </div>
         </div>

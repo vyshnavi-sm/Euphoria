@@ -43,10 +43,16 @@ const orderSchema = new Schema({
         type: Number,
         default: 0
     },
+
+   deliveryCharge: {
+    type: Number,
+    default: 50
+    },
     finalAmount:{
         type: Number,
         required: true
     },
+
     address:{
         type: Schema.Types.ObjectId,
         ref: "Address",

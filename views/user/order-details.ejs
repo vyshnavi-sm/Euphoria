@@ -554,6 +554,18 @@
                                     <span>-₹<%= order.discount.toFixed(2) %></span>
                                 </div>
                             <% } %>
+
+                            <div class="summary-line">
+                                <span>Delivery Charge:</span>
+                                <span>
+                                    <% if (order.totalPrice >= 1000) { %>
+                                        <span style="text-decoration: line-through; color: #999;">₹50</span> FREE
+                                    <% } else { %>
+                                        ₹<%= order.deliveryCharge.toFixed(2) %>
+                                    <% } %>
+                                </span>
+                            </div>
+
                             <div class="summary-line summary-total">
                                 <span>Total:</span>
                                 <span>₹<%= order.finalAmount.toFixed(2) %></span>

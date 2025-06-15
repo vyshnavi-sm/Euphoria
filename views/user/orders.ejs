@@ -479,6 +479,14 @@
                   hour12: true
                 }) : 'Invalid Date' %></p>
                 <p class="mb-1"><strong>Total Amount:</strong> ₹<%= order.finalAmount ? order.finalAmount.toFixed(2) : '0.00' %></p>
+                <!-- <p class="mb-1">
+                    <strong>Delivery Charge:</strong>
+                    <% if (order.totalPrice >= 1000) { %>
+                        <span style="text-decoration: line-through; color: #999;">₹50</span> FREE
+                    <% } else { %>
+                        ₹<%= order.deliveryCharge ? order.deliveryCharge.toFixed(2) : '50.00' %>
+                    <% } %>
+                </p> -->
               </div>
               <div class="col-md-6 text-md-end">
                 <a href="/user/orders/<%= order._id %>" class="btn btn-sm btn-primary">View Details</a>
