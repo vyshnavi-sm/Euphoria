@@ -381,7 +381,11 @@
                         minute: '2-digit',
                         hour12: true
                     }) %></p>
-                    <p><strong>Payment Method:</strong> <%= order.paymentMethod %></p>
+                    <p><strong>Payment Method:</strong> <%= order.paymentMethod %>
+                    <% if (order.paymentStatus === 'Paid') { %>
+                        <span style="color:#a3a728;font-weight:600;margin-left:10px;">(Payment: Success)</span>
+                    <% } %>
+                    </p>
                 </div>
                 <div>
                     <p><strong>Status:</strong> <span class="order-status status-<%= order.status.toLowerCase() %>"><%= order.status %></span></p>

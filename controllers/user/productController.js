@@ -23,7 +23,9 @@ const productDetails = async (req,res)=>{
 
         const productOffer = product.offerDiscount || 0;
         const categoryDiscount = categoryOffer ? categoryOffer.discountPercentage : 0;
-        const totalOffer = productOffer + categoryDiscount;
+        
+        // Apply the highest offer between product offer and category offer
+        const totalOffer = Math.max(productOffer, categoryDiscount);
 
         // First, try to fetch related products from the same category
         let relatedProducts = await Product.find({

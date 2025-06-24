@@ -481,6 +481,157 @@
         align-items: center;
     }
 }
+
+.badge-cancelled {
+  background-color: #b0b0b0 !important;
+  color: #fff !important;
+  text-decoration: line-through;
+  font-weight: bold;
+}
+
+/* Responsive Design for Profile Page */
+@media (max-width: 992px) {
+  .container, .content-main {
+    padding: 10px !important;
+  }
+  .main {
+    padding: 15px 0;
+  }
+  .dashboard-menu {
+    margin-bottom: 20px;
+  }
+  .profile-picture-container {
+    width: 100px;
+    height: 100px;
+  }
+  .card-title {
+    font-size: 22px;
+  }
+}
+@media (max-width: 768px) {
+  .main {
+    padding: 10px 0;
+  }
+  .page-header.breadcrumb-wrap {
+    padding: 10px 0;
+  }
+  .dashboard-menu {
+    padding: 10px;
+    margin-bottom: 15px;
+  }
+  .dashboard-menu .nav-link {
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+  .card-header {
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+  .card-body {
+    padding: 15px;
+  }
+  .profile-picture-container {
+    width: 80px;
+    height: 80px;
+  }
+  .card-title {
+    font-size: 18px;
+  }
+  .card-text {
+    font-size: 15px;
+  }
+  .btn-primary, .btn-success, .btn-danger {
+    width: 100%;
+    padding: 10px 0;
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+  .d-flex.justify-content-center.gap-3.mt-4 {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .row {
+    flex-direction: column;
+  }
+  .col-md-3, .col-md-9, .col-lg-10, .col-lg-6, .col-12 {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+  }
+  .table-responsive {
+    overflow-x: auto;
+  }
+  .table {
+    font-size: 13px;
+    min-width: 600px;
+  }
+  .product-list {
+    max-height: 120px;
+  }
+  .profile-picture-placeholder, .profile-picture {
+    font-size: 30px;
+  }
+  .input-group {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .input-group .form-control, .input-group .btn {
+    width: 100%;
+    border-radius: 8px !important;
+  }
+}
+@media (max-width: 576px) {
+  .main {
+    padding: 5px 0;
+  }
+  .page-header.breadcrumb-wrap {
+    padding: 5px 0;
+  }
+  .dashboard-menu {
+    padding: 6px;
+  }
+  .dashboard-menu .nav-link {
+    padding: 8px 8px;
+    font-size: 13px;
+  }
+  .card-header {
+    font-size: 13px;
+    padding: 8px 8px;
+  }
+  .card-body {
+    padding: 8px;
+  }
+  .profile-picture-container {
+    width: 60px;
+    height: 60px;
+  }
+  .card-title {
+    font-size: 14px;
+  }
+  .card-text {
+    font-size: 12px;
+  }
+  .btn-primary, .btn-success, .btn-danger {
+    font-size: 12px;
+    padding: 8px 0;
+  }
+  .table {
+    font-size: 11px;
+    min-width: 400px;
+  }
+  .product-list {
+    max-height: 80px;
+  }
+  .input-group {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .input-group .form-control, .input-group .btn {
+    font-size: 12px;
+    padding: 6px 0;
+  }
+}
 </style>
 
 <main class="main">
@@ -710,7 +861,7 @@
                                     </div>
                                   </td>
                                   <td>
-                                    <span class="badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' ? 'danger' : 'warning' %>">
+                                    <span class="badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' ? 'danger' : order.status === 'Payment Failed' ? 'danger' : 'warning' %>">
                                       <%= order.status %>
                                     </span>
                                   </td>
@@ -835,12 +986,15 @@
                                     <%= transaction.type === 'credit' ? '+' : '-' %>₹<%= transaction.amount.toFixed(2) %>
                                   </td>
                                   <td>
-                                    <% if (transaction.description.includes('cancelled order')) { %>
+                                    <% const desc = transaction.description.toLowerCase(); %>
+                                    <% if (desc.includes('order cancelled - refund')) { %>
                                       <span class="badge bg-danger">Order Cancelled</span>
-                                    <% } else if (transaction.description.includes('item return')) { %>
-                                      <span class="badge bg-warning">Item Returned</span>
-                                    <% } else if (transaction.description.includes('cancelled item')) { %>
+                                    <% } else if (desc.includes('item cancelled - refund')) { %>
                                       <span class="badge bg-danger">Item Cancelled</span>
+                                    <% } else if (desc.includes('refund for item return')) { %>
+                                      <span class="badge bg-warning text-dark">Item Returned</span>
+                                    <% } else if (desc.includes('refund for order')) { %>
+                                      <span class="badge bg-warning text-dark">Order Returned</span>
                                     <% } else { %>
                                       <span class="badge bg-info">Processed</span>
                                     <% } %>

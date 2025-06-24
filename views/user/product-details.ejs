@@ -226,12 +226,17 @@
 }
 
 /* Title and Brand Styles */
-.title-detail {
+.title-detail, .product-name {
     font-size: 22px;
     font-weight: 600;
     color: #2b2b2b;
     margin-bottom: 12px;
     letter-spacing: 0.5px;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    padding-right: 10px;
+    padding-left: 10px;
 }
 
 .pro-details-brand {
@@ -398,6 +403,11 @@
     line-height: 1.6;
     color: #555;
     font-size: 14px;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    padding-right: 10px;
+    padding-left: 10px;
 }
 
 /* Quantity and Add to Cart Styles */
@@ -987,6 +997,231 @@
     margin-left: 4px;
     color: #a97155;
     vertical-align: middle;
+}
+
+/* Responsive Design Enhancements */
+@media (max-width: 1200px) {
+  .container {
+    max-width: 1000px;
+    padding: 0 10px;
+  }
+  .product-detail {
+    padding: 25px;
+  }
+}
+@media (max-width: 992px) {
+  .container {
+    max-width: 900px;
+    padding: 0 5px;
+  }
+  .product-detail {
+    padding: 15px;
+  }
+  .main-image {
+    height: 350px;
+  }
+  .related-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .main {
+    padding: 0;
+  }
+  .product-detail {
+    padding: 10px;
+    border-radius: 10px;
+  }
+  .row {
+    flex-direction: column !important;
+    display: flex;
+  }
+  .col-md-6, .col-lg-9, .col-sm-12, .col-xs-12 {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    padding: 0 !important;
+  }
+  .detail-gallery {
+    margin-bottom: 20px;
+    padding: 10px;
+  }
+  .main-image {
+    height: 220px;
+  }
+  .thumbnail-container {
+    gap: 8px;
+    padding: 5px;
+  }
+  .thumbnail {
+    width: 55px;
+    height: 55px;
+  }
+  .detail-info {
+    padding: 0;
+  }
+  .button-group {
+    flex-direction: column !important;
+    gap: 10px;
+  }
+  .button-add-to-cart, .wishlist-btn {
+    width: 100% !important;
+    font-size: 13px;
+    padding: 10px 0;
+  }
+  .product-highlights, .related-products, .reviews-section {
+    padding: 10px;
+    margin: 20px 0;
+  }
+  .highlights-list {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .related-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    overflow-x: auto;
+    display: flex;
+    flex-direction: row;
+    scroll-snap-type: x mandatory;
+  }
+  .related-product {
+    min-width: 180px;
+    max-width: 220px;
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+  .detail-info {
+    width: 100% !important;
+    padding: 0 8px !important;
+    box-sizing: border-box;
+  }
+  .title-detail, .product-name, .product-description {
+    padding-left: 12px !important;
+    padding-right: 4px !important;
+  }
+}
+@media (max-width: 600px) {
+  .product-detail {
+    padding: 5px;
+  }
+  .main-image {
+    height: 150px;
+  }
+  .thumbnail {
+    width: 40px;
+    height: 40px;
+  }
+  .title-detail, .product-name {
+    font-size: 18px;
+  }
+  .product-description, .highlight-text, .review-text, .meta-label, .meta-value {
+    font-size: 12px;
+  }
+  .button-add-to-cart, .wishlist-btn {
+    font-size: 12px;
+    padding: 8px 0;
+  }
+  .reviews-section h3, .related-title, .highlights-title {
+    font-size: 15px;
+  }
+}
+@media (max-width: 400px) {
+  .main-image {
+    height: 90px;
+  }
+  .thumbnail {
+    width: 25px;
+    height: 25px;
+  }
+  .product-detail, .product-highlights, .related-products, .reviews-section {
+    padding: 2px;
+    margin: 5px 0;
+  }
+  .button-add-to-cart, .wishlist-btn {
+    font-size: 10px;
+    padding: 5px 0;
+    width: 100% !important;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  .title-detail, .product-name, .product-description {
+    padding-left: 8px !important;
+    padding-right: 2px !important;
+    text-align: unset !important;
+  }
+  .product-description, .highlight-text, .review-text, .meta-label, .meta-value {
+    font-size: 10px;
+    padding-left: 2px;
+    padding-right: 2px;
+    text-align: left !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+  .rating-container, .product-meta, .pro-details-brand, .product-price-cover, .breadcrumb, .detail-info {
+    padding: 4px !important;
+    text-align: left !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+  .breadcrumb {
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+}
+@media (max-width: 375px) {
+  .title-detail, .product-name {
+    font-size: 12px;
+    padding-left: 6px !important;
+    padding-right: 1px !important;
+    text-align: unset !important;
+  }
+  .product-description, .highlight-text, .review-text, .meta-label, .meta-value {
+    font-size: 9px;
+    padding-left: 1px;
+    padding-right: 1px;
+    text-align: unset !important;
+  }
+  .button-add-to-cart, .wishlist-btn {
+    font-size: 9px;
+    padding: 4px 0;
+  }
+  .rating-container, .product-meta, .pro-details-brand, .product-price-cover, .breadcrumb, .detail-info {
+    padding: 2px !important;
+    text-align: left !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+  .breadcrumb {
+    flex-wrap: wrap;
+    gap: 1px;
+  }
+}
+.detail-info, .title-detail, .product-name, .product-description, .pro-details-brand, .product-price-cover {
+  padding-left: 24px;
+}
+@media (max-width: 992px) {
+  .detail-info, .title-detail, .product-name, .product-description, .pro-details-brand, .product-price-cover {
+    padding-left: 18px !important;
+  }
+}
+@media (max-width: 768px) {
+  .detail-info, .title-detail, .product-name, .product-description, .pro-details-brand, .product-price-cover {
+    padding-left: 12px !important;
+    padding-right: 4px !important;
+  }
+}
+@media (max-width: 400px) {
+  .detail-info, .title-detail, .product-name, .product-description, .pro-details-brand, .product-price-cover {
+    padding-left: 10px !important;
+    padding-right: 2px !important;
+  }
+}
+@media (max-width: 375px) {
+  .detail-info, .title-detail, .product-name, .product-description, .pro-details-brand, .product-price-cover {
+    padding-left: 8px !important;
+    padding-right: 1px !important;
+  }
 }
 </style>
 

@@ -59,7 +59,7 @@ const getCheckoutPage = async (req, res) => {
             'regional': 100,
             'national': 150
         };
-        const fixedCharge = 75;
+        const fixedCharge = 50;
 
         const address = (addressData && addressData.address && addressData.address.length > 0) 
             ? (addressData.address.find(a => a._id.equals(req.query.addressId)) || addressData.address[0])

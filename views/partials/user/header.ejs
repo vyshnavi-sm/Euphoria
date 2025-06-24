@@ -22,6 +22,8 @@
     position: sticky;
     top: 0;
     z-index: 1000;
+    flex-wrap: wrap;
+    border-top: 3px solid #5D4037; /* Brown top border */
 }
 
 .nav-left {
@@ -38,12 +40,18 @@
     letter-spacing: 1px;
     margin-right: 20px;
     font-family: 'Playfair Display', serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+    margin-left: 30px; /* Move brand name to the right */
 }
 
 .nav-links {
     display: flex;
     gap: 20px;
     align-items: center; /* Align items vertically */
+    margin-left: 10px;
 }
 
 .nav-links a {
@@ -67,7 +75,8 @@
 
 /* Style for icons in the nav-right section */
 .nav-right i {
-    color: #5C4033; /* Brown color */
+    font-size: 20px; /* Decreased icon size */
+    color: #5D4037; /* Brown color for icons */
 }
 
 .sign-in-link {
@@ -133,43 +142,78 @@
     color: #a97155;
 }
 
-.nav-right i {
-    font-size: 18px;
+.user-button {
+    border: 1px solid #D4AF37; /* Gold border */
+    padding: 8px 20px;
+    border-radius: 5px;
+    color: #5D4037; /* Brown text */
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-family: 'Playfair Display', serif;
+}
+
+.user-button:hover {
+    background-color: #D4AF37;
+    color: white;
+}
+
+.navbar-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    color: #5C4033;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+@media (max-width: 900px) {
+    .brand-name {
+        font-size: 20px;
+        max-width: 110px;
+        margin-left: 18px; /* Slightly less margin on smaller screens */
+    }
+    .navbar {
+        padding: 10px 10px;
+    }
 }
 
 @media (max-width: 768px) {
     .navbar {
-        padding: 10px 20px;
+        flex-direction: row;
+        padding: 8px 5px;
     }
-
     .nav-left {
-        gap: 15px;
+        flex: 1 1 auto;
+        min-width: 0;
     }
-
     .brand-name {
-        font-size: 20px;
+        font-size: 18px;
+        max-width: 90px;
+        margin-left: 10px; /* Even less margin for mobile */
     }
-
     .nav-links {
         display: none;
+        position: absolute;
+        top: 60px;
+        left: 0;
+        width: 100vw;
+        background: white;
+        flex-direction: column;
+        gap: 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        z-index: 2000;
+        padding: 10px 0;
     }
-
+    .nav-links.show {
+        display: flex;
+    }
+    .navbar-toggle {
+        display: block;
+    }
     .nav-right {
-        gap: 10px;
-    }
-
-    .nav-right a {
-        font-size: 14px;
-    }
-
-    .home-button {
-        padding: 8px 16px;
-        font-size: 14px;
-    }
-
-    .product-name {
-        font-size: 24px;
-        margin: 15px 0;
+        gap: 8px;
+        margin-right: 0;
     }
 }
 </style>
@@ -195,35 +239,27 @@ rel="stylesheet">
     <section class="hero">
         <nav class="navbar">
             <div class="nav-left">
-                <!-- Brown EUPHORIA with original size and navigation links in same line -->
                 <div class="brand-name">EUPHORIA</div>
                 <div class="nav-links">
-                    <a href="#">CATEGORIES</a>
-                    <a href="#">ABOUT</a>
-                    <a href="#">CONTACT</a>
+                    <a href="/">Home</a>
+                    <a href="/shop">Shop</a>
                 </div>
             </div>
-            
+            <button class="navbar-toggle" aria-label="Toggle navigation">
+                <i class="fa fa-bars"></i>
+            </button>
             <div class="nav-right">
                 <% if (user) { %>
-                    <div class="dropdown">
-                        <a href="#" class="sign-in-link"><%= user.name %></a>
-                        <div class="dropdown-content">
-                            <a href="/userProfile">Profile</a>
-                            <a href="/logout">Logout</a>
-                        </div>
-                    </div>
+                    <a href="/userProfile" class="user-button"><%= user.name %></a>
+                    <span class="divider">|</span>
+                    <a href="/user/cart"><i class="fas fa-shopping-cart"></i></a>
+                    <a href="/user/wishlist"><i class="fas fa-heart"></i></a>
                 <% } else { %>
-                    <a href="/signup" class="sign-in-link">Sign Up</a>
-                    <a href="/login" class="sign-in-link">Login</a>
+                    <a href="/login" class="user-button">Login</a>
+                    <span class="divider">|</span>
+                    <a href="/user/cart"><i class="fas fa-shopping-cart"></i></a>
+                    <a href="/user/wishlist"><i class="fas fa-heart"></i></a>
                 <% } %>
-
-                <!-- <a href="#">EN <i class="fa-solid fa-chevron-down"></i></a>   -->
-                <span class="divider">|</span>
-                <a href="/user/cart"><i class="fa-solid fa-cart-shopping"></i></a>
-                <a href="#"><i class="fa-solid fa-magnifying-glass"></i></a>
-                <a href="/user/wishlist"><i class="fa-regular fa-heart"></i></a>
-                <!-- <a href="#"><i class="fa-regular fa-user"></i></a> -->
             </div>
         </nav>
     </section>
@@ -231,3 +267,14 @@ rel="stylesheet">
     <!-- Rest of your page content here -->
 </body>
 </html>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.querySelector('.navbar-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    if (toggle && navLinks) {
+        toggle.addEventListener('click', function() {
+            navLinks.classList.toggle('show');
+        });
+    }
+});
+</script>

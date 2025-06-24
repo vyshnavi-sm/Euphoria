@@ -529,6 +529,87 @@
  .clear-filters-btn i {
    font-size: 14px;
  }
+
+@media (max-width: 1200px) {
+  .main-container {
+    padding: 10px;
+  }
+  .product-grid {
+    gap: 18px;
+  }
+}
+@media (max-width: 900px) {
+  .product-list-container {
+    flex-direction: column;
+    gap: 0;
+  }
+  .sidebar {
+    width: 100%;
+    margin-bottom: 18px;
+    padding: 15px 8px;
+    border-radius: 8px;
+  }
+  .product-grid {
+    width: 100%;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+@media (max-width: 768px) {
+  .shop-topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 0;
+  }
+  .search-form {
+    margin-left: 0;
+    margin-top: 10px;
+    max-width: 100%;
+  }
+  .sort-container {
+    margin-left: 0;
+    margin-top: 10px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .home-button {
+    margin-left: 0;
+    margin-top: 10px;
+    width: 100%;
+    justify-content: center;
+  }
+  .product-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .product-card {
+    padding: 12px 6px;
+  }
+}
+@media (max-width: 600px) {
+  .main-container {
+    padding: 2px;
+  }
+  .sidebar {
+    padding: 8px 2px;
+    font-size: 15px;
+  }
+  .product-card {
+    padding: 8px 2px;
+    font-size: 15px;
+  }
+  .product-card img {
+    height: 140px;
+  }
+  .shop-title {
+    font-size: 1.2rem;
+  }
+  .search-input, .sort-select {
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+}
 </style>
 
 <!-- Add Google Fonts for classy typography -->

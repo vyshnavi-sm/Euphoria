@@ -33,7 +33,35 @@ const orderSchema = new Schema({
             default: "Processing"
         },
         cancellationReason: String,
-        returnReason: String
+        returnReason: String,
+        
+        // Return-related fields
+        returnStatus: {
+            type: String,
+            enum: ["Pending", "Accepted", "Rejected"],
+        },
+        returnProcessedAt: Date,
+        returnRejectedAt: Date,
+        adminRejectionReason: String,
+        returnDetails: {
+            returnRequestedAt: Date,
+            images: [String],
+            description: String
+        },
+        
+        // Proportional calculation fields
+        proportionalDiscount: {
+            type: Number,
+            default: 0
+        },
+        proportionalTax: {
+            type: Number,
+            default: 0
+        },
+        totalsAlreadyAdjusted: {
+            type: Boolean,
+            default: false
+        }
     }],
     totalPrice:{
         type: Number,
@@ -43,16 +71,14 @@ const orderSchema = new Schema({
         type: Number,
         default: 0
     },
-
-   deliveryCharge: {
-    type: Number,
-    default: 50
+    deliveryCharge: {
+        type: Number,
+        default: 50
     },
     finalAmount:{
         type: Number,
         required: true
     },
-
     address:{
         type: Schema.Types.ObjectId,
         ref: "Address",
@@ -108,7 +134,50 @@ const orderSchema = new Schema({
         type: String
     },
     cancellationReason: String,
-    returnReason: String
+    returnReason: String,
+    
+    // Order-level return fields
+    returnStatus: {
+        type: String,
+        enum: ["Pending", "Accepted", "Rejected", "Partial"],
+    },
+    returnCompletedAt: Date,
+    
+    // Return history to track all return operations
+    returnHistory: [{
+        itemId: {
+            type: Schema.Types.ObjectId,
+            required: true
+        },
+        productId: {
+            type: Schema.Types.ObjectId,
+            ref: "Product",
+            required: true
+        },
+        quantity: Number,
+        reason: String,
+        returnType: {
+            type: String,
+            enum: ["Single Item", "Full Order"],
+            default: "Single Item"
+        },
+        requestedAt: Date,
+        processedAt: Date,
+        status: {
+            type: String,
+            enum: ["Pending", "Accepted", "Rejected"],
+            required: true
+        },
+        rejectionReason: String,
+        actualRefundAmount: Number,
+        refundDetails: {
+            itemSubtotal: Number,
+            proportionalTax: Number,
+            proportionalDiscount: Number,
+            calculatedRefundAmount: Number,
+            actualRefundAmount: Number
+        }
+    }]
 });
 
 // Add a pre-save hook to ensure orderId is always set

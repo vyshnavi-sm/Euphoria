@@ -274,26 +274,13 @@
         <div class="row">
           <div class="col-md-4">
             <p class="mb-2"><strong>Subtotal:</strong> ₹<%= order.totalPrice.toFixed(2) %></p>
-            
-            <% 
-              // Calculate subtotal as sum of product prices
-              const subtotal = order.orderedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-              const DELIVERY_CHARGE = order.deliveryCharge || 0;
-              const FREE_DELIVERY_THRESHOLD = 1000;
-              const deliveryCharge = DELIVERY_CHARGE;
-              const taxAmount = Math.round(subtotal * 0.18);
-              const finalAmountWithDelivery = subtotal + deliveryCharge + taxAmount - (order.discount || 0);
-            %>
-            
-            <p class="mb-2"><strong>Delivery Charge:</strong> ₹<%= deliveryCharge.toFixed(2) %></p>
-           
-            <p class="mb-2"><strong>Tax (18%):</strong> ₹<%= taxAmount.toFixed(2) %></p>
+            <p class="mb-2"><strong>Delivery Charge:</strong> ₹<%= order.deliveryCharge.toFixed(2) %></p>
+            <p class="mb-2"><strong>Tax (18%):</strong> ₹<%= (order.finalAmount - (order.totalPrice + order.deliveryCharge - order.discount)).toFixed(2) %></p>
             <% if (order.discount > 0) { %>
               <p class="mb-2"><strong>Discount:</strong> -₹<%= order.discount.toFixed(2) %></p>
             <% } %>
-            
             <hr class="my-2">
-            <p class="h6 mt-2 mb-0"><strong>Final Amount:</strong> ₹<%= finalAmountWithDelivery.toFixed(2) %></p>
+            <p class="h6 mt-2 mb-0"><strong>Final Amount:</strong> ₹<%= order.finalAmount.toFixed(2) %></p>
           </div>
         </div>
       </div>
@@ -365,6 +352,14 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+          <!-- Refund breakdown for full order return -->
+          <div id="orderRefundBreakdown" class="mb-3" style="display: none;">
+            <div><strong>Subtotal:</strong> ₹<span id="orderBreakdownSubtotal"></span></div>
+            <div><strong>Tax:</strong> ₹<span id="orderBreakdownTax"></span></div>
+            <div><strong>Discount:</strong> -₹<span id="orderBreakdownDiscount"></span></div>
+            <hr class="my-2">
+            <div><strong>Final Refund Amount:</strong> ₹<span id="orderBreakdownFinal"></span></div>
+          </div>
           <form id="returnRequestForm">
             <input type="hidden" id="returnActionInput" name="action">
             <div class="mb-3" id="refundAmountSection" style="display: none;">
@@ -388,6 +383,14 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
+          <!-- Refund breakdown for item return -->
+          <div id="itemRefundBreakdown" class="mb-3" style="display: none;">
+            <div><strong>Subtotal:</strong> ₹<span id="itemBreakdownSubtotal"></span></div>
+            <div><strong>Tax:</strong> ₹<span id="itemBreakdownTax"></span></div>
+            <div><strong>Discount:</strong> -₹<span id="itemBreakdownDiscount"></span></div>
+            <hr class="my-2">
+            <div><strong>Final Refund Amount:</strong> ₹<span id="itemBreakdownFinal"></span></div>
+          </div>
           <form id="itemReturnForm">
             <input type="hidden" id="itemReturnOrderId" name="orderId">
             <input type="hidden" id="itemReturnItemId" name="itemId">
@@ -585,15 +588,29 @@
 
       const refundSection = document.getElementById('refundAmountSection');
       const refundInput = document.getElementById('refundAmount');
+      const breakdown = document.getElementById('orderRefundBreakdown');
+      const order = JSON.parse(document.getElementById('order-data').textContent);
 
       if (action === 'accept') {
         refundSection.style.display = 'block';
         refundInput.required = true;
-        refundInput.value = '<%= order.finalAmount || 0 %>';
+        refundInput.value = order.finalAmount || 0;
+        // Show breakdown
+        breakdown.style.display = 'block';
+        // Calculate values
+        const subtotal = order.orderedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const deliveryCharge = order.deliveryCharge || 0;
+        const discount = order.discount || 0;
+        const tax = (order.finalAmount - (order.totalPrice + deliveryCharge - discount));
+        document.getElementById('orderBreakdownSubtotal').textContent = subtotal.toFixed(2);
+        document.getElementById('orderBreakdownTax').textContent = tax > 0 ? tax.toFixed(2) : '0.00';
+        document.getElementById('orderBreakdownDiscount').textContent = discount.toFixed(2);
+        document.getElementById('orderBreakdownFinal').textContent = order.finalAmount ? order.finalAmount.toFixed(2) : '0.00';
       } else {
         refundSection.style.display = 'none';
         refundInput.required = false;
         refundInput.value = '';
+        breakdown.style.display = 'none';
       }
 
       modal.show();
@@ -601,57 +618,62 @@
 
     // Function to show item return modal
     function showItemReturnModal(orderId, itemId, action) {
-        const modal = new bootstrap.Modal(document.getElementById('itemReturnModal'));
-        
-        document.getElementById('itemReturnOrderId').value = orderId;
-        document.getElementById('itemReturnItemId').value = itemId;
-        document.getElementById('itemReturnAction').value = action;
-        
-        currentItemForReturn = itemId;
-        
-        const refundSection = document.getElementById('itemRefundAmountSection');
-        const refundInput = document.getElementById('itemRefundAmount');
-        const userReasonSection = document.getElementById('itemReturnReasonSection');
-        const userReasonText = document.getElementById('itemUserReturnReason');
-        const rejectReasonSection = document.getElementById('itemRejectReasonSection');
-        const rejectReasonInput = document.getElementById('itemRejectReason');
-
-        refundSection.style.display = 'none';
-        refundInput.required = false;
-        userReasonSection.style.display = 'none';
-        rejectReasonSection.style.display = 'none';
-        rejectReasonInput.required = false;
-        rejectReasonInput.value = '';
-        userReasonText.textContent = '';
-
-        const order = JSON.parse(document.getElementById('order-data').textContent);
-        const item = order.orderedItems.find(item => item._id === itemId);
-
-        if (item && item.status === 'Return Requested') {
-             userReasonSection.style.display = 'block';
-             userReasonText.textContent = item.returnReason || 'No reason provided';
-        }
-
-        if (action === 'accept') {
-            refundSection.style.display = 'block';
-            refundInput.required = true;
-             if (item) {
-                 refundInput.value = (item.price * item.quantity).toFixed(2);
-             } else {
-                 refundInput.value = 0;
-             }
-        } else if (action === 'reject') {
-             rejectReasonSection.style.display = 'block';
-             rejectReasonInput.required = true;
-        }
-
-        if (item && item.product && item.product.productName) {
-             document.getElementById('itemReturnProductName').textContent = item.product.productName;
+      const modal = new bootstrap.Modal(document.getElementById('itemReturnModal'));
+      document.getElementById('itemReturnOrderId').value = orderId;
+      document.getElementById('itemReturnItemId').value = itemId;
+      document.getElementById('itemReturnAction').value = action;
+      currentItemForReturn = itemId;
+      const refundSection = document.getElementById('itemRefundAmountSection');
+      const refundInput = document.getElementById('itemRefundAmount');
+      const userReasonSection = document.getElementById('itemReturnReasonSection');
+      const userReasonText = document.getElementById('itemUserReturnReason');
+      const rejectReasonSection = document.getElementById('itemRejectReasonSection');
+      const rejectReasonInput = document.getElementById('itemRejectReason');
+      const breakdown = document.getElementById('itemRefundBreakdown');
+      refundSection.style.display = 'none';
+      refundInput.required = false;
+      userReasonSection.style.display = 'none';
+      rejectReasonSection.style.display = 'none';
+      rejectReasonInput.required = false;
+      rejectReasonInput.value = '';
+      userReasonText.textContent = '';
+      breakdown.style.display = 'none';
+      const order = JSON.parse(document.getElementById('order-data').textContent);
+      const item = order.orderedItems.find(item => item._id === itemId);
+      if (item && item.status === 'Return Requested') {
+        userReasonSection.style.display = 'block';
+        userReasonText.textContent = item.returnReason || 'No reason provided';
+      }
+      if (action === 'accept') {
+        refundSection.style.display = 'block';
+        refundInput.required = true;
+        if (item) {
+          // Use proportional values if available
+          const subtotal = (item.price * item.quantity) || 0;
+          const discount = item.proportionalDiscount || 0;
+          const tax = item.proportionalTax || 0;
+          const finalRefund = subtotal + tax - discount;
+          refundInput.value = finalRefund.toFixed(2);
+          // Show breakdown
+          breakdown.style.display = 'block';
+          document.getElementById('itemBreakdownSubtotal').textContent = subtotal.toFixed(2);
+          document.getElementById('itemBreakdownTax').textContent = tax.toFixed(2);
+          document.getElementById('itemBreakdownDiscount').textContent = discount.toFixed(2);
+          document.getElementById('itemBreakdownFinal').textContent = finalRefund.toFixed(2);
         } else {
-            document.getElementById('itemReturnProductName').textContent = 'Item Details Not Found';
+          refundInput.value = 0;
+          breakdown.style.display = 'none';
         }
-        
-        modal.show();
+      } else if (action === 'reject') {
+        rejectReasonSection.style.display = 'block';
+        rejectReasonInput.required = true;
+      }
+      if (item && item.product && item.product.productName) {
+        document.getElementById('itemReturnProductName').textContent = item.product.productName;
+      } else {
+        document.getElementById('itemReturnProductName').textContent = 'Item Details Not Found';
+      }
+      modal.show();
     }
 
     // Event Listeners

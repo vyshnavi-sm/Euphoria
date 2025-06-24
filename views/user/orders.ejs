@@ -320,24 +320,15 @@
       margin-bottom: 20px;
     }
 
-    .btn-brown {
-      background-color: var(--primary-color);
-      color: var(--text-light);
-      border: none;
-      padding: 12px 25px;
-      border-radius: 8px;
-      font-weight: 500;
-      font-family: 'Montserrat', sans-serif;
-      transition: 0.3s;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      font-size: 14px;
+    .btn-brown, .btn-brown:visited {
+      background-color: var(--primary-color) !important;
+      color: var(--text-light) !important;
+      border: none !important;
     }
-
-    .btn-brown:hover {
-      background-color: var(--primary-dark);
-      color: var(--text-light);
-      transform: translateY(-2px);
+    .btn-brown:hover, .btn-brown:active, .btn-brown:focus {
+      background-color: var(--primary-dark) !important;
+      color: var(--text-light) !important;
+      border: none !important;
       box-shadow: 0 5px 15px rgba(62, 39, 35, 0.2);
     }
 
@@ -432,6 +423,166 @@
       border-color: var(--primary-light);
       box-shadow: 0 0 0 0.2rem rgba(93, 64, 55, 0.25);
     }
+
+    /* Responsive Design for Orders Page */
+    @media (max-width: 992px) {
+      .orders-container {
+        margin: 40px auto 30px;
+        padding: 0 10px;
+      }
+      .orders-header {
+        flex-direction: column;
+        padding: 15px 10px;
+        text-align: center;
+      }
+      .orders-header .btn {
+        margin-top: 15px;
+        width: 100%;
+      }
+      .header-content {
+        width: 100%;
+        margin-bottom: 10px;
+      }
+      .search-container {
+        flex-direction: column;
+        gap: 0;
+      }
+      .search-input {
+        width: 100%;
+        border-radius: 10px 10px 0 0;
+        margin-bottom: 0;
+      }
+      .search-btn {
+        width: 100%;
+        border-radius: 0 0 10px 10px;
+        padding: 10px 0;
+      }
+    }
+    @media (max-width: 768px) {
+      .orders-container {
+        margin: 20px auto 10px;
+        padding: 0 5px;
+      }
+      .orders-header {
+        flex-direction: column;
+        padding: 10px 5px;
+        border-radius: 10px 10px 0 0;
+      }
+      .section-title {
+        font-size: 22px;
+      }
+      .section-subtitle {
+        font-size: 12px;
+      }
+      .search-container {
+        flex-direction: column;
+        box-shadow: none;
+        border-radius: 8px;
+      }
+      .search-input, .search-btn {
+        font-size: 13px;
+        padding: 10px;
+      }
+      .card {
+        padding: 10px;
+      }
+      .card-title {
+        font-size: 16px;
+      }
+      .order-header, .d-flex.justify-content-between.align-items-center.mb-3 {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px;
+      }
+      .row {
+        flex-direction: column;
+      }
+      .col-md-6, .text-md-end {
+        width: 100% !important;
+        text-align: left !important;
+        margin-bottom: 10px;
+      }
+      .btn {
+        width: 100%;
+        margin-bottom: 8px;
+      }
+      .pagination {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .page-link {
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+      .empty-orders {
+        padding: 30px 5px;
+      }
+      .empty-orders-text {
+        font-size: 18px;
+      }
+      .modal-dialog {
+        margin: 1rem auto;
+        max-width: 95vw;
+      }
+    }
+    @media (max-width: 576px) {
+      .orders-header {
+        padding: 8px 2px;
+        border-radius: 8px 8px 0 0;
+      }
+      .section-title {
+        font-size: 16px;
+      }
+      .section-subtitle {
+        font-size: 10px;
+      }
+      .search-input, .search-btn {
+        font-size: 12px;
+        padding: 8px;
+      }
+      .card {
+        padding: 6px;
+      }
+      .card-title {
+        font-size: 13px;
+      }
+      .order-header, .d-flex.justify-content-between.align-items-center.mb-3 {
+        gap: 4px;
+      }
+      .btn {
+        font-size: 12px;
+        padding: 6px 0;
+      }
+      .product-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 8px;
+      }
+      .product-item img {
+        width: 60px;
+        height: 60px;
+        margin-right: 0;
+        margin-bottom: 8px;
+      }
+      .product-name {
+        font-size: 14px;
+      }
+      .product-price {
+        font-size: 13px;
+      }
+      .order-summary {
+        padding: 10px;
+      }
+      .summary-line {
+        font-size: 13px;
+      }
+      .summary-total {
+        font-size: 15px;
+      }
+      .modal-content {
+        padding: 5px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -463,7 +614,7 @@
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <h5 class="card-title mb-0">Order #<%= order._id %></h5>
-              <span class="badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' ? 'danger' : 'warning' %>">
+              <span class="badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' || order.status === 'Payment Failed' ? 'danger' : order.status === 'Returned' ? 'info' : 'warning' %>">
                 <%= order.status %>
               </span>
             </div>
@@ -489,7 +640,7 @@
                 </p> -->
               </div>
               <div class="col-md-6 text-md-end">
-                <a href="/user/orders/<%= order._id %>" class="btn btn-sm btn-primary">View Details</a>
+                <a href="/user/orders/<%= order._id %>" class="btn btn-sm btn-brown">View Details</a>
                 <% if (['Processing', 'Pending'].includes(order.status)) { %>
                   <button type="button" class="btn btn-sm btn-danger" onclick="showCancelOrderModal('<%= order._id %>')">
                     <i class="fas fa-times"></i> Cancel Order

@@ -212,10 +212,11 @@ const createPDF = async (type, data) => {
             const totalsStartY = currentY + 15;
             const totalsWidth = 200;
             
-            const subtotal = data.order.totalPrice;
+            // Add fallback to 0 if values are missing
+            const subtotal = typeof data.order.totalPrice === 'number' && !isNaN(data.order.totalPrice) ? data.order.totalPrice : 0;
             const tax = subtotal * 0.18;
-            const discount = data.order.discount || 0;
-            const finalAmount = data.order.finalAmount;
+            const discount = typeof data.order.discount === 'number' && !isNaN(data.order.discount) ? data.order.discount : 0;
+            const finalAmount = typeof data.order.finalAmount === 'number' && !isNaN(data.order.finalAmount) ? data.order.finalAmount : 0;
 
             doc
                 .fontSize(11) // Increased font size for totals breakdown

@@ -287,13 +287,10 @@ const handleReturnRequest = async (req, res) => {
                 });
             }
 
-            for (const item of order.orderedItems) {
-                const product = item.product;
-                if (product) {
-                    product.stock += item.quantity;
-                    await product.save();
-                }
-            }
+            // Set order totals to zero for a full return
+            order.totalPrice = 0;
+            order.discount = 0;
+            order.finalAmount = 0;
         } else if (action === 'reject') {
             order.status = 'Delivered';
             order.returnStatus = 'Rejected';
@@ -334,12 +331,66 @@ const handleItemReturnRequest = async (req, res) => {
             return res.status(400).json({ message: 'Item is not in return request status' });
         }
 
+        // Always recalculate proportional discount and tax for all active items
+        const recalculateProportionalSplits = () => {
+            // Only consider items that are not Cancelled, Returned, or Return Requested
+            const activeItems = order.orderedItems.filter(item =>
+                item.status !== 'Cancelled' && item.status !== 'Returned' && item.status !== 'Return Requested'
+            );
+            const totalItemsValue = activeItems.reduce((total, item) =>
+                total + (item.price * item.quantity), 0
+            );
+            // Discount
+            if (order.discount > 0) {
+                order.orderedItems.forEach(item => {
+                    if (item.status !== 'Cancelled' && item.status !== 'Returned' && item.status !== 'Return Requested') {
+                        const itemValue = item.price * item.quantity;
+                        const proportionalPercentage = totalItemsValue > 0 ? (itemValue / totalItemsValue) : 0;
+                        item.proportionalDiscount = Math.round((order.discount * proportionalPercentage) * 100) / 100;
+                    } else {
+                        item.proportionalDiscount = 0;
+                    }
+                });
+            } else {
+                order.orderedItems.forEach(item => { item.proportionalDiscount = 0; });
+            }
+            // Tax
+            const subtotal = activeItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+            const calculatedTax = subtotal * 0.18; // 18% tax
+            if (calculatedTax > 0) {
+                order.orderedItems.forEach(item => {
+                    if (item.status !== 'Cancelled' && item.status !== 'Returned' && item.status !== 'Return Requested') {
+                        const itemValue = item.price * item.quantity;
+                        const proportionalPercentage = totalItemsValue > 0 ? (itemValue / totalItemsValue) : 0;
+                        item.proportionalTax = Math.round((calculatedTax * proportionalPercentage) * 100) / 100;
+                    } else {
+                        item.proportionalTax = 0;
+                    }
+                });
+            } else {
+                order.orderedItems.forEach(item => { item.proportionalTax = 0; });
+            }
+        };
+        // Recalculate splits before processing return
+        recalculateProportionalSplits();
+
+        // Get item's proportional amounts
+        const itemSubtotal = item.price * item.quantity;
+        const itemProportionalDiscount = item.proportionalDiscount || 0;
+        const itemProportionalTax = item.proportionalTax || 0;
+        const calculatedRefundAmount = itemSubtotal + itemProportionalTax - itemProportionalDiscount;
+
         if (action === 'accept') {
+            // Store original item status for reversal calculation
+            const wasAlreadyReturned = item.status === 'Returned';
+            
             item.status = 'Returned';
             item.returnStatus = 'Accepted';
+            item.returnProcessedAt = new Date();
 
-            // Process refund if amount is provided and valid
-            const refundAmt = parseFloat(refundAmount);
+            // Calculate refund amount - use provided amount or calculated amount
+            const refundAmt = refundAmount ? parseFloat(refundAmount) : calculatedRefundAmount;
+            
             if (!isNaN(refundAmt) && refundAmt > 0 && order.userId) {
                 const user = await User.findById(order.userId);
                 if (user) {
@@ -350,11 +401,33 @@ const handleItemReturnRequest = async (req, res) => {
                         userId: user._id,
                         amount: refundAmt,
                         type: 'credit',
-                        description: `Refund for item return (Order #${order._id}, Item ID: ${item._id})`,
+                        description: `Refund for item return (Order #${order.orderId || order._id})`,
                         orderId: order._id,
-                        itemId: item._id
+                        itemId: item._id,
+                        refundDetails: {
+                            itemSubtotal: itemSubtotal,
+                            proportionalTax: itemProportionalTax,
+                            proportionalDiscount: itemProportionalDiscount,
+                            finalRefundAmount: refundAmt
+                        }
                     });
                 }
+            }
+
+            // Update order totals only if item wasn't already processed
+            if (!wasAlreadyReturned && !item.totalsAlreadyAdjusted) {
+                // Subtract the item's amounts from order totals
+                order.totalPrice -= itemSubtotal;
+                order.discount -= itemProportionalDiscount;
+                order.finalAmount -= calculatedRefundAmount;
+
+                // Prevent negative values
+                order.totalPrice = Math.max(0, order.totalPrice);
+                order.discount = Math.max(0, order.discount);
+                order.finalAmount = Math.max(0, order.finalAmount);
+
+                // Mark that totals have been adjusted for this item
+                item.totalsAlreadyAdjusted = true;
             }
 
             // Update product stock
@@ -362,6 +435,40 @@ const handleItemReturnRequest = async (req, res) => {
             if (product) {
                 product.stock += item.quantity;
                 await product.save();
+            }
+
+            // Update return history
+            if (!order.returnHistory) {
+                order.returnHistory = [];
+            }
+            
+            // Find and update existing return history entry or create new one
+            const existingHistoryIndex = order.returnHistory.findIndex(
+                history => history.itemId.toString() === item._id.toString()
+            );
+            
+            if (existingHistoryIndex !== -1) {
+                order.returnHistory[existingHistoryIndex].status = 'Accepted';
+                order.returnHistory[existingHistoryIndex].processedAt = new Date();
+                order.returnHistory[existingHistoryIndex].actualRefundAmount = refundAmt;
+            } else {
+                order.returnHistory.push({
+                    itemId: item._id,
+                    productId: item.product._id,
+                    quantity: item.quantity,
+                    reason: item.returnReason,
+                    returnType: 'Single Item',
+                    requestedAt: item.returnDetails?.returnRequestedAt || new Date(),
+                    processedAt: new Date(),
+                    status: 'Accepted',
+                    refundDetails: {
+                        itemSubtotal: itemSubtotal,
+                        proportionalTax: itemProportionalTax,
+                        proportionalDiscount: itemProportionalDiscount,
+                        calculatedRefundAmount: calculatedRefundAmount,
+                        actualRefundAmount: refundAmt
+                    }
+                });
             }
 
             // Check if all items are returned
@@ -372,20 +479,105 @@ const handleItemReturnRequest = async (req, res) => {
             if (allReturned) {
                 order.status = 'Returned';
                 order.returnStatus = 'Accepted';
+                order.returnCompletedAt = new Date();
             }
+
         } else if (action === 'reject') {
+            // Store original item status
+            const wasReturnRequested = item.status === 'Return Requested';
+            
             item.status = 'Delivered';
             item.returnStatus = 'Rejected';
+            item.returnRejectedAt = new Date();
+            
             if (rejectReason) {
                 item.adminRejectionReason = rejectReason;
             }
+
+            // If item was in return requested status, we need to add back its amounts to order totals
+            // (since they were deducted during return request)
+            if (wasReturnRequested && !item.totalsAlreadyAdjusted) {
+                order.totalPrice += itemSubtotal;
+                order.discount += itemProportionalDiscount;
+                order.finalAmount += calculatedRefundAmount;
+                
+                // Mark that totals have been adjusted
+                item.totalsAlreadyAdjusted = true;
+            }
+
+            // Update return history
+            if (!order.returnHistory) {
+                order.returnHistory = [];
+            }
+            
+            const existingHistoryIndex = order.returnHistory.findIndex(
+                history => history.itemId.toString() === item._id.toString()
+            );
+            
+            if (existingHistoryIndex !== -1) {
+                order.returnHistory[existingHistoryIndex].status = 'Rejected';
+                order.returnHistory[existingHistoryIndex].processedAt = new Date();
+                order.returnHistory[existingHistoryIndex].rejectionReason = rejectReason;
+            } else {
+                order.returnHistory.push({
+                    itemId: item._id,
+                    productId: item.product._id,
+                    quantity: item.quantity,
+                    reason: item.returnReason,
+                    returnType: 'Single Item',
+                    requestedAt: item.returnDetails?.returnRequestedAt || new Date(),
+                    processedAt: new Date(),
+                    status: 'Rejected',
+                    rejectionReason: rejectReason,
+                    refundDetails: {
+                        itemSubtotal: itemSubtotal,
+                        proportionalTax: itemProportionalTax,
+                        proportionalDiscount: itemProportionalDiscount,
+                        calculatedRefundAmount: calculatedRefundAmount
+                    }
+                });
+            }
+
+            // Clear return-related fields
+            item.returnReason = undefined;
+            item.returnDetails = undefined;
         }
 
         await order.save();
-        res.json({ success: true, message: `Item return request ${action}ed successfully` });
+        
+        // Prepare response with updated totals
+        const responseData = {
+            success: true, 
+            message: `Item return request ${action}ed successfully`,
+            itemDetails: {
+                itemId: item._id,
+                status: item.status,
+                returnStatus: item.returnStatus,
+                itemSubtotal: itemSubtotal,
+                proportionalDiscount: itemProportionalDiscount,
+                proportionalTax: itemProportionalTax,
+                calculatedRefundAmount: calculatedRefundAmount
+            },
+            updatedOrderTotals: {
+                totalPrice: order.totalPrice,
+                discount: order.discount,
+                finalAmount: order.finalAmount,
+                orderStatus: order.status
+            }
+        };
+
+        if (action === 'accept' && refundAmount) {
+            responseData.refundProcessed = {
+                amount: parseFloat(refundAmount),
+                creditedToWallet: true
+            };
+        }
+
+        res.json(responseData);
+        
     } catch (error) {
         console.error('Error handling item return request:', error);
-        res.status(500).json({ success: false, message: 'Error processing item return request' });
+        res.status(500).json({ success: false, message: 'Error processing item return request', error: error.message });
     }
 };
 

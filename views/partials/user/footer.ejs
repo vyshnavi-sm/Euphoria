@@ -1,43 +1,44 @@
 <style>
     /* Footer Styles */
     footer {
-        background-color: #f8f9fa;
-        padding: 50px 0 20px;
+        background-color: #5C4033;
+        color: white;
+        padding: 50px 0 0 0;
         margin-top: 50px;
-        border-top: 1px solid #e9ecef;
+        font-family: 'Cormorant Garamond', serif;
     }
 
     .footer-container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 0 20px;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(4, 1fr);
         gap: 30px;
+        padding: 0 20px;
     }
 
     .footer-section {
-        padding: 0 15px;
+        margin-bottom: 30px;
     }
 
     .footer-section h3 {
-        color: #333;
         font-size: 24px;
         margin-bottom: 20px;
-        font-weight: 600;
+        font-weight: 700;
+        color: white;
     }
 
     .footer-section h4 {
-        color: #333;
-        font-size: 18px;
-        margin-bottom: 20px;
+        font-size: 20px;
+        margin-bottom: 15px;
         font-weight: 600;
+        color: white;
     }
 
     .footer-section p {
-        color: #666;
         line-height: 1.6;
         margin-bottom: 15px;
+        color: rgba(255, 255, 255, 0.8);
     }
 
     .footer-section ul {
@@ -50,111 +51,94 @@
     }
 
     .footer-section ul li a {
-        color: #666;
+        color: rgba(255, 255, 255, 0.8);
         text-decoration: none;
         transition: color 0.3s ease;
     }
 
     .footer-section ul li a:hover {
-        color: #a97155;
+        color: white;
     }
 
     .play-store-box {
         display: flex;
         align-items: center;
-        background-color: #333;
-        color: white;
-        padding: 10px 15px;
-        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px;
+        border-radius: 8px;
         margin-top: 20px;
         cursor: pointer;
-        transition: background-color 0.3s ease;
+        transition: all 0.3s ease;
     }
 
     .play-store-box:hover {
-        background-color: #444;
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
     }
 
     .play-store-box i {
         font-size: 30px;
-        margin-right: 10px;
+        margin-right: 15px;
+        color: white !important;
+    }
+
+    .play-store-box .fa-google-play {
+        color: white !important;
+    }
+
+    .play-store-box .fa-brands {
+        color: white !important;
     }
 
     .play-text p {
         margin: 0;
         font-size: 12px;
-        color: #ccc;
+        color: white;
     }
 
     .play-text h2 {
         margin: 0;
-        font-size: 16px;
+        font-size: 18px;
+        font-weight: 600;
         color: white;
     }
 
     .footer-bottom {
-        max-width: 1200px;
-        margin: 30px auto 0;
-        padding: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 20px 0;
+        margin-top: 30px;
         text-align: center;
-        border-top: 1px solid #e9ecef;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .footer-bottom-content {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        width: 100%;
-        max-width: 800px;
-        margin: 0 auto;
+        padding: 20px 50px;
     }
 
-    .social-icons {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .social-icons i {
+    .social-icons i, .payment-icons i {
         font-size: 24px;
-        color: #666;
+        margin: 0 10px;
         cursor: pointer;
-        transition: color 0.3s ease;
+        transition: transform 0.3s ease;
+        color: white;
     }
 
-    .social-icons i:hover {
-        color: #a97155;
+    .social-icons i:hover, .payment-icons i:hover {
+        transform: translateY(-3px);
+        color: white;
     }
 
-    .footer-bottom p {
-        color: #666;
-        margin: 20px 0;
+    @media (max-width: 992px) {
+        .footer-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
-    .payment-icons {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .payment-icons i {
-        font-size: 30px;
-        color: #666;
-    }
-
-    @media (max-width: 768px) {
+    @media (max-width: 576px) {
         .footer-container {
             grid-template-columns: 1fr;
         }
 
-        .footer-section {
-            margin-bottom: 30px;
-        }
-
-        .footer-bottom-content {
+        .footer-bottom {
             flex-direction: column;
             gap: 20px;
         }
@@ -215,19 +199,17 @@
     </div>
 
     <div class="footer-bottom">
-        <div class="footer-bottom-content">
-            <div class="social-icons">
-                <i class="fa-brands fa-facebook"></i>
-                <i class="fa-brands fa-square-x-twitter"></i>
-                <i class="fa-brands fa-youtube"></i>
-                <i class="fa-brands fa-square-instagram"></i>
-            </div>
-            <p>© 2025 Euphoria - All Rights Reserved.</p>
-            <div class="payment-icons">
-                <i class="fa-brands fa-cc-visa"></i>
-                <i class="fa-brands fa-cc-mastercard"></i>
-                <i class="fa-brands fa-paypal"></i>
-            </div>
+        <div class="social-icons">
+            <i class="fa-brands fa-facebook"></i>
+            <i class="fa-brands fa-square-x-twitter"></i>
+            <i class="fa-brands fa-youtube"></i>
+            <i class="fa-brands fa-square-instagram"></i>
+        </div>
+        <p>© 2025 Euphoria - All Rights Reserved.</p>
+        <div class="payment-icons">
+            <i class="fa-brands fa-cc-visa"></i>
+            <i class="fa-brands fa-cc-mastercard"></i>
+            <i class="fa-brands fa-paypal"></i>
         </div>
     </div>
 </footer>

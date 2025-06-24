@@ -112,5 +112,3 @@ module.exports = referralController;
 
 
 
-
-
