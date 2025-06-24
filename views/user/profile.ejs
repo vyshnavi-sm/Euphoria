@@ -699,7 +699,7 @@
                     <div class="card-body text-center">
                       <div class="profile-picture-container">
                         <% if (user.profilePicture) { %>
-                          <img src="/images/profiles/<%= user.profilePicture %>" alt="Profile Picture" class="profile-picture">
+                          <img src="<%= user.profilePicture %>" alt="Profile Picture" class="profile-picture">
                         <% } else { %>
                           <div class="profile-picture-placeholder">
                             <i class="fi-rs-user"></i>

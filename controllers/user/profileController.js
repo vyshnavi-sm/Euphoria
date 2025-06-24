@@ -19,19 +19,19 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({
-    storage: storage,
-    fileFilter: function (req, file, cb) {
-        if (file.mimetype.startsWith('image/')) {
-            cb(null, true);
-        } else {
-            cb(new Error('Not an image! Please upload an image.'), false);
-        }
-    },
-    limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
-    }
-}).single('profilePicture');
+// const upload = multer({
+//     storage: storage,
+//     fileFilter: function (req, file, cb) {
+//         if (file.mimetype.startsWith('image/')) {
+//             cb(null, true);
+//         } else {
+//             cb(new Error('Not an image! Please upload an image.'), false);
+//         }
+//     },
+//     limits: {
+//         fileSize: 5 * 1024 * 1024 // 5MB limit
+//     }
+// }).single('profilePicture');
 
 function generateOtp(){
     const digits = "1234567890";
@@ -863,7 +863,7 @@ const updateProfile = async (req, res) => {
 
         // Handle profile picture upload if present
         if (req.file) {
-            updateData.profilePicture = req.file.filename;
+            updateData.profilePicture = req.file.path;
         }
 
         const updatedUser = await User.findByIdAndUpdate(
@@ -917,6 +917,5 @@ module.exports = {
     editAddress,
     updateAddress,
     deleteAddress,
-    updateProfile,
-    upload
+    updateProfile
 };

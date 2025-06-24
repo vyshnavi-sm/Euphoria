@@ -12,6 +12,7 @@ const checkoutController = require("../controllers/user/checkoutController");
 const orderController = require("../controllers/user/orderController");
 const paymentController = require('../controllers/user/paymentController');
 const referralController = require('../controllers/referralController');
+const upload = require('../middlewares/imageUpload')
 
 // Basic routes
 router.get("/pageNotFound", userController.pageNotFound);
@@ -57,7 +58,7 @@ router.post("/reset-password", profileController.postNewPassword);
 router.post("/resend-forgot-otp", profileController.resendOtp);
 router.post("/resend-change-email-otp", profileController.resendOtp);
 router.get("/userProfile", userAuth, profileController.getProfile);
-router.post("/update-profile", userAuth, profileController.upload, profileController.updateProfile);
+router.post("/update-profile", userAuth, upload.single('profilePicture'), profileController.updateProfile);
 router.get("/change-email", profileController.changeEmail);
 router.post("/change-email", profileController.changeEmailValid);
 router.post("/verify-email-otp", profileController.verifyEmailOtp);

@@ -40,6 +40,7 @@ const addBrand = async (req, res) => {
     try {
         const brand = req.body.name;
         const image = req.file;
+        console.log(image)
 
         // Validate required fields
         if (!brand || !brand.trim()) {
@@ -56,16 +57,11 @@ const addBrand = async (req, res) => {
             return res.redirect("/admin/brands?error=Brand already exists");
         }
 
-        // Ensure the uploads/brand-images directory exists
-        const uploadDir = path.join('public', 'uploads', 'brand-images');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-
+        
         // Create new brand
         const newBrand = new Brand({
             brandName: brand,
-            brandImage: [image.filename], // Store as array
+            brandImage: [image.path], // Store as array
         });
 
         await newBrand.save();

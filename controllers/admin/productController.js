@@ -86,81 +86,20 @@ const addProducts = async(req, res) => {
             return res.redirect("/admin/addProducts?error=" + encodeURIComponent("Product with this name already exists, please try with another name."));
         }
 
-        const images = [];
+      const images = [];
 
-        // Process image uploads
-        if(req.files && req.files.length > 0) {
-            console.log(`Processing ${req.files.length} uploaded files...`);
-            
-            // Define upload directory - use absolute path
-            const uploadDir = path.resolve(process.cwd(), 'public', 'uploads', 'product-images');
-            console.log(`Target upload directory: ${uploadDir}`);
-            
-            // Ensure directory exists
-            if (!fs.existsSync(uploadDir)) {
-                console.log(`Creating directory: ${uploadDir}`);
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-
-            // Process each uploaded file
-            for(let i = 0; i < req.files.length; i++) {
-                const file = req.files[i];
-                
-                // Skip if no file was uploaded in this position
-                if(!file || !file.originalname) {
-                    console.log(`Skipping empty file slot at index ${i}`);
-                    continue;
-                }
-                
-                // Validate file type
-                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-                if (!allowedTypes.includes(file.mimetype)) {
-                    return res.redirect("/admin/addProducts?error=Only JPG, JPEG, and PNG images are allowed");
-                }
-                
-                // Validate file size (max 5MB)
-                const maxSize = 5 * 1024 * 1024; // 5MB
-                if (file.size > maxSize) {
-                    return res.redirect("/admin/addProducts?error=Image size should not exceed 5MB");
-                }
-                
-                console.log(`Processing image ${i+1}/${req.files.length}: ${file.originalname}`);
-                
-                try {
-                    // Generate a unique filename
-                    const filename = `${Date.now()}-${file.originalname.replace(/\s+/g, '-')}`;
-                    const outputPath = path.join(uploadDir, filename);
-                    
-                    console.log(`Reading file from: ${file.path}`);
-                    console.log(`Writing resized image to: ${outputPath}`);
-                    
-                    // Read the buffer directly from the uploaded file
-                    const imageBuffer = fs.readFileSync(file.path);
-                    
-                    // Process the image with Sharp using the buffer
-                    await sharp(imageBuffer)
-                        .resize(440, 440, {
-                            fit: 'cover',
-                            withoutEnlargement: true
-                        })
-                        .toFile(outputPath);
-                    
-                    // Delete the temporary file
-                    if (fs.existsSync(file.path)) {
-                        console.log(`Removing temporary file: ${file.path}`);
-                        fs.unlinkSync(file.path);
-                    }
-                    
-                    // Add the filename to our images array
-                    images.push(filename);
-                    console.log(`Successfully processed and saved image as: ${filename}`);
-                    
-                } catch (error) {
-                    console.error(`Error processing image ${file.originalname}:`, error);
-                    return res.redirect("/admin/addProducts?error=" + encodeURIComponent(`Error processing image ${file.originalname}: ${error.message}`));
-                }
-            }
-        }
+// Process image uploads
+if(req.files && req.files.length > 0) {
+    console.log(`Processing ${req.files.length} uploaded files...`);
+    
+    // Extract cloudinary URLs from uploaded files
+    const imageUrls = req.files.map(file => file.path);
+    
+    // Add URLs to images array
+    images.push(...imageUrls);
+    
+    console.log(`Successfully processed ${imageUrls.length} images:`, imageUrls);
+}
 
         // Find category by name
         const category = await Category.findOne({name: products.category});
@@ -385,13 +324,27 @@ const editProduct = async (req, res) => {
         const newStatus = quantity === 0 ? "out of stock" : "Available";
         const isBlocked = data.isBlocked === 'on';
 
-        // Process new images if any
-        let images = [...product.productImage];
-        const newImagesCount = req.files ? req.files.length : 0;
+        // Process images - using the same logic as addProduct
+        let images = [...product.productImage]; // Start with existing images
 
-        // Validate maximum number of images
-        if (images.length + newImagesCount > 4) {
-             return res.redirect(`/admin/editProduct?id=${id}&error=${encodeURIComponent(`You can only have a maximum of 4 product images. You currently have ${images.length} and are trying to add ${newImagesCount}.`)}`);
+        // Process new image uploads if any
+        if (req.files && req.files.length > 0) {
+            console.log(`Processing ${req.files.length} uploaded files...`);
+            
+            // Extract cloudinary URLs from uploaded files
+            const imageUrls = req.files.map(file => file.path);
+            
+            // Add new URLs to images array
+            images.push(...imageUrls);
+            
+            console.log(`Successfully processed ${imageUrls.length} new images:`, imageUrls);
+        }
+
+        // Validate maximum number of images (should not exceed 4)
+        if (images.length > 4) {
+            const currentCount = product.productImage.length;
+            const newCount = req.files ? req.files.length : 0;
+            return res.redirect(`/admin/editProduct?id=${id}&error=${encodeURIComponent(`You can only have a maximum of 4 product images. You currently have ${currentCount} and are trying to add ${newCount}.`)}`);
         }
 
         // Update product fields
@@ -405,6 +358,7 @@ const editProduct = async (req, res) => {
         product.status = newStatus;
         product.color = data.color.trim();
         product.isBlocked = isBlocked;
+        product.productImage = images; // Update with new images array
 
         // Save the updated product
         await product.save();
