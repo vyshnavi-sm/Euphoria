@@ -79,7 +79,7 @@ router.get("/deleteAddress", userAuth, profileController.deleteAddress);
 
 // Cart Routes
 router.post("/user/cart/add", userAuth, cartController.addToCart);
-router.delete("/user/cart/remove/:productId", userAuth, cartController.removeFromCart);
+router.post("/user/cart/remove", userAuth, cartController.removeFromCart);
 router.get("/user/cart", userAuth, cartController.getCart);
 router.post("/user/cart/update", userAuth, cartController.updateCart);
 

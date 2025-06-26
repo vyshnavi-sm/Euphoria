@@ -95,7 +95,7 @@ const addToCart = async (req, res) => {
 // Remove from cart
 const removeFromCart = async (req, res) => {
     try {
-        const { productId } = req.params;
+        const productId = req.params.productId || req.body.productId;
         const userId = req.session.user;
 
         if (!userId) {
@@ -113,7 +113,7 @@ const removeFromCart = async (req, res) => {
         );
 
         await cart.save();
-        res.status(200).json({ message: 'Product removed from cart successfully', cart });
+        res.status(200).json({ success: true, message: 'Product removed from cart successfully', cart });
     } catch (error) {
         console.error('Error removing from cart:', error);
         res.status(500).json({ message: 'Internal server error' });

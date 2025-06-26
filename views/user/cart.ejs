@@ -550,7 +550,7 @@
                         </div>
                         <div class="summary-item total">
                             <span>Total</span>
-                            <span id="total">₹<%= cart.items ? (cart.items.reduce((sum, item) => sum + item.totalPrice, 0) + (cart.items.reduce((sum, item) => sum + item.totalPrice, 0) >= 1000 ? 0 : 50)).toFixed(2) : '0.00' %></span>
+                            <span id="total">₹<%= cart.items && cart.items.length > 0 ? (cart.items.reduce((sum, item) => sum + item.totalPrice, 0) + (cart.items.reduce((sum, item) => sum + item.totalPrice, 0) >= 1000 ? 0 : 50)).toFixed(2) : '0.00' %></span>
                         </div>
                         <div class="cart-actions">
                             <a href="/shop" class="btn btn-primary continue-shopping">
