@@ -535,6 +535,7 @@ const loadShoppingPage = async (req, res) => {
         if (req.session.user) {
             user = await User.findById(req.session.user);
         }
+        console.log(products)
 
         res.render('user/shop', {
             products,
@@ -550,6 +551,7 @@ const loadShoppingPage = async (req, res) => {
             priceRange: gt && lt ? `${gt}-${lt}` : null
         });
     } catch (error) {
+        console.log(error)
         console.error('Error loading shop page:', error);
         res.status(500).render('error', { message: 'Error loading shop page' });
     }
