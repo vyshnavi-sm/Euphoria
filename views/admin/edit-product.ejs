@@ -355,7 +355,7 @@
                                         <div class="thumbnails-container">
                                             <% product.productImage.forEach((image, index) => { %>
                                                 <div class="thumbnail position-relative">
-                                                    <img src="/uploads/product-images/<%= image %>" alt="Product Image" style="width: 100px; height: 100px; object-fit: cover;">
+                                                    <img src="<%= image %>" alt="Product Image" style="width: 100px; height: 100px; object-fit: cover;">
                                                     <button type="button" class="btn btn-danger btn-sm delete-image-btn" 
                                                         data-image="<%= image %>" 
                                                         data-product="<%= product._id %>"

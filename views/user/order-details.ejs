@@ -426,7 +426,7 @@
                         <% order.orderedItems.forEach(item => { %>
                             <div class="product-item">
                                 <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
-                                    <img src="/uploads/product-images/<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" class="product-image">
+                                    <img src="<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" class="product-image">
                                 <% } else { %>
                                     <img src="/images/default-product.jpg" alt="Product Image" class="product-image">
                                 <% } %>

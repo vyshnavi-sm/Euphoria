@@ -24,12 +24,14 @@
     z-index: 1000;
     flex-wrap: wrap;
     border-top: 3px solid #5D4037; /* Brown top border */
+    transition: all 0.3s ease;
 }
 
 .nav-left {
     display: flex;
     align-items: center;
     gap: 30px;
+    flex: 1;
 }
 
 /* Style to match the original nav-center class */
@@ -45,6 +47,7 @@
     text-overflow: ellipsis;
     max-width: 150px;
     margin-left: 30px; /* Move brand name to the right */
+    transition: all 0.3s ease;
 }
 
 .nav-links {
@@ -52,6 +55,7 @@
     gap: 20px;
     align-items: center; /* Align items vertically */
     margin-left: 10px;
+    transition: all 0.3s ease;
 }
 
 .nav-links a {
@@ -60,10 +64,14 @@
     font-family: 'Cormorant Garamond', serif;
     font-weight: 500;
     transition: color 0.3s ease;
+    padding: 8px 12px;
+    border-radius: 4px;
+    white-space: nowrap;
 }
 
 .nav-links a:hover {
     color: #a97155;
+    background-color: rgba(169, 113, 85, 0.1);
 }
 
 .nav-right {
@@ -71,12 +79,19 @@
     align-items: center;
     gap: 15px;
     margin-right: 20px;
+    flex-shrink: 0;
 }
 
 /* Style for icons in the nav-right section */
 .nav-right i {
     font-size: 20px; /* Decreased icon size */
     color: #5D4037; /* Brown color for icons */
+    transition: all 0.3s ease;
+}
+
+.nav-right a:hover i {
+    color: #a97155;
+    transform: scale(1.1);
 }
 
 .sign-in-link {
@@ -106,6 +121,7 @@
     right: 0;
     border-radius: 8px;
     overflow: hidden;
+    margin-top: 5px;
 }
 
 .dropdown-content a {
@@ -116,11 +132,26 @@
     width: 100%;
     font-family: 'Cormorant Garamond', serif;
     transition: all 0.3s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.dropdown-content a:last-child {
+    border-bottom: none;
 }
 
 .dropdown-content a:hover {
     background-color: #f8f9fa;
     color: #a97155;
+}
+
+.dropdown-content a.logout-link {
+    color: #dc3545;
+    border-top: 1px solid #f0f0f0;
+}
+
+.dropdown-content a.logout-link:hover {
+    background-color: #dc3545;
+    color: white;
 }
 
 .dropdown:hover .dropdown-content {
@@ -150,11 +181,14 @@
     font-weight: 500;
     transition: all 0.3s ease;
     font-family: 'Playfair Display', serif;
+    white-space: nowrap;
 }
 
 .user-button:hover {
     background-color: #D4AF37;
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
 }
 
 .navbar-toggle {
@@ -165,55 +199,376 @@
     color: #5C4033;
     cursor: pointer;
     margin-left: 10px;
+    padding: 8px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
 }
 
-@media (max-width: 900px) {
+.navbar-toggle:hover {
+    background-color: rgba(92, 64, 51, 0.1);
+    color: #a97155;
+}
+
+/* Mobile menu overlay */
+.mobile-menu-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1500;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.mobile-menu-overlay.show {
+    opacity: 1;
+}
+
+/* Enhanced Responsive Design */
+@media (max-width: 1200px) {
+    .navbar {
+        padding: 15px 20px;
+    }
+    
+    .nav-left {
+        gap: 20px;
+    }
+    
+    .brand-name {
+        font-size: 22px;
+        max-width: 130px;
+        margin-left: 20px;
+    }
+    
+    .nav-links {
+        gap: 15px;
+    }
+}
+
+@media (max-width: 992px) {
+    .navbar {
+        padding: 12px 15px;
+    }
+    
     .brand-name {
         font-size: 20px;
         max-width: 110px;
-        margin-left: 18px; /* Slightly less margin on smaller screens */
+        margin-left: 15px;
     }
-    .navbar {
-        padding: 10px 10px;
+    
+    .nav-links {
+        gap: 12px;
+    }
+    
+    .nav-links a {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+    
+    .nav-right {
+        gap: 12px;
+    }
+    
+    .user-button {
+        padding: 6px 16px;
+        font-size: 14px;
     }
 }
 
 @media (max-width: 768px) {
     .navbar {
         flex-direction: row;
-        padding: 8px 5px;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        position: relative;
     }
-    .nav-left {
-        flex: 1 1 auto;
-        min-width: 0;
+    .navbar-toggle {
+        display: block;
+        order: 1;
+        margin-left: 0;
     }
     .brand-name {
-        font-size: 18px;
-        max-width: 90px;
-        margin-left: 10px; /* Even less margin for mobile */
+        order: 2;
+        flex: 1;
+        text-align: center;
+        margin: 0;
+        font-size: 20px;
+        max-width: 100%;
+    }
+    .nav-left {
+        flex: 1;
+        min-width: 0;
+        gap: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
     .nav-links {
         display: none;
         position: absolute;
-        top: 60px;
+        top: 100%;
         left: 0;
-        width: 100vw;
+        width: 100%;
         background: white;
         flex-direction: column;
         gap: 0;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         z-index: 2000;
-        padding: 10px 0;
+        padding: 0;
+        border-top: 1px solid #eee;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
     }
     .nav-links.show {
         display: flex;
-    }
-    .navbar-toggle {
-        display: block;
+        max-height: 300px;
+        padding: 15px 0;
     }
     .nav-right {
+        order: 3;
+        display: flex;
+        align-items: center;
         gap: 8px;
         margin-right: 0;
+    }
+    .dropdown-content {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        min-width: 200px;
+        max-width: 90vw;
+        box-shadow: 0px 10px 25px rgba(0,0,0,0.3);
+    }
+    .dropdown-content a {
+        padding: 15px 20px;
+        font-size: 16px;
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar {
+        padding: 8px 10px;
+    }
+    
+    .brand-name {
+        font-size: 16px;
+        max-width: 80px;
+        margin-left: 8px;
+        margin-right: 8px;
+    }
+    
+    .nav-left {
+        gap: 10px;
+    }
+    
+    .nav-right {
+        gap: 6px;
+    }
+    
+    .nav-right i {
+        font-size: 16px;
+    }
+    
+    .user-button {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    
+    .divider {
+        margin: 0 4px;
+        font-size: 12px;
+    }
+    
+    .navbar-toggle {
+        font-size: 1.5rem;
+        padding: 6px;
+    }
+    
+    .nav-links a {
+        padding: 12px 15px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar {
+        padding: 6px 8px;
+    }
+    
+    .brand-name {
+        font-size: 14px;
+        max-width: 70px;
+        margin-left: 5px;
+        margin-right: 5px;
+    }
+    
+    .nav-right {
+        gap: 4px;
+    }
+    
+    .nav-right i {
+        font-size: 15px;
+    }
+    
+    .user-button {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .divider {
+        margin: 0 3px;
+        font-size: 11px;
+    }
+    
+    .navbar-toggle {
+        font-size: 1.3rem;
+        padding: 5px;
+    }
+}
+
+/* Animation for mobile menu */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.nav-links.show {
+    animation: slideDown 0.3s ease;
+}
+
+/* Accessibility improvements */
+.navbar-toggle:focus {
+    outline: 2px solid #a97155;
+    outline-offset: 2px;
+}
+
+.nav-links a:focus,
+.user-button:focus,
+.nav-right a:focus {
+    outline: 2px solid #a97155;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .navbar {
+        border-top: 3px solid #000;
+    }
+    
+    .nav-links a:hover,
+    .user-button:hover {
+        background-color: #000;
+        color: #fff;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .navbar,
+    .nav-links,
+    .nav-links a,
+    .user-button,
+    .nav-right i,
+    .navbar-toggle {
+        transition: none;
+    }
+    
+    .nav-links.show {
+        animation: none;
+    }
+}
+
+/* Dropdown arrow indicator */
+.dropdown-toggle::after {
+    content: '▼';
+    margin-left: 5px;
+    font-size: 10px;
+    transition: transform 0.3s ease;
+}
+
+.dropdown:hover .dropdown-toggle::after {
+    transform: rotate(180deg);
+}
+
+/* Additional dropdown improvements */
+.dropdown-content a i {
+    margin-right: 8px;
+    width: 16px;
+    text-align: center;
+}
+
+.dropdown-content a.logout-link i {
+    color: #dc3545;
+}
+
+.dropdown-content a.logout-link:hover i {
+    color: white;
+}
+
+/* Mobile dropdown overlay */
+.dropdown-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Focus states for accessibility */
+.dropdown-toggle:focus {
+    outline: 2px solid #a97155;
+    outline-offset: 2px;
+}
+
+.dropdown-content a:focus {
+    outline: 2px solid #a97155;
+    outline-offset: -2px;
+}
+
+/* High contrast mode support for dropdown */
+@media (prefers-contrast: high) {
+    .dropdown-content {
+        border: 2px solid #000;
+    }
+    
+    .dropdown-content a {
+        border-bottom: 1px solid #000;
+    }
+    
+    .dropdown-content a.logout-link {
+        border-top: 2px solid #000;
+    }
+}
+
+/* Reduced motion support for dropdown */
+@media (prefers-reduced-motion: reduce) {
+    .dropdown-toggle::after {
+        transition: none;
+    }
+    
+    .dropdown-overlay {
+        animation: none;
     }
 }
 </style>
@@ -245,24 +600,33 @@ rel="stylesheet">
                     <a href="/shop">Shop</a>
                 </div>
             </div>
-            <button class="navbar-toggle" aria-label="Toggle navigation">
+            <button class="navbar-toggle" aria-label="Toggle navigation" aria-expanded="false">
                 <i class="fa fa-bars"></i>
             </button>
             <div class="nav-right">
                 <% if (user) { %>
-                    <a href="/userProfile" class="user-button"><%= user.name %></a>
+                    <div class="dropdown">
+                        <a href="#" class="user-button dropdown-toggle"><%= user.name %></a>
+                        <div class="dropdown-content">
+                            <a href="/userProfile"><i class="fas fa-user"></i> Profile</a>
+                            <a href="/logout" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
                     <span class="divider">|</span>
-                    <a href="/user/cart"><i class="fas fa-shopping-cart"></i></a>
-                    <a href="/user/wishlist"><i class="fas fa-heart"></i></a>
+                    <a href="/user/cart" aria-label="Shopping Cart"><i class="fas fa-shopping-cart"></i></a>
+                    <a href="/user/wishlist" aria-label="Wishlist"><i class="fas fa-heart"></i></a>
                 <% } else { %>
                     <a href="/login" class="user-button">Login</a>
                     <span class="divider">|</span>
-                    <a href="/user/cart"><i class="fas fa-shopping-cart"></i></a>
-                    <a href="/user/wishlist"><i class="fas fa-heart"></i></a>
+                    <a href="/user/cart" aria-label="Shopping Cart"><i class="fas fa-shopping-cart"></i></a>
+                    <a href="/user/wishlist" aria-label="Wishlist"><i class="fas fa-heart"></i></a>
                 <% } %>
             </div>
         </nav>
     </section>
+    
+    <!-- Mobile menu overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
     
     <!-- Rest of your page content here -->
 </body>
@@ -271,9 +635,175 @@ rel="stylesheet">
 document.addEventListener('DOMContentLoaded', function() {
     const toggle = document.querySelector('.navbar-toggle');
     const navLinks = document.querySelector('.nav-links');
+    const mobileOverlay = document.getElementById('mobileMenuOverlay');
+    const dropdown = document.querySelector('.dropdown');
+    const dropdownToggle = document.querySelector('.dropdown-toggle');
+    const dropdownContent = document.querySelector('.dropdown-content');
+    
+    // Mobile menu functionality
     if (toggle && navLinks) {
         toggle.addEventListener('click', function() {
+            const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+            
+            // Toggle menu
             navLinks.classList.toggle('show');
+            mobileOverlay.classList.toggle('show');
+            
+            // Update aria-expanded
+            toggle.setAttribute('aria-expanded', !isExpanded);
+            
+            // Update icon
+            const icon = toggle.querySelector('i');
+            if (icon) {
+                icon.className = isExpanded ? 'fa fa-bars' : 'fa fa-times';
+            }
+        });
+        
+        // Close menu when clicking overlay
+        mobileOverlay.addEventListener('click', function() {
+            navLinks.classList.remove('show');
+            mobileOverlay.classList.remove('show');
+            toggle.setAttribute('aria-expanded', 'false');
+            const icon = toggle.querySelector('i');
+            if (icon) {
+                icon.className = 'fa fa-bars';
+            }
+        });
+        
+        // Close menu when clicking on a link (mobile)
+        navLinks.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') {
+                navLinks.classList.remove('show');
+                mobileOverlay.classList.remove('show');
+                toggle.setAttribute('aria-expanded', 'false');
+                const icon = toggle.querySelector('i');
+                if (icon) {
+                    icon.className = 'fa fa-bars';
+                }
+            }
+        });
+        
+        // Close menu on window resize (if screen becomes larger)
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                navLinks.classList.remove('show');
+                mobileOverlay.classList.remove('show');
+                toggle.setAttribute('aria-expanded', 'false');
+                const icon = toggle.querySelector('i');
+                if (icon) {
+                    icon.className = 'fa fa-bars';
+                }
+            }
+        });
+        
+        // Keyboard navigation support
+        toggle.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggle.click();
+            }
+        });
+    }
+    
+    // Dropdown functionality
+    if (dropdown && dropdownToggle && dropdownContent) {
+        let isDropdownOpen = false;
+        
+        // Toggle dropdown on click (for mobile and accessibility)
+        dropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (window.innerWidth <= 768) {
+                // Mobile behavior - toggle dropdown
+                isDropdownOpen = !isDropdownOpen;
+                if (isDropdownOpen) {
+                    dropdownContent.style.display = 'block';
+                    // Add overlay for mobile
+                    const dropdownOverlay = document.createElement('div');
+                    dropdownOverlay.className = 'dropdown-overlay';
+                    dropdownOverlay.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background: rgba(0,0,0,0.5);
+                        z-index: 999;
+                    `;
+                    document.body.appendChild(dropdownOverlay);
+                    
+                    // Close dropdown when clicking overlay
+                    dropdownOverlay.addEventListener('click', function() {
+                        dropdownContent.style.display = 'none';
+                        isDropdownOpen = false;
+                        document.body.removeChild(dropdownOverlay);
+                    });
+                } else {
+                    dropdownContent.style.display = 'none';
+                    const overlay = document.querySelector('.dropdown-overlay');
+                    if (overlay) {
+                        document.body.removeChild(overlay);
+                    }
+                }
+            }
+        });
+        
+        // Desktop hover behavior
+        if (window.innerWidth > 768) {
+            dropdown.addEventListener('mouseenter', function() {
+                dropdownContent.style.display = 'block';
+            });
+            
+            dropdown.addEventListener('mouseleave', function() {
+                dropdownContent.style.display = 'none';
+            });
+        }
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!dropdown.contains(e.target)) {
+                dropdownContent.style.display = 'none';
+                isDropdownOpen = false;
+                const overlay = document.querySelector('.dropdown-overlay');
+                if (overlay) {
+                    document.body.removeChild(overlay);
+                }
+            }
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                // Switch to hover behavior on desktop
+                dropdownContent.style.display = 'none';
+                isDropdownOpen = false;
+                const overlay = document.querySelector('.dropdown-overlay');
+                if (overlay) {
+                    document.body.removeChild(overlay);
+                }
+            }
+        });
+        
+        // Keyboard navigation for dropdown
+        dropdownToggle.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                dropdownToggle.click();
+            }
+        });
+        
+        // Handle dropdown links
+        dropdownContent.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') {
+                // Close dropdown after clicking a link
+                dropdownContent.style.display = 'none';
+                isDropdownOpen = false;
+                const overlay = document.querySelector('.dropdown-overlay');
+                if (overlay) {
+                    document.body.removeChild(overlay);
+                }
+            }
         });
     }
 });

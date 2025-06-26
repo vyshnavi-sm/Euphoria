@@ -842,7 +842,7 @@
                                         <% const firstItem = order.orderedItems[0]; %>
                                         <div class="product-item d-flex align-items-center py-2">
                                           <% if (firstItem.product && firstItem.product.productImage && firstItem.product.productImage.length > 0) { %>
-                                            <img src="/uploads/product-images/<%= firstItem.product.productImage[0] %>" alt="<%= firstItem.product.productName %>" class="product-image me-3">
+                                            <img src="<%= firstItem.product.productImage[0] %>" alt="<%= firstItem.product.productName %>" class="product-image me-3">
                                           <% } else { %>
                                             <img src="/images/default-product.jpg" alt="Product Image" class="product-image me-3">
                                           <% } %>

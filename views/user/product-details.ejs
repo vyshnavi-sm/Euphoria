@@ -1406,7 +1406,7 @@
                 <div class="related-grid">
                     <% relatedProducts.forEach(relatedProduct => { %>
                         <a href="/product/<%= relatedProduct._id %>" class="related-product">
-                            <img src="/uploads/product-images/<%= relatedProduct.productImage[0] %>" 
+                            <img src="<%= relatedProduct.productImage[0] %>" 
                                  alt="<%= relatedProduct.productName %>">
                             <h4><%= relatedProduct.productName %></h4>
                             <span class="price">₹<%= relatedProduct.salePrice %></span>
@@ -1416,7 +1416,7 @@
             </div>
 
             <!-- Reviews Section -->
-            <div class="reviews-section">
+            <!-- <div class="reviews-section">
               <h3>Customer Reviews</h3>
               <% if (product.reviews && product.reviews.length > 0) { %>
                 <% product.reviews.forEach(review => { %>
@@ -1444,7 +1444,7 @@
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </section>
 </main>
 

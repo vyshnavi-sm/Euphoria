@@ -137,6 +137,44 @@ const getOrderDetails = async (req, res) => {
             return res.status(404).json({ error: 'Order not found' });
         }
 
+        // Recalculate proportional splits for all items (for up-to-date modal info)
+        const activeItems = order.orderedItems.filter(item =>
+            item.status !== 'Cancelled' && item.status !== 'Returned'
+        );
+        const totalItemsValue = activeItems.reduce((total, item) =>
+            total + (item.price * item.quantity), 0
+        );
+        // Discount
+        if (order.discount > 0) {
+            order.orderedItems.forEach(item => {
+                if (item.status !== 'Cancelled' && item.status !== 'Returned') {
+                    const itemValue = item.price * item.quantity;
+                    const proportionalPercentage = totalItemsValue > 0 ? (itemValue / totalItemsValue) : 0;
+                    item.proportionalDiscount = Math.round((order.discount * proportionalPercentage) * 100) / 100;
+                } else {
+                    item.proportionalDiscount = 0;
+                }
+            });
+        } else {
+            order.orderedItems.forEach(item => { item.proportionalDiscount = 0; });
+        }
+        // Tax
+        const subtotal = activeItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+        const calculatedTax = subtotal * 0.18;
+        if (calculatedTax > 0) {
+            order.orderedItems.forEach(item => {
+                if (item.status !== 'Cancelled' && item.status !== 'Returned') {
+                    const itemValue = item.price * item.quantity;
+                    const proportionalPercentage = totalItemsValue > 0 ? (itemValue / totalItemsValue) : 0;
+                    item.proportionalTax = Math.round((calculatedTax * proportionalPercentage) * 100) / 100;
+                } else {
+                    item.proportionalTax = 0;
+                }
+            });
+        } else {
+            order.orderedItems.forEach(item => { item.proportionalTax = 0; });
+        }
+
         // Preserve original createdAt from database
         const orderDate = order.createdAt || order.createdOn;
         
@@ -331,11 +369,11 @@ const handleItemReturnRequest = async (req, res) => {
             return res.status(400).json({ message: 'Item is not in return request status' });
         }
 
-        // Always recalculate proportional discount and tax for all active items
-        const recalculateProportionalSplits = () => {
-            // Only consider items that are not Cancelled, Returned, or Return Requested
+        // Always recalculate proportional discount and tax for all active items INCLUDING the item being returned
+        const recalculateProportionalSplits = (excludeItemId = null) => {
+            // Only consider items that are not Cancelled or Returned (optionally exclude one item)
             const activeItems = order.orderedItems.filter(item =>
-                item.status !== 'Cancelled' && item.status !== 'Returned' && item.status !== 'Return Requested'
+                item.status !== 'Cancelled' && item.status !== 'Returned' && (!excludeItemId || item._id.toString() !== excludeItemId.toString())
             );
             const totalItemsValue = activeItems.reduce((total, item) =>
                 total + (item.price * item.quantity), 0
@@ -343,7 +381,7 @@ const handleItemReturnRequest = async (req, res) => {
             // Discount
             if (order.discount > 0) {
                 order.orderedItems.forEach(item => {
-                    if (item.status !== 'Cancelled' && item.status !== 'Returned' && item.status !== 'Return Requested') {
+                    if (item.status !== 'Cancelled' && item.status !== 'Returned' && (!excludeItemId || item._id.toString() !== excludeItemId.toString())) {
                         const itemValue = item.price * item.quantity;
                         const proportionalPercentage = totalItemsValue > 0 ? (itemValue / totalItemsValue) : 0;
                         item.proportionalDiscount = Math.round((order.discount * proportionalPercentage) * 100) / 100;
@@ -359,7 +397,7 @@ const handleItemReturnRequest = async (req, res) => {
             const calculatedTax = subtotal * 0.18; // 18% tax
             if (calculatedTax > 0) {
                 order.orderedItems.forEach(item => {
-                    if (item.status !== 'Cancelled' && item.status !== 'Returned' && item.status !== 'Return Requested') {
+                    if (item.status !== 'Cancelled' && item.status !== 'Returned' && (!excludeItemId || item._id.toString() !== excludeItemId.toString())) {
                         const itemValue = item.price * item.quantity;
                         const proportionalPercentage = totalItemsValue > 0 ? (itemValue / totalItemsValue) : 0;
                         item.proportionalTax = Math.round((calculatedTax * proportionalPercentage) * 100) / 100;
@@ -371,10 +409,10 @@ const handleItemReturnRequest = async (req, res) => {
                 order.orderedItems.forEach(item => { item.proportionalTax = 0; });
             }
         };
-        // Recalculate splits before processing return
+        // 1. Recalculate splits including the item being returned
         recalculateProportionalSplits();
 
-        // Get item's proportional amounts
+        // Get item's proportional amounts (now correct for refund)
         const itemSubtotal = item.price * item.quantity;
         const itemProportionalDiscount = item.proportionalDiscount || 0;
         const itemProportionalTax = item.proportionalTax || 0;
@@ -481,6 +519,9 @@ const handleItemReturnRequest = async (req, res) => {
                 order.returnStatus = 'Accepted';
                 order.returnCompletedAt = new Date();
             }
+
+            // 2. After marking as returned, recalculate splits for remaining items
+            recalculateProportionalSplits(item._id);
 
         } else if (action === 'reject') {
             // Store original item status

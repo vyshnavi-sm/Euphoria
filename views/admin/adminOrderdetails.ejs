@@ -617,7 +617,18 @@
     }
 
     // Function to show item return modal
-    function showItemReturnModal(orderId, itemId, action) {
+    async function showItemReturnModal(orderId, itemId, action) {
+      // Fetch latest order data from server to ensure up-to-date tax/refund info
+      let order;
+      try {
+        const response = await fetch(`/admin/api/orders/${orderId}`);
+        if (!response.ok) throw new Error('Failed to fetch latest order data');
+        order = await response.json();
+      } catch (err) {
+        showToast('Could not fetch latest order data. Showing possibly outdated info.', 'error');
+        // fallback to old method
+        order = JSON.parse(document.getElementById('order-data').textContent);
+      }
       const modal = new bootstrap.Modal(document.getElementById('itemReturnModal'));
       document.getElementById('itemReturnOrderId').value = orderId;
       document.getElementById('itemReturnItemId').value = itemId;
@@ -638,7 +649,6 @@
       rejectReasonInput.value = '';
       userReasonText.textContent = '';
       breakdown.style.display = 'none';
-      const order = JSON.parse(document.getElementById('order-data').textContent);
       const item = order.orderedItems.find(item => item._id === itemId);
       if (item && item.status === 'Return Requested') {
         userReasonSection.style.display = 'block';

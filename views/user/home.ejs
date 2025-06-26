@@ -176,7 +176,7 @@
     <section class="categories">
         <% categories.forEach(category => { %>
             <div class="category-item">
-                <img src="<%= categoryImages[category._id] ? ('/uploads/product-images/' + categoryImages[category._id]) : ('/uploads/category-images/' + (category.image || 'default-image.jpg')) %>" alt="<%= category.name %>">
+                <img src="<%= categoryImages[category._id] ? (categoryImages[category._id]) : ('/category-images/' + (category.image || 'default-image.jpg')) %>" alt="<%= category.name %>">
                 <div class="category-overlay"></div>
                 <div class="category-text"><%= category.name.toUpperCase() %></div>
             </div>
@@ -191,7 +191,7 @@
             <% const limitedProducts = products.slice(0, 5); %>
             <% limitedProducts.forEach(product => { %>
                 <div class="product">
-                    <img src="/uploads/product-images/<%= product.productImage[0] %>" alt="<%= product.productName %>">
+                    <img src="<%= product.productImage[0] %>" alt="<%= product.productName %>">
                     <p><%= product.productName %></p>
                     <p>₹<%= product.salePrice %></p>
                 </div>

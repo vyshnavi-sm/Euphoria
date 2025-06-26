@@ -546,7 +546,7 @@
           <% cart.items.forEach(item => { %>
             <div class="product-item">
               <% if (item.productId && item.productId.productImage && item.productId.productImage.length > 0) { %>
-                <img src="/uploads/product-images/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
+                <img src="<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>">
               <% } else { %>
                 <img src="/images/default-product.jpg" alt="Product Image">
               <% } %>
