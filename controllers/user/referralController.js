@@ -1,9 +1,8 @@
-const User = require('../models/userSchema');
-const Coupon = require('../models/couponSchema');
-const { ReferralOffer } = require('../models/offerSchema');
+const User = require('../../models/userSchema');
+const Coupon = require('../../models/couponSchema');
+const { ReferralOffer } = require('../../models/offerSchema');
 
 const referralController = {
-    // Get user's referral code
     getReferralCode: async (req, res) => {
         try {
             const userId = req.session.user_id;
@@ -24,7 +23,6 @@ const referralController = {
         }
     },
 
-    // Process referral during registration
     processReferral: async (req, res) => {
         try {
             const { referralCode } = req.body;
@@ -34,13 +32,11 @@ const referralController = {
                 return res.status(400).json({ message: 'Referral code is required' });
             }
 
-            // Find referrer
             const referrer = await User.findOne({ referalCode: referralCode });
             if (!referrer) {
                 return res.status(404).json({ message: 'Invalid referral code' });
             }
 
-            // Update new user's referredBy field
             const newUser = await User.findById(newUserId);
             if (!newUser) {
                 return res.status(404).json({ message: 'User not found' });
@@ -49,22 +45,19 @@ const referralController = {
             newUser.referredBy = referrer._id;
             await newUser.save();
 
-            // Update referrer's referral count
             referrer.referralCount += 1;
             await referrer.save();
 
-            // Create referral offer
             const referralOffer = new ReferralOffer({
                 referrer: referrer._id,
                 referred: newUser._id,
                 referralCode: referralCode,
-                rewardAmount: 100, // You can adjust this amount
-                expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days from now
+                rewardAmount: 100, 
+                expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) 
             });
             await referralOffer.save();
 
-            // Add reward to referrer's wallet
-            referrer.wallet += 100; // Same amount as rewardAmount
+            referrer.wallet += 100; 
             referrer.referralRewards.push({
                 amount: 100,
                 referredUser: newUser._id
@@ -81,7 +74,6 @@ const referralController = {
         }
     },
 
-    // Get referral statistics
     getReferralStats: async (req, res) => {
         try {
             const userId = req.session.user_id;

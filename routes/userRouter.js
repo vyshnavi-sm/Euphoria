@@ -11,17 +11,25 @@ const wishlistController = require("../controllers/user/wishlistController");
 const checkoutController = require("../controllers/user/checkoutController");
 const orderController = require("../controllers/user/orderController");
 const paymentController = require('../controllers/user/paymentController');
-const referralController = require('../controllers/referralController');
-const upload = require('../middlewares/imageUpload')
+const referralController = require('../controllers/user/referralController');
+const upload = require('../helpers/imageUpload');
+const homeController = require('../controllers/user/homeController');
+const couponController = require('../controllers/user/couponController');
+const cancelController = require('../controllers/user/cancelController');
+const returnController = require('../controllers/user/returnController')
+const addressController = require('../controllers/user/addressController')
+const forgotPasswordController = require('../controllers/user/forgotPasswordController');
+const PasswordController = require('../controllers/user/passwordController');
+const emailController = require('../controllers/user/emailController');
 
 // Basic routes
 router.get("/pageNotFound", userController.pageNotFound);
-router.get("/", userController.loadHomepage);
-router.get("/shop", userController.loadShoppingPage);
+router.get("/", homeController.loadHomepage);
+router.get("/shop", homeController.loadShoppingPage);
 
 // Filter routes
-router.get("/filter", userController.filterProduct);
-router.get("/filterPrice", userController.filterByPrice);
+router.get("/filter", homeController.filterProduct);
+router.get("/filterPrice", homeController.filterByPrice);
 
 // Signup/Register routes
 router.get("/signup", userController.loadSignup);
@@ -50,32 +58,32 @@ router.post("/login", userController.login);
 router.get("/logout", userController.logout);
 
 // Profile Management Routes
-router.get('/forgot-password', profileController.getForgotPassPage);
-router.post("/forgotPass-otp", profileController.forgotEmailValid);
-router.post("/verify-passForgot-otp", profileController.verifyForgotPassOtp);
-router.get("/reset-password", profileController.getResetPassPage);
-router.post("/reset-password", profileController.postNewPassword);
-router.post("/resend-forgot-otp", profileController.resendOtp);
-router.post("/resend-change-email-otp", profileController.resendOtp);
+router.get('/forgot-password', forgotPasswordController.getForgotPassPage);
+router.post("/forgotPass-otp", forgotPasswordController.forgotEmailValid);
+router.post("/verify-passForgot-otp", forgotPasswordController.verifyForgotPassOtp);
+router.get("/reset-password", forgotPasswordController.getResetPassPage);
+router.post("/reset-password", PasswordController.postNewPassword);
+router.post("/resend-forgot-otp", forgotPasswordController.resendOtp);
+router.post("/resend-change-email-otp", forgotPasswordController.resendOtp);
 router.get("/userProfile", userAuth, profileController.getProfile);
 router.post("/update-profile", userAuth, upload.single('profilePicture'), profileController.updateProfile);
-router.get("/change-email", profileController.changeEmail);
-router.post("/change-email", profileController.changeEmailValid);
-router.post("/verify-email-otp", profileController.verifyEmailOtp);
-router.get("/change-password", profileController.changePassword);
-router.post("/change-password", profileController.postNewPassword);
-router.post("/verify-changepassword-otp", profileController.verifyChangePassOtp);
-router.get("/addresses", profileController.viewAddresses);
+router.get("/change-email", emailController.changeEmail);
+router.post("/change-email", emailController.changeEmailValid);
+router.post("/verify-email-otp", emailController.verifyEmailOtp);
+router.get("/change-password", PasswordController.changePassword);
+router.post("/change-password", PasswordController.postNewPassword);
+router.post("/verify-changepassword-otp", PasswordController.verifyChangePassOtp);
+router.get("/addresses", addressController.viewAddresses);
 
 // Product Management
 router.get("/product/:id", productController.productDetails);
 
 // Address Management
-router.get("/addAddress", profileController.addAddress);
-router.post("/addAddress", profileController.postAddAddress);
-router.get("/edit-address/:id", profileController.editAddress);
-router.post("/edit-address/:id", profileController.updateAddress);
-router.get("/deleteAddress", userAuth, profileController.deleteAddress);
+router.get("/addAddress", addressController.addAddress);
+router.post("/addAddress", addressController.postAddAddress);
+router.get("/edit-address/:id", addressController.editAddress);
+router.post("/edit-address/:id", addressController.updateAddress);
+router.get("/deleteAddress", userAuth, addressController.deleteAddress);
 
 // Cart Routes
 router.post("/user/cart/add", userAuth, cartController.addToCart);
@@ -95,16 +103,16 @@ router.post("/user/place-order", userAuth, checkoutController.placeOrder);
 router.get("/user/order-success/:orderId", userAuth, checkoutController.getOrderSuccess);
 
 // Coupon Routes
-router.post("/apply-coupon", userAuth, checkoutController.applyCoupon);
-router.post("/remove-coupon", userAuth, checkoutController.removeCoupon);
+router.post("/apply-coupon", userAuth, couponController.applyCoupon);
+router.post("/remove-coupon", userAuth, couponController.removeCoupon);
 
 // Order Routes
 router.get("/user/orders", userAuth, orderController.getUserOrders);
 router.get("/user/orders/:id", userAuth, orderController.getOrderDetails);
-router.post("/user/orders/:orderId/cancel", userAuth, orderController.cancelOrder);
-router.post("/user/orders/:orderId/return", userAuth, orderController.returnOrder);
-router.post("/user/orders/:orderId/items/:itemId/cancel", userAuth, orderController.cancelItem);
-router.post("/user/orders/:orderId/items/:itemId/return", userAuth, orderController.returnSingleItem);
+router.post("/user/orders/:orderId/cancel", userAuth, cancelController.cancelOrder);
+router.post("/user/orders/:orderId/return", userAuth, returnController.returnOrder);
+router.post("/user/orders/:orderId/items/:itemId/cancel", userAuth, cancelController.cancelItem);
+router.post("/user/orders/:orderId/items/:itemId/return", userAuth, returnController.returnSingleItem);
 router.get("/user/orders/:orderId/invoice", userAuth, orderController.downloadInvoice);
 
 // Payment routes

@@ -1,25 +1,36 @@
 const User = require('../../models/userSchema');
+const Order = require('../../models/orderSchema');
 
 const customerInfo = async (req, res) => {
     try {
-        let search = req.query.search || ""; // Default search value
-        let page = parseInt(req.query.page) || 1; // Default page number
-        const limit = 8; // Number of users per page
+        let search = req.query.search || ""; 
+        let page = parseInt(req.query.page) || 1; 
+        const limit = 8; 
 
-        // Fetch filtered customers
         const userData = await User.find({
             isAdmin: false,
             $or: [
-                { name: { $regex: search, $options: "i" } }, // Case-insensitive search
+                { name: { $regex: search, $options: "i" } },
                 { email: { $regex: search, $options: "i" } },
             ],
         })
-            .sort({ createdOn: -1 }) // Sort by creation date in descending order
+            .sort({ createdOn: -1 }) 
             .limit(limit)
             .skip((page - 1) * limit)
             .exec();
 
-        // Count total number of customers
+        const userDataWithOrders = await Promise.all(
+            userData.map(async (user) => {
+                const orderCount = await Order.countDocuments({ userId: user._id });
+                return {
+                    ...user.toObject(),
+                    customerId: user._id.toString().slice(-8).toUpperCase(),
+                    orders: orderCount,
+                    balance: user.wallet || 0
+                };
+            })
+        );
+
         const count = await User.countDocuments({
             isAdmin: false,
             $or: [
@@ -28,9 +39,8 @@ const customerInfo = async (req, res) => {
             ],
         });
 
-        // Render customers.ejs with data
         res.render('customers', {
-            data: userData,
+            data: userDataWithOrders,
             totalPages: Math.ceil(count / limit),
             currentPage: page,
             searchQuery: search,
@@ -45,7 +55,7 @@ const customerInfo = async (req, res) => {
 const customerBlocked = async (req, res) => {
     try {
         
-        const { id } = req.query;  // FIX: Use req.query instead of req.params
+        const { id } = req.query;  
         if (!id) {
             return res.status(400).send("Customer ID is required");
         }
@@ -64,7 +74,7 @@ const customerBlocked = async (req, res) => {
 
 const customerUnblocked = async (req, res) => {
     try {
-        const { id } = req.query;  // FIX: Use req.query instead of req.params
+        const { id } = req.query;  
         if (!id) {
             return res.status(400).send("Customer ID is required");
         }
@@ -80,35 +90,6 @@ const customerUnblocked = async (req, res) => {
         res.redirect("/pageerror");
     }
 };
-
-
-
-// const customerBlocked = async (req,res)=>{
-//     try {
-        
-//         let id=req.querry.id;
-//         await User.updateOne({_id:id},{$set:{isBlocked:true}})
-//         res.redirect("/admin/customers");
-
-
-//     } catch (error) {
-//         console.log("error")
-//         res.redirect("/pageerror");
-        
-//     }
-// }
-
-// const customerUnblocked = async(req,res)=>{
-//     try {
-        
-//         let id = req.query.id;
-//         await User.updateOne({_id:id},{$set:{isBlocked:false}});
-//         res.redirect("/admin/customers")
-//     } catch (error) {
-// res.redirect("/pageerror")
-        
-//     }
-// }
 
 module.exports = { 
     customerInfo,

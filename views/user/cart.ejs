@@ -695,18 +695,64 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ productId, change })
                     });
+                    
                     const data = await response.json();
+                    
                     if (data.success) {
-                        document.getElementById(`quantity-${productId}`).textContent = data.newQuantity;
-                        if (data.newQuantity === 0) {
-                            document.getElementById(`cart-item-${productId}`).remove();
+                        // Update the quantity display
+                        const quantityElement = document.getElementById(`quantity-${productId}`);
+                        if (quantityElement) {
+                            quantityElement.textContent = data.newQuantity;
                         }
+                        
+                        // Remove item if quantity becomes 0
+                        if (data.newQuantity === 0) {
+                            const itemElement = document.getElementById(`cart-item-${productId}`);
+                            if (itemElement) {
+                                itemElement.remove();
+                            }
+                        }
+                        
+                        // Update cart summary
                         updateCartSummary(data.cart);
                         showToast('Cart updated successfully');
+                        
+                        // Reload page if cart is empty
+                        if (data.cart.items.length === 0) {
+                            location.reload();
+                        }
                     } else {
-                        showToast(data.message, 'error');
+                        // Show SweetAlert for specific error types
+                        if (data.errorType === 'quantity_limit') {
+                            Swal.fire({
+                                title: 'Quantity Limit Reached!',
+                                text: 'You can only add up to 5 items of the same product.',
+                                icon: 'warning',
+                                confirmButtonColor: '#5C4033',
+                                confirmButtonText: 'OK'
+                            });
+                        } else if (data.errorType === 'cart_limit') {
+                            Swal.fire({
+                                title: 'Cart Limit Reached!',
+                                text: 'You can only have up to 10 items total in your cart.',
+                                icon: 'warning',
+                                confirmButtonColor: '#5C4033',
+                                confirmButtonText: 'OK'
+                            });
+                        } else if (data.errorType === 'stock_limit') {
+                            Swal.fire({
+                                title: 'Stock Limit Reached!',
+                                text: 'The requested quantity exceeds available stock.',
+                                icon: 'warning',
+                                confirmButtonColor: '#5C4033',
+                                confirmButtonText: 'OK'
+                            });
+                        } else {
+                            showToast(data.message || 'Failed to update cart', 'error');
+                        }
                     }
                 } catch (error) {
+                    console.error('Error updating quantity:', error);
                     showToast('An error occurred. Please try again.', 'error');
                 }
             }
@@ -728,6 +774,11 @@
                             'Your item has been removed from the cart.',
                             'success'
                         );
+                        
+                        // Reload page if cart is empty
+                        if (data.cart.items.length === 0) {
+                            location.reload();
+                        }
                     } else {
                         Swal.fire(
                             'Error!',
@@ -736,6 +787,7 @@
                         );
                     }
                 } catch (error) {
+                    console.error('Error removing item:', error);
                     Swal.fire(
                         'Error!',
                         'An error occurred. Please try again.',
@@ -745,20 +797,22 @@
             }
 
             function updateCartSummary(cart) {
+                if (!cart || !cart.items) return;
+                
                 const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
                 const shipping = subtotal >= 1000 || subtotal === 0 ? 0 : 50;
                 const total = subtotal + shipping;
                 
-                document.getElementById('subtotal').textContent = `₹${subtotal.toFixed(2)}`;
-                document.getElementById('shipping').textContent = `₹${shipping.toFixed(2)}`;
-                document.getElementById('total').textContent = `₹${total.toFixed(2)}`;
+                const subtotalElement = document.getElementById('subtotal');
+                const shippingElement = document.getElementById('shipping');
+                const totalElement = document.getElementById('total');
+                
+                if (subtotalElement) subtotalElement.textContent = `₹${subtotal.toFixed(2)}`;
+                if (shippingElement) shippingElement.textContent = `₹${shipping.toFixed(2)}`;
+                if (totalElement) totalElement.textContent = `₹${total.toFixed(2)}`;
                 
                 if (checkoutButton) {
                     checkoutButton.disabled = subtotal === 0;
-                }
-
-                if (cart.items.length === 0) {
-                    location.reload(); 
                 }
             }
 

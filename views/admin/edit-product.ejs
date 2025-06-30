@@ -198,14 +198,11 @@
 
         /* Image counter styling */
         .image-counter {
-            background-color: #e6d3c0;
-            color: #4e342e;
-            padding: 8px 12px;
-            border-radius: 4px;
-            font-size: 14px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
             font-weight: 500;
-            margin-bottom: 10px;
-            display: inline-block;
         }
 
         .image-counter.warning {
@@ -218,6 +215,53 @@
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+
+        /* Color Picker Styles */
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-picker {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+
+        .color-picker::-webkit-color-swatch-wrapper {
+            padding: 0;
+            border-radius: 8px;
+        }
+
+        .color-picker::-webkit-color-swatch {
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .color-input {
+            flex: 1;
+        }
+
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+
+        .color-name {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
         }
     </style>
     
@@ -317,8 +361,11 @@
                             <div class="col-lg-4">
                                 <div class="mb-4">
                                     <label class="form-label">Color</label>
-                                    <input name="color" type="text" value="<%= product.color %>"
-                                        class="form-control border">
+                                    <div class="color-picker-container">
+                                        <input type="color" id="colorPicker" class="color-picker" value="<%= product.color %>" onchange="updateColorInput()">
+                                        <input name="color" type="text" value="<%= product.color %>" class="form-control border color-input" id="colorInput" placeholder="Color name or hex code" onchange="updateColorPicker()">
+                                    </div>
+                                    <div class="color-name" id="colorName"></div>
                                     <div id="color-error" class="error-message"></div>
                                 </div>
                             </div>
@@ -903,6 +950,107 @@ $(document).ready(function() {
     
     // Initialize image counter on page load
     updateImageCounter();
+});
+
+// Color Picker Functions
+function updateColorInput() {
+    const colorPicker = document.getElementById('colorPicker');
+    const colorInput = document.getElementById('colorInput');
+    const colorName = document.getElementById('colorName');
+    
+    const hexColor = colorPicker.value;
+    colorInput.value = hexColor;
+    
+    // Get color name from hex
+    const colorNames = {
+        '#000000': 'Black',
+        '#FFFFFF': 'White',
+        '#FF0000': 'Red',
+        '#00FF00': 'Green',
+        '#0000FF': 'Blue',
+        '#FFFF00': 'Yellow',
+        '#FF00FF': 'Magenta',
+        '#00FFFF': 'Cyan',
+        '#FFA500': 'Orange',
+        '#800080': 'Purple',
+        '#FFC0CB': 'Pink',
+        '#A52A2A': 'Brown',
+        '#808080': 'Gray',
+        '#FFD700': 'Gold',
+        '#C0C0C0': 'Silver',
+        '#8B4513': 'Saddle Brown',
+        '#228B22': 'Forest Green',
+        '#4169E1': 'Royal Blue',
+        '#DC143C': 'Crimson',
+        '#FF6347': 'Tomato'
+    };
+    
+    colorName.textContent = colorNames[hexColor.toUpperCase()] || `Color: ${hexColor}`;
+}
+
+function updateColorPicker() {
+    const colorPicker = document.getElementById('colorPicker');
+    const colorInput = document.getElementById('colorInput');
+    const colorName = document.getElementById('colorName');
+    
+    let inputValue = colorInput.value.trim();
+    
+    // Check if input is a valid hex color
+    if (/^#[0-9A-F]{6}$/i.test(inputValue)) {
+        colorPicker.value = inputValue;
+        updateColorInput();
+    } else {
+        // Try to convert color names to hex
+        const colorNameToHex = {
+            'black': '#000000',
+            'white': '#FFFFFF',
+            'red': '#FF0000',
+            'green': '#00FF00',
+            'blue': '#0000FF',
+            'yellow': '#FFFF00',
+            'magenta': '#FF00FF',
+            'cyan': '#00FFFF',
+            'orange': '#FFA500',
+            'purple': '#800080',
+            'pink': '#FFC0CB',
+            'brown': '#A52A2A',
+            'gray': '#808080',
+            'grey': '#808080',
+            'gold': '#FFD700',
+            'silver': '#C0C0C0',
+            'saddle brown': '#8B4513',
+            'forest green': '#228B22',
+            'royal blue': '#4169E1',
+            'crimson': '#DC143C',
+            'tomato': '#FF6347'
+        };
+        
+        const hexColor = colorNameToHex[inputValue.toLowerCase()];
+        if (hexColor) {
+            colorPicker.value = hexColor;
+            colorInput.value = hexColor;
+            updateColorInput();
+        } else {
+            colorName.textContent = `Custom: ${inputValue}`;
+        }
+    }
+}
+
+// Initialize color picker on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Set initial color picker value based on existing color
+    const colorInput = document.getElementById('colorInput');
+    if (colorInput && colorInput.value) {
+        const colorPicker = document.getElementById('colorPicker');
+        // Try to set the color picker to the existing color value
+        if (/^#[0-9A-F]{6}$/i.test(colorInput.value)) {
+            colorPicker.value = colorInput.value;
+        } else {
+            // If it's not a hex color, try to convert it
+            updateColorPicker();
+        }
+        updateColorInput();
+    }
 });
 
 // Function to get URL parameters

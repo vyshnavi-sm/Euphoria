@@ -78,14 +78,11 @@
                         <% for (let i = 0; i < data.length; i++) { %>
                             <tr>
                                 <td>
-                                    <img src="<%= data[i].avatar ? data[i].avatar : 'https://www.svgrepo.com/show/382097/female-avatar-girl-face-woman-user-9.svg' %>" 
-                                    class="avatar" 
-                                    alt="User Avatar">
                                    <%= data[i].name %>
                                 </td>
-                                <td><%= data[i].customerId %></td>
-                                <td><%= data[i].orders %></td>
-                                <td>₹ <%= data[i].balance %></td>
+                                <td><%= data[i].customerId || 'N/A' %></td>
+                                <td><%= data[i].orders || 0 %></td>
+                                <td>₹ <%= data[i].balance || 0 %></td>
                                 <td>
                                     <span class="status <%= data[i].isBlocked ? 'blocked' : 'active' %>">
                                         <%= data[i].isBlocked ? 'Blocked' : 'Active' %>

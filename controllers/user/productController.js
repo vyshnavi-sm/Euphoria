@@ -12,7 +12,6 @@ const productDetails = async (req,res)=>{
             .populate('category')
             .populate('brand');
 
-        // Check for active category offer
         const currentDate = new Date();
         const categoryOffer = await CategoryOffer.findOne({
             category: product.category._id,
@@ -24,10 +23,8 @@ const productDetails = async (req,res)=>{
         const productOffer = product.offerDiscount || 0;
         const categoryDiscount = categoryOffer ? categoryOffer.discountPercentage : 0;
         
-        // Apply the highest offer between product offer and category offer
         const totalOffer = Math.max(productOffer, categoryDiscount);
 
-        // First, try to fetch related products from the same category
         let relatedProducts = await Product.find({
             category: product.category._id,
             _id: { $ne: productId },
@@ -37,16 +34,15 @@ const productDetails = async (req,res)=>{
         .populate('brand')
         .limit(4);
 
-        // If we don't have enough products from the same category, fetch more products
         if (relatedProducts.length < 4) {
             const additionalProducts = await Product.find({
                 _id: { $ne: productId },
                 isBlocked: false,
                 quantity: { $gt: 0 },
-                category: { $ne: product.category._id } // from different categories
+                category: { $ne: product.category._id } 
             })
             .populate('brand')
-            .sort({ createdAt: -1 }) // Get newest products
+            .sort({ createdAt: -1 }) 
             .limit(4 - relatedProducts.length);
 
             relatedProducts = [...relatedProducts, ...additionalProducts];

@@ -1,7 +1,6 @@
 const Wishlist = require('../../models/wishlistSchema');
 const Product = require('../../models/productSchema');
 
-// Get wishlist status for a product
 const getWishlistStatus = async (req, res) => {
     try {
         const { productId } = req.params;
@@ -23,7 +22,6 @@ const getWishlistStatus = async (req, res) => {
     }
 };
 
-// Toggle wishlist item
 const toggleWishlist = async (req, res) => {
     try {
         const { productId } = req.body;
@@ -32,18 +30,14 @@ const toggleWishlist = async (req, res) => {
         if (!userId) {
             return res.status(401).json({ message: 'Please login to manage wishlist' });
         }
-
-        // Get product details
         const product = await Product.findById(productId);
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
 
-        // Find user's wishlist
         let wishlist = await Wishlist.findOne({ userId });
 
         if (!wishlist) {
-            // Create new wishlist if doesn't exist
             wishlist = new Wishlist({
                 userId,
                 items: [{
@@ -58,13 +52,11 @@ const toggleWishlist = async (req, res) => {
             });
         }
 
-        // Check if product exists in wishlist
         const existingItemIndex = wishlist.items.findIndex(
             item => item.productId.toString() === productId
         );
 
         if (existingItemIndex !== -1) {
-            // Remove item if exists
             wishlist.items.splice(existingItemIndex, 1);
             await wishlist.save();
             return res.json({ 
@@ -72,7 +64,6 @@ const toggleWishlist = async (req, res) => {
                 isInWishlist: false 
             });
         } else {
-            // Add item if doesn't exist
             wishlist.items.push({
                 productId,
                 addedAt: new Date()
@@ -89,7 +80,6 @@ const toggleWishlist = async (req, res) => {
     }
 };
 
-// Get wishlist page
 const getWishlist = async (req, res) => {
     try {
         const userId = req.session.user;

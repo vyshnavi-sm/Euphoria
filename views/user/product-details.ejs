@@ -1444,7 +1444,7 @@
           </div>
         </div>
       </div>
-    </div> -->
+    </div>
   </section>
 </main>
 
@@ -1609,12 +1609,39 @@ document.addEventListener('DOMContentLoaded', function() {
             }
           });
         } else {
-          Swal.fire({
-            title: 'Error',
-            text: data.message || 'Error adding to cart',
-            icon: 'error',
-            confirmButtonColor: '#a97155'
-          });
+          // Show SweetAlert for specific error types
+          if (data.errorType === 'quantity_limit') {
+            Swal.fire({
+              title: 'Quantity Limit Reached!',
+              text: 'You can only add up to 5 items of the same product.',
+              icon: 'warning',
+              confirmButtonColor: '#a97155',
+              confirmButtonText: 'OK'
+            });
+          } else if (data.errorType === 'cart_limit') {
+            Swal.fire({
+              title: 'Cart Limit Reached!',
+              text: 'You can only have up to 10 items total in your cart.',
+              icon: 'warning',
+              confirmButtonColor: '#a97155',
+              confirmButtonText: 'OK'
+            });
+          } else if (data.errorType === 'stock_limit') {
+            Swal.fire({
+              title: 'Stock Limit Reached!',
+              text: 'The requested quantity exceeds available stock.',
+              icon: 'warning',
+              confirmButtonColor: '#a97155',
+              confirmButtonText: 'OK'
+            });
+          } else {
+            Swal.fire({
+              title: 'Error',
+              text: data.message || 'Error adding to cart',
+              icon: 'error',
+              confirmButtonColor: '#a97155'
+            });
+          }
         }
       } catch (error) {
         console.error('Error adding to cart:', error);

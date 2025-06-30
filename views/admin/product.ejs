@@ -290,13 +290,13 @@
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
                                 <% if (product.isBlocked) { %>
-                                    <a href="/admin/unblockProduct?id=<%= product._id %>" class="btn btn-sm btn-success" onclick="return confirm('Are you sure you want to unblock this product?')">
+                                    <button onclick="unblockProduct('<%= product._id %>')" class="btn btn-sm btn-success">
                                         <i class="fas fa-unlock"></i> Unblock
-                                    </a>
+                                    </button>
                                 <% } else { %>
-                                    <a href="/admin/blockProduct?id=<%= product._id %>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to block this product? It will be removed from all user carts.')">
+                                    <button onclick="blockProduct('<%= product._id %>')" class="btn btn-sm btn-danger">
                                         <i class="fas fa-ban"></i> Block
-                                    </a>
+                                    </button>
                                 <% } %>
                             </div>
                         </td>
@@ -456,13 +456,23 @@
                     if (salePriceCell) {
                         salePriceCell.textContent = `₹${result.newSalePrice}`;
                     }
+                    
+                    // Update the offer cell to show "Remove" button
+                    const offerCell = row.querySelector('td:nth-child(7)');
+                    if (offerCell) {
+                        const productName = row.querySelector('td:nth-child(1)').textContent.trim();
+                        offerCell.innerHTML = `
+                            <span class="badge bg-success">${result.discountPercentage}% OFF</span>
+                            <button onclick="removeOffer('${data.productId}')" class="btn btn-sm btn-remove">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
+                        `;
+                    }
                 }
                 showToast(result.message, 'success');
                 // Close the modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('offerModal'));
                 modal.hide();
-                // Reload after a short delay to update all UI elements
-                setTimeout(() => window.location.reload(), 1500);
             } else {
                 showToast(result.message, 'error');
             }
@@ -496,16 +506,132 @@
                     if (salePriceCell) {
                         salePriceCell.textContent = `₹${result.newSalePrice}`;
                     }
+                    
+                    // Update the offer cell to show "Add Offer" button
+                    const offerCell = row.querySelector('td:nth-child(7)');
+                    if (offerCell) {
+                        const productName = row.querySelector('td:nth-child(1)').textContent.trim();
+                        offerCell.innerHTML = `
+                            <button onclick="showOfferModal('${productId}', '${productName}')" class="btn btn-sm btn-offer">
+                                <i class="fas fa-tag"></i> Add Offer
+                            </button>
+                        `;
+                    }
                 }
                 showToast(result.message, 'success');
-                // Reload after a short delay to update all UI elements
-                setTimeout(() => window.location.reload(), 1500);
             } else {
                 showToast(result.message, 'error');
             }
         } catch (error) {
             console.error('Error removing offer:', error);
             showToast('Error removing offer', 'error');
+        }
+    }
+
+    async function blockProduct(productId) {
+        if (!confirm('Are you sure you want to block this product? It will be removed from all user carts.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/products/blockProduct', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ productId })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Update the status badge
+                const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                if (row) {
+                    const statusCell = row.querySelector('td:nth-child(8)');
+                    if (statusCell) {
+                        statusCell.innerHTML = '<span class="badge bg-danger">Blocked</span>';
+                    }
+                    
+                    // Update the action buttons
+                    const actionCell = row.querySelector('td:nth-child(9)');
+                    if (actionCell) {
+                        actionCell.innerHTML = `
+                            <div class="btn-group">
+                                <a href="/admin/editProduct?id=${productId}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button onclick="unblockProduct('${productId}')" class="btn btn-sm btn-success">
+                                    <i class="fas fa-unlock"></i> Unblock
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error blocking product:', error);
+            showToast('Error blocking product', 'error');
+        }
+    }
+
+    async function unblockProduct(productId) {
+        if (!confirm('Are you sure you want to unblock this product?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/admin/products/unblockProduct', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ productId })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Update the status badge
+                const row = document.querySelector(`tr[data-product-id="${productId}"]`);
+                if (row) {
+                    const statusCell = row.querySelector('td:nth-child(8)');
+                    const quantityCell = row.querySelector('td:nth-child(6)');
+                    if (statusCell) {
+                        // Check if product is out of stock
+                        const quantity = parseInt(quantityCell.textContent);
+                        if (quantity === 0) {
+                            statusCell.innerHTML = '<span class="badge bg-warning">Out of Stock</span>';
+                        } else {
+                            statusCell.innerHTML = '<span class="badge bg-success">Active</span>';
+                        }
+                    }
+                    
+                    // Update the action buttons
+                    const actionCell = row.querySelector('td:nth-child(9)');
+                    if (actionCell) {
+                        actionCell.innerHTML = `
+                            <div class="btn-group">
+                                <a href="/admin/editProduct?id=${productId}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <button onclick="blockProduct('${productId}')" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-ban"></i> Block
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
+                showToast(result.message, 'success');
+            } else {
+                showToast(result.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error unblocking product:', error);
+            showToast('Error unblocking product', 'error');
         }
     }
 </script>

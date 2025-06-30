@@ -763,12 +763,49 @@ async function addToCart(productId) {
         }
       }
     } else if (response.status === 401) {
-      showToast('Please login to add items to cart', 'error');
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 2000);
+      Swal.fire({
+        title: 'Sign in Required',
+        text: 'Please sign in to add items to your cart',
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#5C4033',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sign In',
+        cancelButtonText: 'Continue Shopping'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = '/login';
+        }
+      });
     } else {
-      showToast(data.message || 'Error adding to cart', 'error');
+      // Show SweetAlert for specific error types
+      if (data.errorType === 'quantity_limit') {
+        Swal.fire({
+          title: 'Quantity Limit Reached!',
+          text: 'You can only add up to 5 items of the same product.',
+          icon: 'warning',
+          confirmButtonColor: '#5C4033',
+          confirmButtonText: 'OK'
+        });
+      } else if (data.errorType === 'cart_limit') {
+        Swal.fire({
+          title: 'Cart Limit Reached!',
+          text: 'You can only have up to 10 items total in your cart.',
+          icon: 'warning',
+          confirmButtonColor: '#5C4033',
+          confirmButtonText: 'OK'
+        });
+      } else if (data.errorType === 'stock_limit') {
+        Swal.fire({
+          title: 'Stock Limit Reached!',
+          text: 'The requested quantity exceeds available stock.',
+          icon: 'warning',
+          confirmButtonColor: '#5C4033',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        showToast(data.message || 'Error adding to cart', 'error');
+      }
     }
   } catch (error) {
     console.error('Error adding to cart:', error);

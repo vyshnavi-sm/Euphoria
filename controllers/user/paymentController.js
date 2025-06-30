@@ -2,7 +2,6 @@ const Razorpay = require('razorpay');
 const Order = require('../../models/orderSchema');
 const crypto = require('crypto');
 
-// Initialize Razorpay with error handling
 let razorpay;
 try {
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
@@ -17,7 +16,6 @@ try {
     console.error('Error initializing Razorpay:', error.message);
 }
 
-// Create Razorpay order
 const createRazorpayOrder = async (req, res) => {
     try {
         if (!razorpay) {
@@ -31,9 +29,8 @@ const createRazorpayOrder = async (req, res) => {
         
         console.log('Creating Razorpay order:', { amount, orderId });
         
-        // Create Razorpay order
         const razorpayOrder = await razorpay.orders.create({
-            amount: Math.round(amount * 100), // Razorpay expects amount in paise, ensure it's integer
+            amount: Math.round(amount * 100),
             currency: 'INR',
             receipt: orderId || `order_${Date.now()}`,
             payment_capture: 1
@@ -44,7 +41,7 @@ const createRazorpayOrder = async (req, res) => {
         res.json({
             success: true,
             order: razorpayOrder,
-            key: process.env.RAZORPAY_KEY_ID // Send key to frontend
+            key: process.env.RAZORPAY_KEY_ID 
         });
     } catch (error) {
         console.error('Error creating Razorpay order:', error);
@@ -55,7 +52,6 @@ const createRazorpayOrder = async (req, res) => {
     }
 };
 
-// Verify Razorpay payment
 const verifyRazorpayPayment = async (req, res) => {
     try {
         if (!process.env.RAZORPAY_KEY_SECRET) {
@@ -77,7 +73,6 @@ const verifyRazorpayPayment = async (req, res) => {
             razorpay_signature
         });
 
-        // Verify signature
         const generated_signature = crypto
             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
             .update(razorpay_order_id + '|' + razorpay_payment_id)
@@ -111,13 +106,11 @@ const verifyRazorpayPayment = async (req, res) => {
     }
 };
 
-// Handle payment failure
 const handlePaymentFailure = async (req, res) => {
     try {
         const { orderId } = req.params;
         console.log('Handling payment failure for order:', orderId);
         
-        // Find and update order status if needed
         if (orderId) {
             try {
                 await Order.findByIdAndUpdate(orderId, {
@@ -137,13 +130,11 @@ const handlePaymentFailure = async (req, res) => {
     }
 };
 
-// New function to handle payment success
 const handlePaymentSuccess = async (req, res) => {
     try {
         const { orderId } = req.params;
         console.log('Handling payment success for order:', orderId);
         
-        // Find and update order status
         if (orderId) {
             try {
                 const order = await Order.findByIdAndUpdate(orderId, {
@@ -162,7 +153,6 @@ const handlePaymentSuccess = async (req, res) => {
             }
         }
         
-        // Fallback redirect
         res.redirect('/user/orders');
     } catch (error) {
         console.error('Error handling payment success:', error);

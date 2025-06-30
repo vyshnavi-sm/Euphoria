@@ -1,7 +1,4 @@
 const Brand = require("../../models/brandSchema");
-const Product = require("../../models/productSchema");
-const path = require('path');
-const fs = require('fs');
 
 const getBrandPage = async (req, res) => {
     try {
@@ -15,7 +12,6 @@ const getBrandPage = async (req, res) => {
         const totalBrands = await Brand.countDocuments();
         const totalPages = Math.ceil(totalBrands / limit);
 
-        // Get error and success messages from query parameters
         const error = req.query.error;
         const success = req.query.success;
 
@@ -34,15 +30,12 @@ const getBrandPage = async (req, res) => {
     }
 };
 
-
-
 const addBrand = async (req, res) => {
     try {
         const brand = req.body.name;
         const image = req.file;
         console.log(image)
 
-        // Validate required fields
         if (!brand || !brand.trim()) {
             return res.redirect("/admin/brands?error=Brand name is required");
         }
@@ -51,17 +44,14 @@ const addBrand = async (req, res) => {
             return res.redirect("/admin/brands?error=Brand image is required");
         }
 
-        // Check if brand already exists
         const findBrand = await Brand.findOne({ brandName: brand });
         if (findBrand) {
             return res.redirect("/admin/brands?error=Brand already exists");
         }
 
-        
-        // Create new brand
-        const newBrand = new Brand({
+                const newBrand = new Brand({
             brandName: brand,
-            brandImage: [image.path], // Store as array
+            brandImage: [image.path], 
         });
 
         await newBrand.save();

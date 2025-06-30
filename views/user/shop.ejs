@@ -1231,19 +1231,30 @@
                     }
                 });
             } else {
-                if (data.message === 'Maximum quantity per product is 5') {
+                // Show SweetAlert for specific error types
+                if (data.errorType === 'quantity_limit') {
                     Swal.fire({
-                        title: 'Maximum Product Quantity',
-                        text: 'You can only add up to 5 items of this product',
+                        title: 'Quantity Limit Reached!',
+                        text: 'You can only add up to 5 items of the same product.',
                         icon: 'warning',
-                        confirmButtonColor: '#5C4033'
+                        confirmButtonColor: '#5C4033',
+                        confirmButtonText: 'OK'
                     });
-                } else if (data.message === 'Maximum total items in cart is 10') {
+                } else if (data.errorType === 'cart_limit') {
                     Swal.fire({
-                        title: 'Cart Limit Reached',
-                        text: 'You can only have a maximum of 10 items in your cart',
+                        title: 'Cart Limit Reached!',
+                        text: 'You can only have up to 10 items total in your cart.',
                         icon: 'warning',
-                        confirmButtonColor: '#5C4033'
+                        confirmButtonColor: '#5C4033',
+                        confirmButtonText: 'OK'
+                    });
+                } else if (data.errorType === 'stock_limit') {
+                    Swal.fire({
+                        title: 'Stock Limit Reached!',
+                        text: 'The requested quantity exceeds available stock.',
+                        icon: 'warning',
+                        confirmButtonColor: '#5C4033',
+                        confirmButtonText: 'OK'
                     });
                 } else {
                     Swal.fire({

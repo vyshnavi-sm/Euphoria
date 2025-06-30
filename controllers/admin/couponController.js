@@ -1,6 +1,5 @@
 const Coupon = require('../../models/couponSchema');
 
-// Load coupon management page
 const loadCouponPage = async (req, res) => {
     try {
         const coupons = await Coupon.find().sort({ createdAt: -1 });
@@ -17,10 +16,9 @@ const loadCouponPage = async (req, res) => {
     }
 };
 
-// Create new coupon
 const createCoupon = async (req, res) => {
     try {
-        console.log('Received coupon creation request, req.body:', req.body); // Log request body
+        console.log('Received coupon creation request, req.body:', req.body); 
         const {
             code,
             discountType,
@@ -32,13 +30,11 @@ const createCoupon = async (req, res) => {
             usageLimit
         } = req.body;
 
-        // Basic Validation
         if (!code || !discountType || !discountValue || !startDate || !endDate) {
             req.flash('error', 'Please fill in all required fields.');
             return res.redirect('/admin/coupons');
         }
 
-        // Validate discount type and value
         if (discountType === 'percentage' && (discountValue < 0 || discountValue > 100)) {
             req.flash('error', 'Percentage discount value must be between 0 and 100.');
             return res.redirect('/admin/coupons');
@@ -48,7 +44,6 @@ const createCoupon = async (req, res) => {
             return res.redirect('/admin/coupons');
         }
 
-        // Validate dates
         const start = new Date(startDate);
         const end = new Date(endDate);
         const now = new Date();
@@ -57,13 +52,7 @@ const createCoupon = async (req, res) => {
             req.flash('error', 'End date must be after start date.');
             return res.redirect('/admin/coupons');
         }
-        // Optional: Prevent creating coupons with start date in the past
-        // if (start < now) {
-        //     req.flash('error', 'Start date cannot be in the past.');
-        //     return res.redirect('/admin/coupons');
-        // }
-
-        // Check for existing coupon code
+       
         const existingCoupon = await Coupon.findOne({ code: code });
         if (existingCoupon) {
             req.flash('error', 'Coupon code already exists.');
@@ -71,7 +60,7 @@ const createCoupon = async (req, res) => {
         }
 
         const couponData = {
-            code: code.toUpperCase(), // Ensure code is uppercase
+            code: code.toUpperCase(), 
             discountType,
             discountValue: parseFloat(discountValue),
             minOrderAmount: minOrderAmount ? parseFloat(minOrderAmount) : 0,
@@ -94,7 +83,6 @@ const createCoupon = async (req, res) => {
     }
 };
 
-// Delete coupon
 const deleteCoupon = async (req, res) => {
     try {
         const { id } = req.params;
@@ -116,7 +104,6 @@ const deleteCoupon = async (req, res) => {
     }
 };
 
-// Toggle coupon status (optional, but good for management)
 const toggleCouponStatus = async (req, res) => {
     try {
         const { id } = req.params;
