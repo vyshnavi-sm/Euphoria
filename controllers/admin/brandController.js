@@ -62,6 +62,8 @@ const addBrand = async (req, res) => {
     }
 };
 
+
+
 const blockBrand = async (req, res) => {
     try {
         const id = req.query.id;

@@ -696,5 +696,18 @@
             });
         });
     </script>
+
+    <% if (typeof blockedUser !== 'undefined' && blockedUser) { %>
+    <script>
+        Swal.fire({
+            icon: 'error',
+            title: 'Blocked',
+            text: 'You have been blocked by the admin.',
+            confirmButtonText: 'OK',
+            allowOutsideClick: false,
+            allowEscapeKey: false
+        });
+    </script>
+    <% } %>
 </body>
 </html>

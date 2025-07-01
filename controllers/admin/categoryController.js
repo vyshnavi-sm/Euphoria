@@ -99,6 +99,7 @@ const addCategory = async (req, res) => {
         if (existingCategory) {
             return res.status(400).json({ error: "Category already exists" });
         }
+    
 
         const newCategory = new Category({
             name: categoryName.trim(),

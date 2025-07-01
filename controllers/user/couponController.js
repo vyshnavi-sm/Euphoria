@@ -1,9 +1,5 @@
 const Cart = require('../../models/cartSchema');
-const User = require('../../models/userSchema');
-const Address = require('../../models/addressSchema');
-const Order = require('../../models/orderSchema');
 const Coupon = require('../../models/couponSchema');
-const WalletTransaction = require('../../models/walletTransactionSchema');
 
 function calculateOrderTotal(cart, coupon) {
     const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);

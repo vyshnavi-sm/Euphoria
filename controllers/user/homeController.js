@@ -27,11 +27,19 @@ const loadHomepage = async (req, res) => {
 
         const userData = req.session.user ? await User.findById(req.session.user) : null;
 
+        if (userData && userData.isBlocked) {
+            req.session.destroy(() => {
+                res.render("user/login", { blockedUser: true });
+            });
+            return;
+        }
+
         res.render("home", {
             user: userData,
             products: bestSellerProducts,
             categories,
-            categoryImages
+            categoryImages,
+            blockedUser: false
         });
 
     } catch (error) {

@@ -14,9 +14,13 @@ const cancelOrder = async (req, res) => {
 
         const order = await Order.findById(orderId);
         if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-        if (order.userId.toString() !== userId.toString()) return res.status(403).json({ success: false, message: 'Not authorized to cancel this order' });
-        if (!['Processing', 'Confirmed', 'Pending'].includes(order.status)) return res.status(400).json({ success: false, message: 'Order cannot be cancelled in its current status' });
-        if (order.status === 'Cancelled') return res.status(400).json({ success: false, message: 'Order is already cancelled' });
+        
+        if (order.userId.toString() !== userId.toString())
+            return res.status(403).json({ success: false, message: 'Not authorized to cancel this order' });
+        if (!['Processing', 'Confirmed', 'Pending'].includes(order.status)) 
+            return res.status(400).json({ success: false, message: 'Order cannot be cancelled in its current status' });
+        if (order.status === 'Cancelled')
+             return res.status(400).json({ success: false, message: 'Order is already cancelled' });
 
         let refundProcessed = false, refundAmount = 0;
 
@@ -78,9 +82,12 @@ const cancelItem = async (req, res) => {
 
         let userId = req.session?.user_id || req.session?.userId || req.session?.user?._id || req.session?.user?.id || req.user?.id || req.user?._id || req.userId || req.body.userId || req.headers['x-user-id'];
 
-        if (!orderId || !itemId) return res.status(400).json({ success: false, message: 'Order ID and Item ID are required' });
-        if (!userId) return res.status(401).json({ success: false, message: 'User not authenticated. Please log in again.' });
-        if (!reason?.trim()) return res.status(400).json({ success: false, message: 'Cancellation reason is required' });
+        if (!orderId || !itemId)
+             return res.status(400).json({ success: false, message: 'Order ID and Item ID are required' });
+        if (!userId) 
+            return res.status(401).json({ success: false, message: 'User not authenticated. Please log in again.' });
+        if (!reason?.trim()) 
+            return res.status(400).json({ success: false, message: 'Cancellation reason is required' });
 
         const order = await Order.findById(orderId);
         if (!order) return res.status(404).json({ success: false, message: 'Order not found' });

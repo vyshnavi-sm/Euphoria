@@ -2,6 +2,10 @@ const Order = require('../../models/orderSchema');
 const moment = require('moment');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
+const User = require('../../models/userSchema');
+const { generateOtp } = require('../../utils/otpService');
+const { sendVerificationEmail } = require('../../utils/emailService');
+const Product = require('../../models/productSchema');
 
 const loadSalesReport = async (req, res) => {
   try {
@@ -424,3 +428,4 @@ module.exports = {
   loadSalesReport,
   generateSalesReport
 };
+

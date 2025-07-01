@@ -5,7 +5,6 @@ const userAuth = (req, res, next) => {
         User.findById(req.session.user)
             .then(data => {
                 if (data && !data.isBlocked) {
-                    // Update last activity timestamp
                     req.session.lastActivity = Date.now();
                     next();
                 } else {
@@ -40,8 +39,7 @@ const adminAuth = async (req, res, next) => {
             return res.redirect('/admin/login');
         }
 
-        // Check if session has expired (24 hours timeout)
-        const sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+        const sessionTimeout = 24 * 60 * 60 * 1000; 
         const lastActivity = req.session.admin.lastActivity || 0;
         
         if (Date.now() - lastActivity > sessionTimeout) {
@@ -51,7 +49,6 @@ const adminAuth = async (req, res, next) => {
             return res.redirect('/admin/login');
         }
 
-        // Verify admin still exists and is not blocked
         const admin = await User.findOne({ 
             _id: req.session.admin.id, 
             isAdmin: true 
@@ -64,7 +61,6 @@ const adminAuth = async (req, res, next) => {
             return res.redirect('/admin/login');
         }
 
-        // Update last activity timestamp
         req.session.admin.lastActivity = Date.now();
         await new Promise((resolve) => req.session.save(resolve));
         next();

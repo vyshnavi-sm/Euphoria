@@ -218,4 +218,9 @@ const handleRetryPayment = async (req, res) => {
     }
 };
 
-module.exports = { getCheckoutPage, placeOrder, getOrderSuccess, handleRetryPayment };
+module.exports = { 
+    getCheckoutPage,
+     placeOrder,
+      getOrderSuccess, 
+      handleRetryPayment 
+    };

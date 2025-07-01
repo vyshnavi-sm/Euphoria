@@ -65,7 +65,6 @@ const referralController = {
             });
             await referrer.save();
 
-            // Add wallet transaction for referral bonus
             await WalletTransaction.create({
                 userId: referrer._id,
                 amount: 100,
