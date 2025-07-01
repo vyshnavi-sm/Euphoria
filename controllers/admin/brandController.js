@@ -23,7 +23,6 @@ const getBrandPage = async (req, res) => {
             error: error,
             success: success
         });
-
     } catch (error) {
         console.error("Error in getBrandPage:", error);
         res.redirect("/admin/brands?error=An error occurred while loading brands");

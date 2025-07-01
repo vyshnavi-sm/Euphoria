@@ -1448,6 +1448,9 @@
   </section>
 </main>
 
+<!-- Add hidden input for max quantity -->
+<input type="hidden" id="maxQuantity" value="<%= product.quantity %>">
+
 <script>
   // Initialize zoom
   document.addEventListener('DOMContentLoaded', function() {
@@ -1837,6 +1840,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <%- include("../../views/partials/user/footer") %>
-
-<!-- Add hidden input for max quantity -->
-<input type="hidden" id="maxQuantity" value="<%= product.quantity %>">

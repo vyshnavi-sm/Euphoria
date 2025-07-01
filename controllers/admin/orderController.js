@@ -74,7 +74,9 @@ const getAllOrders = async (req, res) => {
                 : 'N/A';
         });
 
-        orders.sort((a, b) => new Date(b.createdAt || b.createdOn) - new Date(a.createdAt || a.createdOn));
+        if (sortBy !== 'totalPrice') {
+            orders.sort((a, b) => new Date(b.createdAt || b.createdOn) - new Date(a.createdAt || a.createdOn));
+        }
 
         res.json({
             orders,

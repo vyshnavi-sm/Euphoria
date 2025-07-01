@@ -1,6 +1,7 @@
 const User = require('../../models/userSchema');
 const Coupon = require('../../models/couponSchema');
 const { ReferralOffer } = require('../../models/offerSchema');
+const WalletTransaction = require('../../models/walletTransactionSchema');
 
 const referralController = {
     getReferralCode: async (req, res) => {
@@ -63,6 +64,14 @@ const referralController = {
                 referredUser: newUser._id
             });
             await referrer.save();
+
+            // Add wallet transaction for referral bonus
+            await WalletTransaction.create({
+                userId: referrer._id,
+                amount: 100,
+                type: 'credit',
+                description: `Referral bonus for inviting user ${newUser.email}`
+            });
 
             res.json({ 
                 message: 'Referral processed successfully',

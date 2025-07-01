@@ -65,7 +65,7 @@ const customerBlocked = async (req, res) => {
             return res.status(404).send("User not found");
         }
 
-        res.redirect('/admin/customers');  // Refresh page
+        res.redirect('/admin/customers');  
     } catch (error) {
         console.error("Error blocking customer:", error);
         res.redirect("/pageerror");
@@ -84,7 +84,7 @@ const customerUnblocked = async (req, res) => {
             return res.status(404).send("User not found");
         }
 
-        res.redirect('/admin/customers');  // Refresh page
+        res.redirect('/admin/customers');  
     } catch (error) {
         console.error("Error unblocking customer:", error);
         res.redirect("/pageerror");
