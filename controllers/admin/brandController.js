@@ -1,4 +1,5 @@
 const Brand = require("../../models/brandSchema");
+const Coupon = require("../../models/couponSchema");
 
 const getBrandPage = async (req, res) => {
     try {
@@ -43,13 +44,13 @@ const addBrand = async (req, res) => {
             return res.redirect("/admin/brands?error=Brand image is required");
         }
 
-        const findBrand = await Brand.findOne({ brandName: brand });
+        const findBrand = await Brand.findOne({ brandName: { $regex: new RegExp("^" + brand.trim() + "$", "i") } });
         if (findBrand) {
             return res.redirect("/admin/brands?error=Brand already exists");
         }
 
-                const newBrand = new Brand({
-            brandName: brand,
+        const newBrand = new Brand({
+            brandName: brand.trim(),
             brandImage: [image.path], 
         });
 
@@ -73,6 +74,9 @@ const blockBrand = async (req, res) => {
         res.redirect("/pageerror");
     }
 };
+
+
+
 
 const unBlockBrand = async (req, res) => {
     try {
@@ -105,3 +109,6 @@ module.exports = {
     unBlockBrand,
     deleteBrand,
 };
+
+
+

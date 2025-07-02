@@ -613,7 +613,7 @@
         <div class="card mb-3">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="card-title mb-0">Order #<%= order._id %></h5>
+              <h5 class="card-title mb-0">Order #<%= order.orderId %></h5>
               <span class="badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' || order.status === 'Payment Failed' ? 'danger' : order.status === 'Returned' ? 'info' : 'warning' %>">
                 <%= order.status %>
               </span>

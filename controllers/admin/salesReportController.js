@@ -6,6 +6,7 @@ const User = require('../../models/userSchema');
 const { generateOtp } = require('../../utils/otpService');
 const { sendVerificationEmail } = require('../../utils/emailService');
 const Product = require('../../models/productSchema');
+const Coupon = require('../../models/couponSchema');
 
 const loadSalesReport = async (req, res) => {
   try {
@@ -428,4 +429,6 @@ module.exports = {
   loadSalesReport,
   generateSalesReport
 };
+
+
 

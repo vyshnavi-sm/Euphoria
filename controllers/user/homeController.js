@@ -34,6 +34,7 @@ const loadHomepage = async (req, res) => {
             return;
         }
 
+
         res.render("home", {
             user: userData,
             products: bestSellerProducts,
@@ -148,7 +149,6 @@ const filterProduct = async (req, res) => {
             .populate('brand')
             .lean();
 
-        // Fallback filtering logic
         if (products.length === 0 && (categoryId || brandId)) {
             const allProducts = await Product.find({
                 isBlocked: false,

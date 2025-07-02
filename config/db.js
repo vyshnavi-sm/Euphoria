@@ -7,7 +7,7 @@ const connectDB = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       tls: true,
-      tlsAllowInvalidCertificates: true, // Temporarily disable certificate validation
+      tlsAllowInvalidCertificates: true, 
     });
 
     console.log("✅ MongoDB connected successfully");

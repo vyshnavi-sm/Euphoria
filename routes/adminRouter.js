@@ -19,6 +19,7 @@ const getDashboardDataController = require('../controllers/admin/dashboardDataCo
 
 
 router.get("/pageerror",adminController.pageerror)
+
 // Login Management
 router.get("/login",adminController.loadLogin);
 router.post("/login",adminController.login);

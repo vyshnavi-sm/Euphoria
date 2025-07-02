@@ -57,6 +57,7 @@ const logout = (req, res) => {
   }
 };
 
+
 const validateAdminSession = (req, res, next) => {
   if (!req.session.admin) {
     return req.xhr || req.headers.accept.includes("json")

@@ -121,10 +121,8 @@ const userSchema = new Schema({
   }
 });
 
-// Hash password before saving
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
-    // Check if password is already hashed (bcrypt hashes start with $2b$)
     if (!this.password.startsWith('$2b$')) {
       this.password = await bcrypt.hash(this.password, 10);
     }
@@ -132,7 +130,6 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Generate unique referral code before saving
 userSchema.pre('save', async function(next) {
   if (!this.referalCode) {
     const generateReferralCode = () => {

@@ -16,7 +16,6 @@ const MongoStore = require('connect-mongo');
 
 db()
 
-// Add cache control middleware
 app.use((req, res, next) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     next();
@@ -31,14 +30,14 @@ app.use(session({
     saveUninitialized: false,
     store: MongoStore.create({
         mongoUrl: process.env.MONGODB_URI,
-        ttl: 72 * 60 * 60, // 72 hours in seconds
+        ttl: 72 * 60 * 60, 
         autoRemove: 'native',
-        touchAfter: 24 * 3600 // time period in seconds
+        touchAfter: 24 * 3600 
     }),
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+        secure: process.env.NODE_ENV === 'production', 
         httpOnly: true,
-        maxAge: 72 * 60 * 60 * 1000, // 72 hours in milliseconds
+        maxAge: 72 * 60 * 60 * 1000,
         sameSite: 'lax'
     }
 }));
@@ -51,10 +50,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// Add flash middleware
+
 app.use(flash());
 
-// Make flash messages available to all views
+
 app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success');
     res.locals.error_msg = req.flash('error');
@@ -73,22 +72,21 @@ app.set("views", [
 
 app.use(express.static("public"));
 
-// Apply session middleware to routes
 app.use("/signup", sessionMiddleware.preventBackToSignup);
 app.use("/login", sessionMiddleware.preventBackToLogin);
 app.use("/verify-otp", sessionMiddleware.preventBackToOtp);
 
-// Make user data available to all views
+
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     next();
 });
 
-// Mount routes
+
 app.use("/", userRouter);
 app.use("/admin", adminRouter);
 
-// Increase event emitter max listeners
+
 require('events').EventEmitter.defaultMaxListeners = 15;
 
 const PORT=process.env.PORT || 4000;

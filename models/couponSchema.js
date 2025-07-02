@@ -56,7 +56,7 @@ const couponSchema = new mongoose.Schema({
     assignedTo: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        default: null // Null for general coupons, ObjectId for referral coupons
+        default: null 
     }
 }, { timestamps: true });
 

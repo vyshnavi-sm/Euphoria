@@ -2,24 +2,20 @@ const multer = require("multer");
 const path = require("path");
 const fs = require('fs');
 
-// Create uploads directories if they don't exist
 const uploadDirs = {
     general: path.join('public', 'uploads'),
     brand: path.join('public', 'uploads', 'brand-images'),
     product: path.join('public', 'uploads', 'product-images')
 };
 
-// Ensure all directories exist
 Object.values(uploadDirs).forEach(dir => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
     }
 });
 
-// Storage Engine
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // Determine the destination based on the route
         let uploadDir = uploadDirs.general;
         if (req.originalUrl.includes('/addBrand')) {
             uploadDir = uploadDirs.brand;
@@ -34,7 +30,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// File Filter (only allow images)
 const fileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
         cb(null, true);
@@ -43,12 +38,11 @@ const fileFilter = (req, file, cb) => {
     }
 };
 
-// Initialize Multer
 const uploads = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB limit
+        fileSize: 5 * 1024 * 1024 
     }
 });
 

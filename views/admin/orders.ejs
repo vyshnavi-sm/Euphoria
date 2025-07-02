@@ -579,8 +579,7 @@
 <div class="container-fluid px-4">
     <h1 class="page-title">Order Management</h1>
 
-    
-                                                
+   
     <!-- Toast notifications -->
     <div class="toast-container"></div>
     
@@ -825,18 +824,15 @@ function showToast(message, type = 'success') {
     `;
     toastContainer.appendChild(toast);
     
-    // Auto-remove toast after 5 seconds
     setTimeout(() => {
         toast.remove();
     }, 5000);
     
-    // Add click listener to close button
     toast.querySelector('.btn-close').addEventListener('click', () => {
         toast.remove();
     });
 }
 
-// Function to update current date and time
 function updateCurrentDateTime() {
     const now = new Date();
     const dateTimeString = now.toLocaleString('en-IN', {
@@ -930,9 +926,9 @@ async function loadOrders(page = 1) {
             
             row.innerHTML = `
                 <td>
-                    ${order._id}
+                    ${order.orderId}
                     ${statusInfo.showReturnIndicator ? createReturnIndicator(statusInfo.isUrgent, statusInfo.isPartial) : ''}
-                    ${statusInfo.showReturnIndicator ? createReturnItemsList(statusInfo.returnRequestItems, order._id) : ''}
+                    ${statusInfo.showReturnIndicator ? createReturnItemsList(statusInfo.returnRequestItems, order.orderId) : ''}
                 </td>
                 <td>${formattedDateTime}</td>
                 <td>
@@ -1192,7 +1188,7 @@ async function loadOrderDetails(orderId) {
         
         modalContent.innerHTML = `
             <div class="order-details">
-                <p><strong>Order ID:</strong> ${order._id}</p>
+                <p><strong>Order ID:</strong> ${order.orderId}</p>
                 <p><strong>Date:</strong> ${formattedDate}</p>
                 <p><strong>Status:</strong> <span class="badge bg-${order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' || order.status === 'Returned' ? 'danger' : order.status === 'Out for Delivery' ? 'info' : 'warning'}">${order.status}</span></p>
                 <p><strong>Total Amount:</strong> ₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</p>

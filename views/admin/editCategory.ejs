@@ -7,7 +7,7 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-6 mt-60">
-            <form method="post" action="/admin/editCategory/<%=category._id%>">
+            <form id="editCategoryForm" method="post" action="/admin/editCategory/<%=category._id%>">
                 <div class="d-grid text-end mt-30 col-md-5">
                     <button class="btn btn-primary" type="submit">Update category</button>
                 </div>
@@ -25,3 +25,37 @@
     </div>
 </div>
 <%- include("../../views/partials/admin/footer") %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.getElementById('editCategoryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (response.ok) {
+            window.location.href = '/admin/category';
+        } else {
+            const result = await response.json();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.error || 'An error occurred',
+                confirmButtonColor: '#5C4033'
+            });
+        }
+    } catch (err) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Network error. Please try again.',
+            confirmButtonColor: '#5C4033'
+        });
+    }
+});
+</script>

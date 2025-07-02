@@ -35,7 +35,6 @@ const orderSchema = new Schema({
         cancellationReason: String,
         returnReason: String,
         
-        // Return-related fields
         returnStatus: {
             type: String,
             enum: ["Pending", "Accepted", "Rejected"],
@@ -49,7 +48,6 @@ const orderSchema = new Schema({
             description: String
         },
         
-        // Proportional calculation fields
         proportionalDiscount: {
             type: Number,
             default: 0
@@ -108,10 +106,8 @@ const orderSchema = new Schema({
     estimatedDeliveryDate: {
         type: Date,
         default: function() {
-            // Set default delivery date to 4 days from order creation
             const date = new Date();
             date.setDate(date.getDate() + 4);
-            // Set time to end of day (23:59:59)
             date.setHours(23, 59, 59, 999);
             return date;
         }
@@ -136,14 +132,12 @@ const orderSchema = new Schema({
     cancellationReason: String,
     returnReason: String,
     
-    // Order-level return fields
     returnStatus: {
         type: String,
         enum: ["Pending", "Accepted", "Rejected", "Partial"],
     },
     returnCompletedAt: Date,
     
-    // Return history to track all return operations
     returnHistory: [{
         itemId: {
             type: Schema.Types.ObjectId,
@@ -180,7 +174,6 @@ const orderSchema = new Schema({
     }]
 });
 
-// Add a pre-save hook to ensure orderId is always set
 orderSchema.pre('save', function(next) {
     if (!this.orderId) {
         this.orderId = uuidv4();

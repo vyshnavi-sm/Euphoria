@@ -104,6 +104,7 @@ const placeOrder = async (req, res) => {
             return res.json({ success: false, message: 'Cash on Delivery is not available for orders above ₹1000. Please choose another payment method.' });
         }
 
+    
         if (paymentMethod === 'wallet') {
             const user = await User.findById(userId);
             if (!user) return res.json({ success: false, message: 'User not found' });

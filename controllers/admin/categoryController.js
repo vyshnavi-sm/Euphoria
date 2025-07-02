@@ -155,7 +155,7 @@ const editCategory = async (req, res) => {
         const { name, description } = req.body;
 
         const existingCategory = await Category.findOne({
-            name: name,
+            name: { $regex: new RegExp("^" + name.trim() + "$", "i") },
             _id: { $ne: id }
         });
         if (existingCategory) {
@@ -163,8 +163,8 @@ const editCategory = async (req, res) => {
         }
 
         const updateCategory = await Category.findByIdAndUpdate(id, {
-            name: name,
-            description: description
+            name: name.trim(),
+            description: description.trim()
         }, { new: true });
 
         if (updateCategory) {
