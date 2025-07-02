@@ -357,6 +357,30 @@
             background-color: var(--primary-dark);
             border-color: var(--primary-dark);
         }
+
+        /* --- Order Summary Card Customization --- */
+        .order-summary-card {
+            max-width: 320px;
+            margin-left: auto;
+            margin-right: 0;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 15px;
+            box-shadow: 0 2px 8px rgba(50, 25, 17, 0.08);
+        }
+        .order-summary-card .order-summary {
+            padding: 15px;
+        }
+        .order-summary-card .summary-line,
+        .order-summary-card .summary-total {
+            font-size: 15px;
+        }
+        @media (max-width: 991px) {
+            .order-summary-card {
+                max-width: 100%;
+                margin: 20px 0 0 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -538,7 +562,7 @@
             </div>
 
             <div class="col-md-4">
-                <div class="card">
+                <div class="card order-summary-card">
                     <div class="card-header">
                         <h5 class="mb-0">Order Summary</h5>
                     </div>
