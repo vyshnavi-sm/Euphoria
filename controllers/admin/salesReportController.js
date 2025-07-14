@@ -13,6 +13,17 @@ const loadSalesReport = async (req, res) => {
     const filter = req.query.filter || 'all';
     const startDate = req.query.startDate;
     const endDate = req.query.endDate;
+    let errorMessage = null;
+    // Date validation for custom filter
+    if (filter === 'custom') {
+      if (!startDate || !endDate) {
+        errorMessage = 'Both start and end dates are required.';
+      } else if (isNaN(Date.parse(startDate)) || isNaN(Date.parse(endDate))) {
+        errorMessage = 'Invalid date format.';
+      } else if (new Date(startDate) > new Date(endDate)) {
+        errorMessage = 'Start date cannot be after end date.';
+      }
+    }
     
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10; 
@@ -117,7 +128,8 @@ const loadSalesReport = async (req, res) => {
         hasPrevPage,
         startRecord: skip + 1,
         endRecord: Math.min(skip + limit, totalOrders)
-      }
+      },
+      errorMessage
     });
   } catch (error) {
     console.error('Error loading sales report:', error);
@@ -128,6 +140,20 @@ const loadSalesReport = async (req, res) => {
 const generateSalesReport = async (req, res) => {
   try {
     const { format, filter, startDate, endDate } = req.query;
+    let errorMessage = null;
+    // Date validation for custom filter
+    if (filter === 'custom') {
+      if (!startDate || !endDate) {
+        errorMessage = 'Both start and end dates are required.';
+      } else if (isNaN(Date.parse(startDate)) || isNaN(Date.parse(endDate))) {
+        errorMessage = 'Invalid date format.';
+      } else if (new Date(startDate) > new Date(endDate)) {
+        errorMessage = 'Start date cannot be after end date.';
+      }
+    }
+    if (errorMessage) {
+      return res.status(400).send(errorMessage);
+    }
     let query = {};
 
     const today = moment().startOf('day');

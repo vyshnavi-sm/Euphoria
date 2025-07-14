@@ -71,6 +71,11 @@
 
   <main class="main-content">
     <h1>Sales Report</h1>
+    <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+      <div style="color: #fff; background: #d9534f; padding: 10px; border-radius: 5px; margin-bottom: 1rem;">
+        <%= errorMessage %>
+      </div>
+    <% } %>
 
     <div class="filter-section">
       <label for="timeFilter">Filter By:</label>
@@ -264,12 +269,16 @@
       applyCustomFilterButton.addEventListener('click', () => {
         const startDate = startDateInput.value;
         const endDate = endDateInput.value;
-        if (startDate && endDate) {
-          // Redirect with custom date range filter
-          window.location.href = `/admin/sales-report?filter=custom&startDate=${startDate}&endDate=${endDate}&limit=<%= pagination.limit %>`;
-        } else {
+        if (!startDate || !endDate) {
           alert('Please select both start and end dates.');
+          return;
         }
+        if (new Date(startDate) > new Date(endDate)) {
+          alert('Start date cannot be after end date.');
+          return;
+        }
+        // Redirect with custom date range filter
+        window.location.href = `/admin/sales-report?filter=custom&startDate=${startDate}&endDate=${endDate}&limit=<%= pagination.limit %>`;
       });
 
       // Handle page size change
