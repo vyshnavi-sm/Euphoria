@@ -16,6 +16,7 @@
     rel="stylesheet"
   />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  
   <style>
     * {
         margin: 0;
@@ -29,106 +30,103 @@
         min-height: 100vh;
     }
 
-    /* Top Bar */
-    .topbar {
-        background:#5D4037;
-        backdrop-filter: blur(10px);
-        border-bottom: #5D4037;
-        padding: 1rem 0;
-        position: fixed;
-        top: 0; left: 0; right: 0;
-        z-index: 1000;
-    }
-
-    .logo {
-        color: white;
-        font-size: 1.4rem;
-        font-weight: 700;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        font-family: 'Playfair Display', serif;
-        letter-spacing: 3px;
-    }
-
-    /* Sidebar */
-    .sidebar {
-      width: 200px;
-      height: 100vh;
-      background-color: #5D4037;
-      padding-top: 90px;
-      position: fixed;
-      top: 0;
-      left: 0;
-      overflow-y: auto;
-    }
-
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .sidebar ul li {
-      margin: 0;
-    }
-
-    .sidebar ul li a {
-      display: flex;
-      padding: 15px 20px;
-      color: #ccc;
-      text-decoration: none;
-      font-size: 16px;
-      transition: 0.3s;
-      border-left: 4px solid transparent;
-    }
-
-    .sidebar ul li a:hover {
-      background-color: #5C4033;
-      color: #fff;
-    }
-
-    .sidebar ul li a.active {
-      background-color:#5C4035;
-      color: #ffffff;
-      font-weight: bold;
-      border-left: 4px solid #00bcd4;
-    }
-
-    .nav-menu {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .nav-menu li a {
-        display: flex;
-        align-items: center;
-        padding: 12px 20px;
-        color: #5C4033;
-        text-decoration: none;
-        transition: all 0.2s ease;
-        border-left: 4px solid transparent;
-        font-weight: 500;
-    }
-
-    .nav-menu li a i {
-        margin-right: 12px;
-        width: 20px;
-        text-align: center;
-    }
-
-    .nav-menu li a.active,
-    .nav-menu li a:hover {
-        background: #f6f2ee;
-        border-left-color: #5C4033;
-        color: #5C4033;
-    }
-
     /* Main content */
     .main-content {
-        margin-left: 250px;
+        margin-left: 240px;
         margin-top: 80px;
         padding: 30px;
         min-height: calc(100vh - 80px);
+        background: linear-gradient(135deg, #a97c50 0%, #5d4037 100%);
+    }
+    .page-title, h1, h2, h3, h4, h5, h6 {
+        color: #4a2c2a;
+        font-family: 'Playfair Display', serif;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-shadow: 0 4px 16px rgba(93, 64, 55, 0.10);
+        margin-bottom: 0.5rem;
+        position: relative;
+    }
+    .page-title, h1 {
+        font-size: 3rem;
+        line-height: 1.1;
+        color: #4a2c2a;
+        background: none;
+        display: inline-block;
+        padding-bottom: 0.2em;
+    }
+    .page-title::after, h1::after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 4px;
+        background: linear-gradient(90deg, #bfa76a 0%, #a97c50 100%);
+        border-radius: 2px;
+        margin: 0.3em auto 0 0;
+        opacity: 0.7;
+    }
+    .dashboard-subtitle, .main-content .subtitle, .main-content h2 + p {
+        color: #a97c50;
+        font-size: 1.25rem;
+        font-family: 'Poppins', sans-serif;
+        margin-bottom: 2rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+    .stats-grid {
+        box-shadow: 0 8px 32px rgba(93, 64, 55, 0.10), 0 2px 8px rgba(191, 167, 106, 0.08);
+        border-radius: 24px;
+        padding: 20px 10px 10px 10px;
+        background: rgba(255,255,255,0.10);
+        margin-bottom: 40px;
+    }
+    .dashboard-card {
+        background: linear-gradient(135deg, #a97c50 0%, #5d4037 100%);
+        color: #fff;
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 25px;
+        box-shadow: 0 8px 32px rgba(93, 64, 55, 0.10);
+        border: 1px solid #e0c9b6;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .dashboard-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 16px 48px rgba(93, 64, 55, 0.18);
+    }
+    .dashboard-card .card-title {
+        font-size: 1.2rem;
+        color: #ffe6b0;
+        font-weight: 700;
+        margin-bottom: 8px;
+        letter-spacing: 0.5px;
+        text-shadow: 0 2px 8px rgba(191, 167, 106, 0.12);
+    }
+    .dashboard-card .card-value {
+        font-size: 2.4rem;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: 1px;
+        text-shadow: 0 2px 8px rgba(93, 64, 55, 0.10);
+    }
+    .dashboard-card p, .dashboard-card span {
+        color: #f7e7d1;
+    }
+    /* Elegant input styles if any */
+    input, select, textarea {
+        border-radius: 6px;
+        border: 1px solid #e0c9b6;
+        padding: 7px 12px;
+        font-size: 1rem;
+        color: #5d4037;
+        background: #f8f4f0;
+        transition: border 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+        border: 1.5px solid #a97c50;
+        outline: none;
     }
 
     /* Dashboard cards */
@@ -316,45 +314,57 @@
         border-radius: 10px;
         margin: 20px 0;
     }
+    .sidebar {
+        width: 240px !important;
+        min-width: 240px !important;
+        padding-top: 20px;
+    }
+    .main-content {
+        margin-left: 240px !important;
+        width: calc(100% - 240px) !important;
+    }
+    .nav-menu a {
+        font-size: 0.90rem !important;
+        padding: 6px 16px !important;
+        gap: 8px !important;
+        min-height: 28px !important;
+        line-height: 1.1 !important;
+    }
+    .nav-menu i {
+        font-size: 1.05rem !important;
+        min-width: 20px;
+        text-align: center;
+    }
+    .nav-menu a span, .nav-menu a .menu-text {
+        display: inline !important;
+        position: static !important;
+        background: none !important;
+        color: inherit !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+    .nav-menu a {
+        justify-content: flex-start;
+    }
+    @media (max-width: 992px) {
+        .sidebar {
+            width: 220px !important;
+            min-width: 220px !important;
+        }
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+    }
+    .main-content, .main-content p, .main-content span, .main-content div, .main-content td, .main-content th, .main-content label, .main-content li, .main-content a, .main-content input, .main-content select, .main-content textarea {
+        color: #5d4037;
+    }
   </style>
 </head>
 <body>
-  <!-- Topbar -->
-  <header class="topbar">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-      <div class="logo">EUPHORIA</div>
-      <div class="d-flex gap-3">
-        <i class="fas fa-envelope text-white fs-5"></i>
-        <i class="fas fa-bell text-white fs-5"></i>
-        <img 
-          src="https://t4.ftcdn.net/jpg/02/79/66/93/360_F_279669366_Lk12QalYQKMczLEa4ySjhaLtx1M2u7e6.jpg" 
-          class="rounded-circle" 
-          style="width:35px;height:35px;" 
-          alt="Admin Avatar"
-        />
-      </div>
-    </div>
-  </header>
-
-  <!-- Sidebar -->
-  <aside class="sidebar">
-    <ul class="nav-menu">
-      <li><a href="/admin/dashboard" class="active"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-      <li><a href="/admin/customers"><i class="fas fa-users"></i> Customers</a></li>
-      <li><a href="/admin/category"><i class="fas fa-box"></i> Category</a></li>
-      <li><a href="/admin/brands"><i class="fas fa-tags"></i> Brands</a></li>
-      <li><a href="/admin/products"><i class="fas fa-shopping-bag"></i> Products</a></li>
-      <li><a href="/admin/coupons"><i class="fas fa-ticket-alt"></i> Coupons</a></li>
-      <!-- <li><a href="/admin/banners"><i class="fas fa-image"></i> Banners</a></li> -->
-      <li><a href="/admin/orders"><i class="fas fa-clipboard-list"></i> Orders</a></li>
-      <li><a href="/admin/sales-report"><i class="fas fa-chart-bar"></i> Sales Report</a></li>
-      <!-- <li><a href="/admin/refunds"><i class="fas fa-undo-alt"></i> Refunds</a></li> -->
-      <li><a href="/admin/logout"><i class="fas fa-sign-out-alt"></i> Sign Out</a></li>
-    </ul>
-  </aside>
-
-  <!-- Main Content -->
-  <main class="main-content">
+  <%- include('../../views/partials/admin/header') %>
+  <div class="main-content">
     <div class="container-fluid">
       <h1 class="page-title">Dashboard</h1>
       <p class="page-subtitle">Your business insights at a glance</p>
@@ -436,7 +446,7 @@
         </div>
       </div>
     </div>
-  </main>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>

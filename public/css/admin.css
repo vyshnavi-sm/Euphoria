@@ -175,3 +175,98 @@ th {
         grid-template-columns: 1fr;
     }
 } 
+
+/* Add/adjust responsive styles for tables and containers */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100% !important;
+    height: auto !important;
+    position: relative !important;
+    z-index: 2000;
+  }
+  .main-content {
+    margin-left: 0 !important;
+    padding: 10px !important;
+  }
+  .dashboard-cards {
+    grid-template-columns: 1fr !important;
+  }
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  thead, tbody, th, td, tr {
+    display: block;
+  }
+  thead {
+    display: none;
+  }
+  tr {
+    margin-bottom: 15px;
+    border-bottom: 2px solid #eee;
+  }
+  td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+  }
+  td:before {
+    position: absolute;
+    left: 10px;
+    top: 12px;
+    white-space: nowrap;
+    font-weight: bold;
+    content: attr(data-label);
+    text-align: left;
+  }
+}
+
+@media (max-width: 600px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .dashboard-title h1 {
+    font-size: 22px;
+  }
+  .main-content {
+    padding: 5px !important;
+  }
+  .card {
+    padding: 10px !important;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-title h1 {
+    font-size: 18px;
+  }
+  .main-content {
+    padding: 2px !important;
+  }
+  .card {
+    padding: 6px !important;
+    font-size: 13px;
+  }
+}
+
+/* Sidebar toggle button for mobile */
+.sidebar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: block !important;
+  }
+} 

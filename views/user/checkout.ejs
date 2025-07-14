@@ -930,23 +930,92 @@
                 messageDiv.innerHTML = '<div class="alert alert-success">' + data.message + '</div>';
                 // Update the total amount
                 document.querySelector('.summary-total span:last-child').textContent = '₹' + data.newTotal.toFixed(2);
-                // Add discount line if not present
-                // Check if a summary line with 'Discount' text already exists using standard DOM methods
-                const existingDiscountLine = Array.from(document.querySelectorAll('.summary-line span')).some(span => span.textContent.includes('Discount'));
 
-                if (!existingDiscountLine) {
-                    const discountLine = document.createElement('div');
+                // Update discount line
+                let discountLine = Array.from(document.querySelectorAll('.summary-line')).find(div => div.textContent.includes('Discount'));
+                if (!discountLine) {
+                    discountLine = document.createElement('div');
                     discountLine.className = 'summary-line';
                     discountLine.innerHTML = `
-              <span>Discount</span>
-              <span>- ₹${data.appliedCoupon.discount.toFixed(2)}</span>
-            `;
-                    // Insert the discount line before the total line
+                        <span>Discount</span>
+                        <span>- ₹${data.appliedCoupon.discount.toFixed(2)}</span>
+                    `;
                     document.querySelector('.summary-total').insertAdjacentElement('beforebegin', discountLine);
+                } else {
+                    discountLine.querySelector('span:last-child').textContent = '- ₹' + data.appliedCoupon.discount.toFixed(2);
                 }
-                console.log('Coupon applied successfully, preparing to reload page...');
-                // Reload page after 1 second to show updated UI
-                setTimeout(() => window.location.reload(), 1000);
+
+                // Update delivery charge and notes
+                const subtotalElem = document.querySelector('.summary-line span:last-child');
+                let subtotal = 0;
+                if (subtotalElem) {
+                    // Try to get the subtotal from the DOM
+                    const subtotalText = document.querySelector('.summary-line span').textContent.replace(/[^\d.]/g, '');
+                    subtotal = parseFloat(subtotalText) || 0;
+                }
+                const discount = data.appliedCoupon.discount || 0;
+                let deliveryCharge = (subtotal - discount) >= 1000 ? 0 : 50;
+                // Update delivery charge
+                const deliveryChargeElem = Array.from(document.querySelectorAll('.summary-line')).find(div => div.textContent.includes('Delivery Charge'));
+                if (deliveryChargeElem) {
+                    const deliverySpan = deliveryChargeElem.querySelector('span:last-child');
+                    if (deliveryCharge === 0) {
+                        deliverySpan.innerHTML = '<span style="text-decoration: line-through; color: #999;">₹50</span> FREE';
+                    } else {
+                        deliverySpan.textContent = '₹' + deliveryCharge.toFixed(2);
+                    }
+                }
+                // Update delivery notes
+                const freeNote = document.querySelector('.free-delivery-note');
+                const chargeNote = document.querySelector('.delivery-charge-note');
+                if (deliveryCharge === 0) {
+                    if (chargeNote) chargeNote.style.display = 'none';
+                    if (freeNote) freeNote.style.display = '';
+                } else {
+                    if (freeNote) freeNote.style.display = 'none';
+                    if (chargeNote) {
+                        chargeNote.style.display = '';
+                        chargeNote.innerHTML = `<i class="fas fa-info-circle"></i> Add ₹${(1000 - (subtotal - discount)).toFixed(2)} more to get FREE delivery!`;
+                    }
+                }
+                // Update payment method availability (disable COD if total > 1000)
+                const totalWithDelivery = data.newTotal + deliveryCharge;
+                const codRadio = document.getElementById('cod');
+                const codOption = codRadio?.closest('.payment-option');
+                const codLabel = codOption?.querySelector('label');
+                if (codRadio && codOption && codLabel) {
+                    if (totalWithDelivery > 1000) {
+                        codRadio.disabled = true;
+                        codOption.classList.add('disabled');
+                        if (!codLabel.querySelector('.text-danger')) {
+                            const span = document.createElement('span');
+                            span.className = 'text-danger';
+                            span.textContent = '(Not available for orders above ₹1000)';
+                            codLabel.appendChild(span);
+                        }
+                    } else {
+                        codRadio.disabled = false;
+                        codOption.classList.remove('disabled');
+                        const dangerSpan = codLabel.querySelector('.text-danger');
+                        if (dangerSpan) dangerSpan.remove();
+                    }
+                }
+                // Optionally update taxes if you want to recalculate (assuming 18% GST)
+                const taxesElem = Array.from(document.querySelectorAll('.summary-line')).find(div => div.textContent.includes('Taxes'));
+                if (taxesElem) {
+                    const taxes = Math.round(subtotal * 0.18);
+                    taxesElem.querySelector('span:last-child').textContent = '₹' + taxes.toFixed(2);
+                }
+                // Lock the coupon input and show remove button
+                const couponInput = document.getElementById('couponCode');
+                if (couponInput) {
+                    couponInput.readOnly = true;
+                    couponInput.value = data.appliedCoupon.code || couponCode;
+                }
+                const applyBtn = document.getElementById('applyCouponBtn');
+                const removeBtn = document.getElementById('removeCouponBtn');
+                if (applyBtn) applyBtn.style.display = 'none';
+                if (removeBtn) removeBtn.style.display = '';
             } else {
                 // Display error message from backend
                 messageDiv.innerHTML = '<div class="alert alert-danger">' + data.message + '</div>';

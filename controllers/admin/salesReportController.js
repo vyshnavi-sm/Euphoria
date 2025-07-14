@@ -98,7 +98,7 @@ const loadSalesReport = async (req, res) => {
       return orderObj;
     });
 
-    const totalAmount = processedOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+    const totalAmount = processedOrders.reduce((sum, order) => sum + (order.finalAmount !== undefined ? order.finalAmount : order.totalPrice), 0);
     const totalDiscount = processedOrders.reduce((sum, order) => {
       const couponDiscount = order.couponDiscount || 0;
       const productDiscount = order.discount || 0;
@@ -218,7 +218,7 @@ const generateSalesReport = async (req, res) => {
       return orderObj;
     });
 
-    const totalAmount = processedOrders.reduce((sum, order) => sum + order.totalPrice, 0);
+    const totalAmount = processedOrders.reduce((sum, order) => sum + (order.finalAmount !== undefined ? order.finalAmount : order.totalPrice), 0);
     const totalDiscount = processedOrders.reduce((sum, order) => {
       const couponDiscount = order.couponDiscount || 0;
       const productDiscount = order.discount || 0;
@@ -256,7 +256,7 @@ const generateSalesReport = async (req, res) => {
       doc.y = boxY + boxHeight + 20;
 
       const tableTop = doc.y;
-      const tableHeaders = ['Order ID', 'Customer', 'Date', 'Products', 'Total (₹)', 'Discount (₹)', 'Payment'];
+      const tableHeaders = ['Order ID', 'Customer', 'Date', 'Products', 'Final Amount (₹)', 'Discount (₹)', 'Payment'];
       const columnWidths = [80, 80, 80, 120, 60, 60, 70]; 
       const tableRowHeight = 25;
       let currentY = tableTop;
@@ -350,7 +350,7 @@ const generateSalesReport = async (req, res) => {
         addTableCell(productsDisplay, cellX, currentY, columnWidths[3], tableRowHeight);
         cellX += columnWidths[3];
 
-        addTableCell(order.totalPrice.toFixed(2), cellX, currentY, columnWidths[4], tableRowHeight);
+        addTableCell(((order.finalAmount !== undefined ? order.finalAmount : order.totalPrice).toFixed(2)), cellX, currentY, columnWidths[4], tableRowHeight);
         cellX += columnWidths[4];
 
         const totalOrderDiscount = (order.couponDiscount || 0) + (order.discount || 0);
@@ -380,7 +380,7 @@ const generateSalesReport = async (req, res) => {
         { header: 'Customer', key: 'customer', width: 20 },
         { header: 'Date', key: 'date', width: 20 },
         { header: 'Products', key: 'products', width: 50 },
-        { header: 'Total Amount', key: 'total', width: 15 },
+        { header: 'Final Amount', key: 'total', width: 15 },
         { header: 'Discount', key: 'discount', width: 15 },
         { header: 'Net Amount', key: 'net', width: 15 },
         { header: 'Payment Method', key: 'payment', width: 15 }
@@ -428,9 +428,9 @@ const generateSalesReport = async (req, res) => {
           customer: order.userId ? order.userId.name : 'N/A',
           date: moment(order.createdAt).format('YYYY-MM-DD HH:mm:ss'),
           products: getProductNamesForExcel(order.orderedItems),
-          total: order.totalPrice.toFixed(2),
+          total: (order.finalAmount !== undefined ? order.finalAmount : order.totalPrice).toFixed(2),
           discount: ((order.couponDiscount || 0) + (order.discount || 0)).toFixed(2),
-          net: (order.totalPrice - ((order.couponDiscount || 0) + (order.discount || 0))).toFixed(2),
+          net: (order.finalAmount !== undefined ? order.finalAmount : order.totalPrice - ((order.couponDiscount || 0) + (order.discount || 0))).toFixed(2),
           payment: order.paymentMethod
         });
       });

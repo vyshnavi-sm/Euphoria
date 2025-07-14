@@ -69,7 +69,7 @@ body {
     position: fixed;
     top: 60px; /* Below the header */
     left: 0;
-    width: 200px;
+    width: 300px;
     height: calc(100vh - 60px);
     background: #5D4037;
     padding-top: 10px;
@@ -102,9 +102,9 @@ body {
 
 /* Main Content */
 .main-content {
-    margin-left: 220px; /* Pushes content to the right of the sidebar */
+    margin-left: 320px; /* Pushes content to the right of the sidebar */
     padding: 80px 20px 20px;
-    width: calc(100% - 220px);
+    width: calc(100% - 320px);
 }
 
 /* Responsive Styles */
@@ -120,14 +120,14 @@ body {
         padding: 70px 5px 10px;
     }
     .sidebar {
-        width: 160px;
+        width: 300px;
     }
 }
 @media (max-width: 768px) {
     .sidebar {
         position: fixed;
-        left: -220px;
-        width: 200px;
+        left: -320px;
+        width: 300px;
         height: 100vh;
         z-index: 2000;
         transition: left 0.3s;
@@ -173,4 +173,181 @@ body {
     .logo {
         font-size: 15px;
     }
+}
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.4);
+  z-index: 1999;
+  display: none;
+  transition: opacity 0.3s;
+}
+.sidebar.show ~ .sidebar-overlay {
+  display: block;
+  opacity: 1;
+}
+.sidebar-overlay.show {
+  display: block !important;
+  opacity: 1;
+}
+
+/* Hamburger menu button */
+.sidebar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: block;
+  }
+  .sidebar {
+    left: -320px;
+    transition: left 0.3s;
+    z-index: 2000;
+  }
+  .sidebar.show {
+    left: 0;
+  }
+  .sidebar-overlay {
+    display: none;
+  }
+  .sidebar.show ~ .sidebar-overlay,
+  .sidebar-overlay.show {
+    display: block !important;
+    opacity: 1;
+  }
+}
+
+/* Add/adjust responsive styles for tables and containers */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 70px 2vw 10px !important;
+  }
+  .sidebar {
+    left: -320px;
+    width: 300px;
+    height: 100vh;
+    z-index: 2000;
+    transition: left 0.3s;
+  }
+  .sidebar.active, .sidebar.show {
+    left: 0;
+  }
+  .sidebar-toggle {
+    display: block !important;
+  }
+  .sidebar-overlay {
+    display: block !important;
+    opacity: 1;
+  }
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 15px !important;
+  }
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  thead, tbody, th, td, tr {
+    display: block;
+  }
+  thead {
+    display: none;
+  }
+  tr {
+    margin-bottom: 15px;
+    border-bottom: 2px solid #eee;
+  }
+  td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+  }
+  td:before {
+    position: absolute;
+    left: 10px;
+    top: 12px;
+    white-space: nowrap;
+    font-weight: bold;
+    content: attr(data-label);
+    text-align: left;
+  }
+}
+
+@media (max-width: 600px) {
+  .topbar {
+    flex-direction: column;
+    height: auto;
+    padding: 10px 5px;
+  }
+  .logo {
+    font-size: 18px;
+  }
+  .main-content {
+    padding: 60px 2vw 10px;
+  }
+  .dashboard-card, .stat-card {
+    padding: 12px;
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    padding: 50px 1vw 5px;
+  }
+  .dashboard-card, .stat-card {
+    padding: 8px;
+    font-size: 13px;
+  }
+  .logo {
+    font-size: 15px;
+  }
+}
+
+/* Sidebar toggle button for mobile */
+.sidebar-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.4);
+  z-index: 1999;
+  display: none;
+  transition: opacity 0.3s;
+}
+.sidebar.show ~ .sidebar-overlay {
+  display: block;
+  opacity: 1;
+}
+.sidebar-overlay.show {
+  display: block !important;
+  opacity: 1;
 }

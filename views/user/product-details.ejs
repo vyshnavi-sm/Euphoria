@@ -13,14 +13,31 @@
 <script src="https://cdn.jsdelivr.net/npm/pinch-zoom-js@2.3.4/dist/pinch-zoom.umd.min.js"></script>
 
 <style>
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.main {
+  flex: 1 0 auto;
+}
+.footer-bg {
+  flex-shrink: 0;
+}
 /* Main Container Styles */
 .product-detail {
     background: linear-gradient(135deg, #f8f9fa, #ffffff);
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-    margin-bottom: 30px;
+    padding: 60px;
+    border-radius: 24px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+    margin-bottom: 40px;
     /* margin-left: 170px; */
+    max-width: 1400px;
 }
 
 /* Home Button Styles */
@@ -720,9 +737,16 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 900px;
+    max-width: 1400px;
+    padding: 80px;
 }
-
+@media (max-width: 1400px) {
+  .product-detail,
+  .product-detail.accordion-detail {
+    max-width: 100%;
+    padding: 40px;
+  }
+}
 @media (max-width: 992px) {
   .container {
     max-width: 900px;

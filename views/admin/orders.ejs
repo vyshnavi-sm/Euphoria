@@ -935,7 +935,7 @@ async function loadOrders(page = 1) {
                     ${order.userId ? order.userId.name : 'N/A'}
                     <br><small>${order.userId ? order.userId.email : 'N/A'}</small>
                 </td>
-                <td>₹${order.totalPrice ? order.totalPrice.toFixed(2) : '0.00'}</td>
+                <td>₹${(order.finalAmount !== undefined ? order.finalAmount : order.totalPrice).toFixed(2)}</td>
                 <td>
                     <span class="${statusInfo.badgeClass}">
                         ${order.status}

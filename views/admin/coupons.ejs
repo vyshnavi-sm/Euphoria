@@ -16,89 +16,276 @@
         background-color: var(--background-brown);
         color: var(--text-dark);
         font-family: 'Poppins', sans-serif;
+        margin: 0;
+        padding-top: 60px;
     }
 
-    .container-fluid{
-        padding-left: 320px;
-        padding-right: 40px;
-        margin-top: 50px;
-        max-width: 800px;
+    /* Desktop Layout */
+    .container-fluid {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: clamp(1rem, 4vw, 2.5rem);
+        margin-top: clamp(1.5rem, 5vw, 3rem);
+        margin-left: 240px;
+        transition: margin-left 0.3s ease;
+    }
+
+    /* Responsive adjustments for different screen sizes */
+    @media (max-width: 1400px) {
+        .container-fluid { 
+            margin-left: 240px; 
+        }
+        .table-card-right { 
+            margin-left: 60px; 
+        }
     }
 
     @media (max-width: 1200px) {
-        .container-fluid {
-            padding-left: 180px;
-            max-width: 600px;
+        .container-fluid { 
+            margin-left: 240px; 
+        }
+        .table-card-right { 
+            margin-left: 40px; 
         }
     }
 
     @media (max-width: 992px) {
-        .container-fluid {
-            padding-left: 80px;
-            max-width: 98vw;
+        .container-fluid { 
+            margin-left: 0 !important;
+            padding: 1rem;
+            width: 100%;
+        }
+        .table-card-right { 
+            margin-left: 0 !important;
+            margin-right: 0;
         }
     }
 
     @media (max-width: 768px) {
-        .container-fluid {
-            padding-left: 0;
-            padding-right: 0;
-            max-width: 100vw;
+        .container-fluid { 
+            padding: 0.75rem;
+            margin-top: 1rem;
         }
-        .table {
+        h1 { 
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .row { 
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .row > .col-md-4 { 
+            width: 100%;
+            min-width: 0;
+            margin-bottom: 1rem;
+        }
+        .card.table-card-right { 
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .table { 
             font-size: 13px;
         }
     }
 
-    h1, h2 {
-        color: var(--primary-brown);
-        font-family: 'Cormorant Garamond', serif;
-        font-weight: 600;
+    @media (max-width: 600px) {
+        .container-fluid { 
+            padding: 0.5rem;
+        }
+        .card.table-card-right { 
+            padding: 0.75rem;
+        }
+        .table { 
+            font-size: 12px;
+        }
+        h1 {
+            font-size: 1.5rem;
+        }
     }
 
+    @media (max-width: 576px) {
+        .container-fluid { 
+            padding: 0.5rem;
+        }
+        .card.table-card-right { 
+            padding: 0.5rem;
+        }
+        .table { 
+            min-width: 100%;
+            font-size: 11px;
+        }
+        .btn-primary { 
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        h1 {
+            font-size: 1.3rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        h1 { 
+            font-size: 1.2rem;
+        }
+        .table { 
+            font-size: 10px;
+        }
+        .container-fluid {
+            padding: 0.3rem;
+        }
+    }
+
+    @media (max-width: 400px) {
+        h1 { 
+            font-size: 1.1rem;
+        }
+        .table {
+            font-size: 9px;
+        }
+    }
+
+    @media (max-width: 360px) {
+        h1 { 
+            font-size: 1rem;
+        }
+    }
+
+    @media (max-width: 320px) {
+        h1 { 
+            font-size: 0.9rem;
+        }
+    }
+
+    /* Responsive Table Styles */
+    @media (max-width: 768px) {
+        .table-responsive {
+            border: 1px solid var(--border-brown);
+            border-radius: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table thead th:first-child,
+        .table tbody td:first-child {
+            position: sticky;
+            left: 0;
+            background-color: white;
+            z-index: 10;
+            border-right: 2px solid var(--border-brown);
+        }
+        
+        .table thead th:first-child {
+            background-color: var(--primary-brown);
+            color: white;
+        }
+    }
+
+    /* Card Styles */
     .card {
-        box-shadow: 0 4px 6px var(--shadow-color);
+        box-shadow: 0 4px 12px var(--shadow-color);
         border: none;
         background-color: white;
-        border-radius: 10px;
+        border-radius: 12px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px var(--shadow-color);
     }
 
     .card-header {
         background-color: var(--primary-brown);
         color: white;
-        border-radius: 10px 10px 0 0;
+        border-radius: 12px 12px 0 0;
         font-size: 1.25rem;
-        font-weight: 500;
+        font-weight: 600;
+        padding: 1rem 1.5rem;
     }
 
+    /* Form Styles */
     .form-label {
         color: var(--text-dark);
         font-weight: 500;
+        margin-bottom: 0.5rem;
     }
 
     .form-control, .form-select {
         border: 1px solid var(--border-brown);
-        border-radius: 5px;
-        padding: 0.75rem;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
         color: var(--text-dark);
         background-color: #fffaf5;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
 
     .form-control:focus, .form-select:focus {
         border-color: var(--primary-brown);
-        box-shadow: 0 0 0 0.2rem rgba(93, 64, 55, 0.25);
+        box-shadow: 0 0 0 0.2rem rgba(93, 64, 55, 0.15);
+        outline: none;
     }
 
+    /* Button Styles */
     .btn-primary {
         background-color: var(--primary-brown);
         border-color: var(--primary-brown);
         padding: 0.75rem 1.5rem;
         font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.2s ease;
     }
 
     .btn-primary:hover {
         background-color: var(--secondary-brown);
         border-color: var(--secondary-brown);
+        transform: translateY(-1px);
+    }
+
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        transform: translateY(-1px);
+    }
+
+    .btn-warning {
+        background-color: var(--light-brown);
+        border-color: var(--light-brown);
+        color: var(--text-dark);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-warning:hover {
+        background-color: #9a7d74;
+        border-color: #9a7d74;
+        transform: translateY(-1px);
+    }
+
+    .btn-success {
+        background-color: var(--secondary-brown);
+        border-color: var(--secondary-brown);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-success:hover {
+        background-color: #7d5c53;
+        border-color: #7d5c53;
+        transform: translateY(-1px);
+    }
+
+    /* Table Styles */
+    .table {
+        border-radius: 8px;
+        overflow: hidden;
     }
 
     .table thead th {
@@ -107,6 +294,8 @@
         font-weight: 500;
         border: none;
         padding: 1rem;
+        text-align: center;
+        vertical-align: middle;
     }
 
     .table tbody td {
@@ -114,55 +303,160 @@
         vertical-align: middle;
         border-bottom: 1px solid var(--border-brown);
         color: var(--text-dark);
+        text-align: center;
     }
 
     .table tbody tr:hover {
         background-color: var(--background-brown);
+        transition: background-color 0.2s ease;
     }
 
+    .table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    /* Badge Styles */
     .badge.bg-success {
         background-color: var(--secondary-brown) !important;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 20px;
     }
 
     .badge.bg-danger {
-         background-color: var(--primary-brown) !important;
+        background-color: #dc3545 !important;
+        font-size: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 20px;
     }
 
-    .btn-danger {
-        background-color: var(--primary-brown);
-        border-color: var(--primary-brown);
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
     }
 
-     .btn-danger:hover {
-         background-color: #b00020;
-         border-color: #b00020;
-     }
-
-    .btn-warning {
-        background-color: var(--light-brown);
-        border-color: var(--light-brown);
-        color: var(--text-dark);
+    .action-buttons form,
+    .action-buttons .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
     }
 
-    .btn-warning:hover {
-        background-color: #9a7d74;
-        border-color: #9a7d74;
+    .action-buttons .btn:last-child {
+        margin-bottom: 0;
     }
 
-    .btn-success {
-         background-color: var(--secondary-brown);
-         border-color: var(--secondary-brown);
+    @media (min-width: 768px) {
+        .action-buttons {
+            flex-direction: row;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .action-buttons form,
+        .action-buttons .btn {
+            width: auto;
+            margin-bottom: 0;
+            flex: 1;
+        }
     }
 
-     .btn-success:hover {
-         background-color: #7d5c53;
-         border-color: #7d5c53;
-     }
+    /* Desktop table positioning */
+    @media (min-width: 992px) {
+        .table-card-right {
+            margin-left: 80px;
+            max-width: 1000px;
+        }
+    }
 
+    @media (min-width: 1200px) {
+        .table-card-right {
+            margin-left: 120px;
+            max-width: 1100px;
+        }
+    }
+
+    /* Coupon specific styles */
+    .coupon-card {
+        background: linear-gradient(135deg, #fff 0%, #f8f4f0 100%);
+        border-left: 4px solid var(--primary-brown);
+        margin-bottom: 1rem;
+    }
+
+    .coupon-code {
+        font-family: 'Courier New', monospace;
+        font-weight: bold;
+        font-size: 1.1rem;
+        color: var(--primary-brown);
+        background-color: rgba(93, 64, 55, 0.1);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        display: inline-block;
+    }
+
+    .coupon-discount {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--secondary-brown);
+    }
+
+    /* Loading and empty states */
+    .loading-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-light);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-light);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--light-brown);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    /* Mobile optimizations */
+    @media (max-width: 768px) {
+        .btn {
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .card-header {
+            font-size: 1.1rem;
+            padding: 0.8rem 1rem;
+        }
+        
+        .form-control, .form-select {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+        }
+        
+        .table thead th,
+        .table tbody td {
+            padding: 0.8rem 0.5rem;
+        }
+    }
 </style>
 
 <div class="container-fluid">
-    <h1 class="mt-4">Coupon Management</h1>
+    <h1 class="mt-4 table-card-right">Coupon Management</h1>
 
     <% if (success_msg && success_msg.length > 0) { %>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -178,7 +472,7 @@
         </div>
     <% } %>
 
-    <div class="card mt-4">
+    <div class="card mt-4 table-card-right">
         <div class="card-header">
             <h2>Add New Coupon</h2>
         </div>
@@ -233,7 +527,7 @@
         </div>
     </div>
 
-    <div class="card mt-4">
+    <div class="card mt-4 table-card-right">
         <div class="card-header">
             <h2>Existing Coupons</h2>
         </div>
@@ -274,14 +568,16 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <form action="/admin/coupons/<%= coupon._id %>?_method=DELETE" method="POST" style="display: inline;">
-                                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this coupon?');">Delete</button>
-                                        </form>
-                                        <button type="button" class="btn btn-<%= coupon.isActive ? 'warning' : 'success' %> btn-sm toggle-coupon-btn" 
-                                            data-coupon-id="<%= coupon._id %>" 
-                                            data-active="<%= coupon.isActive %>">
-                                            <%= coupon.isActive ? 'Deactivate' : 'Activate' %>
-                                        </button>
+                                        <div class="action-buttons">
+                                            <form action="/admin/coupons/<%= coupon._id %>?_method=DELETE" method="POST" style="display: inline;">
+                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this coupon?');">Delete</button>
+                                            </form>
+                                            <button type="button" class="btn btn-<%= coupon.isActive ? 'warning' : 'success' %> btn-sm toggle-coupon-btn" 
+                                                data-coupon-id="<%= coupon._id %>" 
+                                                data-active="<%= coupon.isActive %>">
+                                                <%= coupon.isActive ? 'Deactivate' : 'Activate' %>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             <% }) %>

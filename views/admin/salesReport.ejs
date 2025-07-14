@@ -8,7 +8,11 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/adminSalesReport.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+      <%- include("../../views/partials/admin/header") %>
+
   <style>
+    
     .filter-section {
       display: flex;
       flex-direction: row; /* Arrange items horizontally */
@@ -137,7 +141,7 @@
           <th>Customer</th>
           <th>Order Date</th>
           <th>Products</th>
-          <th>Total (₹)</th>
+          <th>Final Amount (₹)</th>
           <th>Discount (₹)</th>
           <th>Payment</th>
         </tr>
@@ -164,7 +168,7 @@
                 <% }
               }); %>
             </td>
-            <td><%= order.totalPrice.toFixed(2) %></td>
+            <td><%= (order.finalAmount !== undefined ? order.finalAmount : order.totalPrice).toFixed(2) %></td>
             <td><%= ((order.couponDiscount || 0) + (order.discount || 0)).toFixed(2) %></td>
             <td><%= order.paymentMethod %></td>
           </tr>
