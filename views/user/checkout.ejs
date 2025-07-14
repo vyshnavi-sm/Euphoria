@@ -689,7 +689,7 @@
               <i class="fas fa-wallet"></i>
               Wallet
               <span class="wallet-balance" style="margin-left: 10px; color: var(--primary-color);">
-                (Balance: ₹<%= user.wallet ? user.wallet.toFixed(2) : '0.00' %>)
+                (Balance: ₹<%= !isNaN(Number(user.wallet)) ? Number(user.wallet).toFixed(2) : '0.00' %>)
               </span>
             </label>
           </div>
