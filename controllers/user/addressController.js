@@ -98,11 +98,13 @@ const updateAddress = async (req, res) => {
             }
         );
 
-        if (!result.modifiedCount) throw new Error('Address not modified');
+        if (!result.modifiedCount) {
+            return res.status(400).json({ success: false, message: 'No changes were made to the address.' });
+        }
         res.redirect(redirect === 'checkout' ? "/user/checkout" : "/userProfile#address");
     } catch (error) {
         console.error("Error updating address:", error);
-        res.redirect("/pageNotFound");
+        res.status(500).json({ success: false, message: 'Failed to update address.' });
     }
 };
 

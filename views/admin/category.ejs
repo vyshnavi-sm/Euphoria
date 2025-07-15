@@ -2,7 +2,7 @@
   <style>
  
 .search-input {
-    border: 1px solid #5C4033;
+    border: 1px solid #3c2a21;
     border-radius: 4px;
     padding: 6px 12px;
     height: 32px;
@@ -11,17 +11,20 @@
 
 .search-btn {
     height: 32px;
-    padding: 6px 12px;
+    padding: 6px 18px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 15px;
     background-color: #5C4033;
-    color: white;
+    color: #403006;
     border: none;
-    transition: background-color 0.3s;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(60,42,33,0.08);
+    transition: background 0.3s, color 0.3s;
 }
 
 .search-btn:hover {
     background-color: #8B5E3C !important;
+    color: #51320c !important;
 }
 
 .clear-btn {
@@ -30,7 +33,7 @@
     border-radius: 4px;
     font-size: 14px;
     background-color: #dc3545;
-    color: white;
+    color: rgb(64, 51, 9);
     border: none;
     transition: background-color 0.3s;
 }
@@ -75,6 +78,26 @@
 
 <div class="main-content">
     <div class="container-fluid">
+        <!-- Search Form Row at Top -->
+        <div class="container-fluid mt-4">
+          <div class="row">
+            <div class="col-12 mb-3">
+              <div class="d-flex justify-content-start align-items-center">
+                <form action="/admin/category" method="GET" class="d-flex" style="max-width: 350px; width: 100%;">
+                  <input type="text" name="search" class="form-control search-input" placeholder="Search categories..." value="<%= search || '' %>">
+                  <button type="submit" class="btn search-btn ms-2">
+                    <i class="fas fa-search"></i> 
+                  </button>
+                  <% if (search) { %>
+                    <a href="/admin/category" class="btn clear-btn ms-2">
+                      <i class="fas fa-times"></i> 
+                    </a>
+                  <% } %>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="row">
             <!-- Add Category Button and Search Bar in Single Line -->
            <!-- Add Category Left | Search Bar Right -->
@@ -84,26 +107,9 @@
         <button type="button" class="btn w-auto" style="background-color: #5C4033; color: white;" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
             <i class="fas fa-plus"></i> Add Category
         </button>
-
-        <!-- Search Bar Right -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div class="search-container">
-                <form action="/admin/category" method="GET" class="d-flex">
-                    <input type="text" name="search" class="form-control search-input" placeholder="Search categories..." value="<%= search || '' %>">
-                    <button type="submit" class="btn search-btn ms-2">
-                        <i class="fas fa-search"></i> Search
-                    </button>
-                    <% if (search) { %>
-                        <a href="/admin/category" class="btn clear-btn ms-2">
-                            <i class="fas fa-times"></i> Clear
-                        </a>
-                    <% } %>
-                </form>
-            </div>
-              </div>
-        
-              </div>
-              </div>
+        <!-- Remove the search bar here -->
+    </div>
+</div>
               
 
             <!-- Category Table -->
@@ -218,7 +224,7 @@
                         <input type="text" class="form-control" id="description" name="description" placeholder="Short description" required>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <!-- <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> -->
                         <button type="submit" class="btn text-white" style="background-color: #8B5E3C;">Add Category</button>
                     </div>
                 </form>

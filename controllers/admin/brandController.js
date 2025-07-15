@@ -6,11 +6,16 @@ const getBrandPage = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = 5;
         const skip = (page - 1) * limit;
-        const brandData = await Brand.find({})
+        const search = req.query.search ? req.query.search.trim() : '';
+        let query = {};
+        if (search) {
+            query.brandName = { $regex: search, $options: 'i' };
+        }
+        const brandData = await Brand.find(query)
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
-        const totalBrands = await Brand.countDocuments();
+        const totalBrands = await Brand.countDocuments(query);
         const totalPages = Math.ceil(totalBrands / limit);
 
         const error = req.query.error;
@@ -22,7 +27,8 @@ const getBrandPage = async (req, res) => {
             totalPages: totalPages,
             totalBrands: totalBrands,
             error: error,
-            success: success
+            success: success,
+            search: search
         });
     } catch (error) {
         console.error("Error in getBrandPage:", error);
