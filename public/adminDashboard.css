@@ -67,44 +67,66 @@ body {
 /* Sidebar Navigation */
 .sidebar {
     position: fixed;
-    top: 60px; /* Below the header */
+    top: 0;
     left: 0;
-    width: 300px;
-    height: calc(100vh - 60px);
-    background: #5D4037;
-    padding-top: 10px;
-    color: white;
+    width: 260px;
+    height: 100vh;
+    background: linear-gradient(180deg, #5D4037 0%, #3E2723 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 32px 0 24px 0;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.08);
+    z-index: 100;
+}
+
+.sidebar .sidebar-title {
+    font-size: 2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 40px;
+    text-align: center;
+    font-family: 'Playfair Display', serif;
 }
 
 .nav-menu {
     list-style: none;
     padding: 0;
+    margin: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .nav-menu li {
-    padding: 15px;
-}
-
-.nav-menu a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
     display: flex;
     align-items: center;
-    gap: 10px;
+    padding: 12px 32px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+    transition: background 0.2s;
+    cursor: pointer;
 }
 
-.nav-menu a:hover {
-    background: #5D4037;
-    padding: 10px;
-    border-radius: 5px;
+.nav-menu li.active,
+.nav-menu li:hover {
+    background: rgba(255,255,255,0.08);
 }
 
-/* Main Content */
+.nav-menu li i {
+    margin-right: 16px;
+    font-size: 1.3em;
+}
+
+/* Remove top: 60px from .sidebar for full height */
+
 .main-content {
-    margin-left: 320px; /* Pushes content to the right of the sidebar */
-    padding: 80px 20px 20px;
-    width: calc(100% - 320px);
+    margin-left: 260px;
+    padding: 80px 30px 30px 30px;
+    width: calc(100% - 260px);
+    background: #f7f3ef;
+    min-height: 100vh;
 }
 
 /* Responsive Styles */
@@ -114,20 +136,20 @@ body {
     }
 }
 @media (max-width: 992px) {
+    .sidebar {
+        width: 220px;
+        min-width: 220px;
+    }
     .main-content {
         margin-left: 0;
         width: 100%;
-        padding: 70px 5px 10px;
-    }
-    .sidebar {
-        width: 300px;
     }
 }
 @media (max-width: 768px) {
     .sidebar {
         position: fixed;
-        left: -320px;
-        width: 300px;
+        left: -260px;
+        width: 220px;
         height: 100vh;
         z-index: 2000;
         transition: left 0.3s;

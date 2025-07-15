@@ -113,13 +113,27 @@ const handlePaymentFailure = async (req, res) => {
         
         if (orderId) {
             try {
+                // Update order status
                 await Order.findByIdAndUpdate(orderId, {
                     paymentStatus: 'Failed',
                     status: 'Payment Failed'
                 });
                 console.log('Updated order status to failed');
+
+                // Restore stock
+                const order = await Order.findById(orderId).populate('orderedItems.product');
+                if (order) {
+                    for (const item of order.orderedItems) {
+                        const product = item.product;
+                        if (product) {
+                            product.quantity += item.quantity;
+                            await product.save();
+                        }
+                    }
+                    console.log('Restored stock for failed payment');
+                }
             } catch (updateError) {
-                console.error('Error updating order status:', updateError);
+                console.error('Error updating order status or restoring stock:', updateError);
             }
         }
         

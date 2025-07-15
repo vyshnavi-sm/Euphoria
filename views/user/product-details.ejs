@@ -873,6 +873,8 @@ body {
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    max-width: 1200px;
+    width: 100%;
 }
 
 .highlights-title {
@@ -902,6 +904,9 @@ body {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
+    max-width: 1150px;
+    width: 100%;
+    margin: 0 auto;
 }
 
 .highlight-item {
@@ -1487,11 +1492,14 @@ body {
                     <% }); %>
                 </div>
             </div>
+          </div> <!-- end of .product-detail.accordion-detail -->
+        </div> <!-- end of .col-lg-9 -->
+      </div> <!-- end of .row -->
+    </div> <!-- end of .container -->
+  </section>
 
-        
 <!-- Add hidden input for max quantity -->
 <input type="hidden" id="maxQuantity" value="<%= product.quantity %>">
-
 <!-- Modal for mobile zoom -->
 <div id="mobileZoomModal" style="display:none;position:fixed;z-index:2000;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.95);align-items:center;justify-content:center;backdrop-filter:blur(2px);transition:all 0.3s;">
   <div style="width:95vw;height:95vh;display:flex;align-items:center;justify-content:center;position:relative;">
@@ -1502,111 +1510,113 @@ body {
   </div>
 </div>
 
+
+
 <script>
-  // Initialize zoom
-  document.addEventListener('DOMContentLoaded', function() {
-    const mainImage = document.getElementById('mainImage');
-    const zoomContainer = document.getElementById('zoomContainer');
-    const zoomLens = document.getElementById('zoomLens');
-    let zoomResult = document.getElementById('zoomResultNew');
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+        // Initialize zoom
+        document.addEventListener('DOMContentLoaded', function() {
+          const mainImage = document.getElementById('mainImage');
+          const zoomContainer = document.getElementById('zoomContainer');
+          const zoomLens = document.getElementById('zoomLens');
+          let zoomResult = document.getElementById('zoomResultNew');
+          const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-    // Create zoom result if not exists (desktop only)
-    if (!isMobile) {
-      if (!zoomResult) {
-        zoomResult = document.createElement('div');
-        zoomResult.id = 'zoomResultNew';
-        zoomContainer.appendChild(zoomResult);
-      }
-      // Position zoomResult beside image
-      zoomResult.style.display = 'none';
-      zoomResult.style.left = '105%';
-      zoomResult.style.top = '0';
+          // Create zoom result if not exists (desktop only)
+          if (!isMobile) {
+            if (!zoomResult) {
+              zoomResult = document.createElement('div');
+              zoomResult.id = 'zoomResultNew';
+              zoomContainer.appendChild(zoomResult);
+            }
+            // Position zoomResult beside image
+            zoomResult.style.display = 'none';
+            zoomResult.style.left = '105%';
+            zoomResult.style.top = '0';
 
-      // Mouse events for zoom (loupe effect)
-      mainImage.addEventListener('mouseenter', function(e) {
-        zoomLens.style.display = 'block';
-        updateZoom(e);
-      });
-      mainImage.addEventListener('mousemove', updateZoom);
-      mainImage.addEventListener('mouseleave', function() {
-        zoomLens.style.display = 'none';
-      });
-      function updateZoom(e) {
-        const rect = mainImage.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        // Lens position
-        const lensSize = zoomLens.offsetWidth;
-        let lensX = x - lensSize/2;
-        let lensY = y - lensSize/2;
-        lensX = Math.max(0, Math.min(rect.width - lensSize, lensX));
-        lensY = Math.max(0, Math.min(rect.height - lensSize, lensY));
-        zoomLens.style.left = lensX + 'px';
-        zoomLens.style.top = lensY + 'px';
-        // Loupe effect: set lens background to zoomed image
-        const scaleX = mainImage.naturalWidth / rect.width;
-        const scaleY = mainImage.naturalHeight / rect.height;
-        const bgSizeX = rect.width * scaleX;
-        const bgSizeY = rect.height * scaleY;
-        zoomLens.style.backgroundImage = `url('${mainImage.src}')`;
-        zoomLens.style.backgroundSize = `${mainImage.naturalWidth}px ${mainImage.naturalHeight}px`;
-        // Position background so the area under the lens is centered
-        const bgPosX = -((x * scaleX) - lensSize/2);
-        const bgPosY = -((y * scaleY) - lensSize/2);
-        zoomLens.style.backgroundPosition = `${bgPosX}px ${bgPosY}px`;
-      }
-    }
-    // Mobile: tap to open modal with pinch-zoom
-    const mobileZoomModal = document.getElementById('mobileZoomModal');
-    const modalZoomImg = document.getElementById('modalZoomImg');
-    const closeZoomModal = document.getElementById('closeZoomModal');
-    if (isMobile) {
-      mainImage.addEventListener('click', function() {
-        modalZoomImg.src = mainImage.src;
-        mobileZoomModal.style.display = 'flex';
-      });
-      closeZoomModal.addEventListener('click', function() {
-        mobileZoomModal.style.display = 'none';
-      });
-      mobileZoomModal.addEventListener('click', function(e) {
-        if (e.target === mobileZoomModal) mobileZoomModal.style.display = 'none';
-      });
-    }
-    // Update zoom when thumbnail changes
-    window.changeMainImage = function(imageSrc) {
-      mainImage.src = imageSrc;
-      if (modalZoomImg) modalZoomImg.src = imageSrc;
-      // Update active thumbnail
-      document.querySelectorAll('.thumbnail').forEach(thumb => {
-        thumb.classList.remove('active');
-        if (thumb.querySelector('img').src.includes(imageSrc)) {
-          thumb.classList.add('active');
+            // Mouse events for zoom (loupe effect)
+            mainImage.addEventListener('mouseenter', function(e) {
+              zoomLens.style.display = 'block';
+              updateZoom(e);
+            });
+            mainImage.addEventListener('mousemove', updateZoom);
+            mainImage.addEventListener('mouseleave', function() {
+              zoomLens.style.display = 'none';
+            });
+            function updateZoom(e) {
+              const rect = mainImage.getBoundingClientRect();
+              const x = e.clientX - rect.left;
+              const y = e.clientY - rect.top;
+              // Lens position
+              const lensSize = zoomLens.offsetWidth;
+              let lensX = x - lensSize/2;
+              let lensY = y - lensSize/2;
+              lensX = Math.max(0, Math.min(rect.width - lensSize, lensX));
+              lensY = Math.max(0, Math.min(rect.height - lensSize, lensY));
+              zoomLens.style.left = lensX + 'px';
+              zoomLens.style.top = lensY + 'px';
+              // Loupe effect: set lens background to zoomed image
+              const scaleX = mainImage.naturalWidth / rect.width;
+              const scaleY = mainImage.naturalHeight / rect.height;
+              const bgSizeX = rect.width * scaleX;
+              const bgSizeY = rect.height * scaleY;
+              zoomLens.style.backgroundImage = `url('${mainImage.src}')`;
+              zoomLens.style.backgroundSize = `${mainImage.naturalWidth}px ${mainImage.naturalHeight}px`;
+              // Position background so the area under the lens is centered
+              const bgPosX = -((x * scaleX) - lensSize/2);
+              const bgPosY = -((y * scaleY) - lensSize/2);
+              zoomLens.style.backgroundPosition = `${bgPosX}px ${bgPosY}px`;
+            }
+          }
+          // Mobile: tap to open modal with pinch-zoom
+          const mobileZoomModal = document.getElementById('mobileZoomModal');
+          const modalZoomImg = document.getElementById('modalZoomImg');
+          const closeZoomModal = document.getElementById('closeZoomModal');
+          if (isMobile) {
+            mainImage.addEventListener('click', function() {
+              modalZoomImg.src = mainImage.src;
+              mobileZoomModal.style.display = 'flex';
+            });
+            closeZoomModal.addEventListener('click', function() {
+              mobileZoomModal.style.display = 'none';
+            });
+            mobileZoomModal.addEventListener('click', function(e) {
+              if (e.target === mobileZoomModal) mobileZoomModal.style.display = 'none';
+            });
+          }
+          // Update zoom when thumbnail changes
+          window.changeMainImage = function(imageSrc) {
+            mainImage.src = imageSrc;
+            if (modalZoomImg) modalZoomImg.src = imageSrc;
+            // Update active thumbnail
+            document.querySelectorAll('.thumbnail').forEach(thumb => {
+              thumb.classList.remove('active');
+              if (thumb.querySelector('img').src.includes(imageSrc)) {
+                thumb.classList.add('active');
+              }
+            });
+            // Update lens background for new image
+            if (zoomLens) {
+              zoomLens.style.backgroundImage = `url('${imageSrc}')`;
+            }
+          };
+        });
+
+        function changeMainImage(imageSrc) {
+          const mainImage = document.getElementById('mainImage');
+          const newSrc =  imageSrc;
+          mainImage.src = newSrc;
+          mainImage.setAttribute('data-zoom-image', newSrc);
+          
+          // Update active thumbnail
+          document.querySelectorAll('.thumbnail').forEach(thumb => {
+              thumb.classList.remove('active');
+              if (thumb.querySelector('img').src.includes(imageSrc)) {
+                  thumb.classList.add('active');
+              }
+          });
         }
-      });
-      // Update lens background for new image
-      if (zoomLens) {
-        zoomLens.style.backgroundImage = `url('${imageSrc}')`;
-      }
-    };
-  });
 
-  function changeMainImage(imageSrc) {
-    const mainImage = document.getElementById('mainImage');
-    const newSrc =  imageSrc;
-    mainImage.src = newSrc;
-    mainImage.setAttribute('data-zoom-image', newSrc);
-    
-    // Update active thumbnail
-    document.querySelectorAll('.thumbnail').forEach(thumb => {
-        thumb.classList.remove('active');
-        if (thumb.querySelector('img').src.includes(imageSrc)) {
-            thumb.classList.add('active');
-        }
-    });
-  }
-
-  // Add this script to the bottom of your product detail page before the closing </body> tag
+        // Add this script to the bottom of your product detail page before the closing </body> tag
 
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize variables
