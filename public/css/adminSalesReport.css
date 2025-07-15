@@ -196,70 +196,53 @@ tbody tr:hover {
 
 /* Custom Pagination Styles for Sales Report */
 .pagination-container {
-  margin-top: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap; /* Allow wrapping on small screens */
+  margin-top: 32px;
+  padding-top: 12px;
+  border-top: 1px solid #e2d8c6;
+  background: none;
+  box-shadow: none;
 }
-
 .pagination-info {
-  font-size: 0.9em;
-  color: #5a4a42; /* Dark brown text */
-  margin-bottom: 10px; /* Space below info before pagination */
+  margin-bottom: 12px;
+  text-align: left;
 }
-
 .pagination {
   display: flex;
-  padding-left: 0;
-  list-style: none;
-  border-radius: 0.25rem; /* Slight border radius */
-  margin-bottom: 10px; /* Space below pagination on small screens */
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto 10px auto;
+  padding: 0;
 }
-
 .page-item {
-  margin: 0 4px; /* Space between pagination items */
+  margin: 0 2px;
 }
-
-.page-item:first-child,
-.page-item:last-child {
-    margin: 0 4px; /* Ensure spacing for first/last items */
-}
-
 .page-item .page-link {
-  position: relative;
-  display: block;
-  padding: 8px 12px; /* Adjust padding as needed */
-  color: white; /* White text color */
-  text-decoration: none;
-  background-color: #795548; /* Brown background color */
-  border: 1px solid #795548; /* Brown border */
-  border-radius: 6px; /* More rounded corners */
-  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1em;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
-
-.page-item .page-link:hover {
-  background-color: #6d5046; /* Darker brown on hover */
-  border-color: #6d5046;
-}
-
 .page-item.active .page-link {
-  z-index: 3;
-  color: white; /* White text for active */
-  background-color: #007bff; /* Blue background for active */
-  border-color: #007bff; /* Blue border for active */
+  background-color: #4a3a32;
+  border-color: #4a3a32;
+  color: #fff;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.10);
 }
-
-.page-item.disabled .page-link {
-  color: #6c757d; /* Grayed out text for disabled */
-  pointer-events: none;
-  background-color: #e9ecef;
-  border-color: #dee2e6;
+.page-item .page-link:hover:not(.active) {
+  background-color: #a1887f;
+  border-color: #a1887f;
+  color: #fff;
 }
-
-.page-item:first-child .page-link,
-.page-item:last-child .page-link {
-    border-radius: 6px; /* Apply rounded corners to first and last items */
+.page-size-selector {
+  margin-bottom: 0;
+  margin-right: 16px;
+  text-align: right;
 }
 
 /* Ensure border radius is consistent for all page items */
@@ -279,4 +262,144 @@ tbody tr:hover {
   border-radius: 4px;
   color: #4a3a32; /* Dark brown text */
   background-color: white;
+} 
+
+/* Responsive Design for Sales Report Page */
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 0;
+    padding: 10px;
+  }
+  .report-metrics {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .metric-box {
+    min-width: 0;
+    width: 100%;
+  }
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .filter-section > div,
+  .report-actions {
+    flex-direction: row;
+    justify-content: flex-start;
+    width: 100%;
+  }
+  .pagination-info {
+    text-align: center;
+  }
+  .pagination {
+    justify-content: center;
+  }
+  .page-size-selector {
+    text-align: center;
+    margin: 0 0 10px 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    padding: 5px;
+  }
+  .report-metrics {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .metric-box {
+    min-width: 0;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px;
+  }
+  .filter-section label,
+  .filter-section select,
+  .filter-section input[type="date"],
+  #applyCustomFilter {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+  .report-actions {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+  .download-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  table, thead, tbody, th, td, tr {
+    display: block;
+    width: 100%;
+  }
+  thead {
+    display: none;
+  }
+  tbody tr {
+    margin-bottom: 15px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border-radius: 8px;
+    padding: 10px 0;
+  }
+  tbody td {
+    border: none;
+    position: relative;
+    padding-left: 50%;
+    min-height: 32px;
+    text-align: left;
+    background: none;
+  }
+  tbody td:before {
+    position: absolute;
+    top: 0;
+    left: 10px;
+    width: 45%;
+    white-space: nowrap;
+    font-weight: bold;
+    color: #5a4a42;
+    content: attr(data-label);
+  }
+  .pagination-container {
+    margin-top: 20px;
+    padding-top: 8px;
+  }
+  .pagination {
+    gap: 4px;
+  }
+  .page-item .page-link {
+    min-width: 28px;
+    min-height: 28px;
+    font-size: 0.95em;
+  }
+  .page-size-selector {
+    margin-bottom: 8px;
+    margin-right: 0;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  h1, h2 {
+    font-size: 1.1em;
+  }
+  .main-content {
+    padding: 2px;
+  }
+  .metric-box p {
+    font-size: 1.1em;
+  }
+  .download-btn {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.3rem;
+  }
 } 

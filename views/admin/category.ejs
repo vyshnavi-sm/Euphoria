@@ -68,6 +68,77 @@
 .btn-remove:hover {
     background-color: #c82333 !important;
 }
+
+@media (max-width: 992px) {
+  .search-container, .d-flex.justify-content-between.align-items-center {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem;
+  }
+  .search-container form, .d-flex.justify-content-between.align-items-center > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+@media (max-width: 768px) {
+  .main-content, .container-fluid {
+    padding: 0.5rem !important;
+  }
+  .search-container, .d-flex.justify-content-between.align-items-center {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem;
+  }
+  .search-container form, .d-flex.justify-content-between.align-items-center > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .search-input, .search-btn, .clear-btn {
+    width: 100% !important;
+    margin-bottom: 0.5rem;
+  }
+  .table-responsive {
+    border-radius: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table {
+    min-width: 700px;
+    font-size: 0.95em;
+  }
+  .btn, .btn-sm {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .pagination .page-item {
+    margin-bottom: 0.25rem;
+  }
+}
+@media (max-width: 600px) {
+  .main-content, .container-fluid {
+    padding: 0.2rem !important;
+  }
+  .table {
+    font-size: 0.9em;
+  }
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: 98vw;
+  }
+  .modal-content {
+    padding: 0.5rem;
+  }
+  .modal-header, .modal-footer {
+    padding: 0.75rem 1rem;
+  }
+  .modal-title {
+    font-size: 1.1rem;
+  }
+}
   </style>
 
 
@@ -313,7 +384,6 @@ async function loadActiveOffers() {
             updateOfferButtons(result.offers);
         } else {
             console.log('❌ No active offers or error:', result.message);
-            // Still call updateOfferButtons with empty array to reset buttons
             updateOfferButtons([]);
         }
     } catch (error) {
@@ -679,3 +749,4 @@ document.getElementById('addCategoryForm').addEventListener('submit', async func
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <%- include("../../views/partials/admin/footer") %>
+

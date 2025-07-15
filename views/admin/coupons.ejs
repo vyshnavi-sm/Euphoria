@@ -12,173 +12,61 @@
         --shadow-color: rgba(93, 64, 55, 0.1);
     }
 
-    body {
-        background-color: var(--background-brown);
-        color: var(--text-dark);
-        font-family: 'Poppins', sans-serif;
-        margin: 0;
-        padding-top: 60px;
+    /* Use .main-content for layout consistency with admin sidebar */
+    .main-content {
+        margin-left: 240px;
+        transition: margin-left 0.3s ease;
+        background: var(--background-brown);
+        min-height: 100vh;
+        padding: clamp(1rem, 4vw, 2.5rem);
+    }
+    @media (max-width: 992px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 1rem;
+        }
+    }
+    @media (max-width: 768px) {
+        .main-content {
+            padding: 0.75rem;
+        }
+    }
+    @media (max-width: 576px) {
+        .main-content {
+            padding: 0.5rem;
+        }
     }
 
-    /* Desktop Layout */
+    /* Remove margin-left from .container-fluid and .table-card-right, rely on .main-content */
     .container-fluid {
         max-width: 1200px;
         margin: 0 auto;
-        padding: clamp(1rem, 4vw, 2.5rem);
-        margin-top: clamp(1.5rem, 5vw, 3rem);
-        margin-left: 240px;
-        transition: margin-left 0.3s ease;
+        padding: 0;
+        width: 100%;
     }
-
-    /* Responsive adjustments for different screen sizes */
-    @media (max-width: 1400px) {
-        .container-fluid { 
-            margin-left: 240px; 
-        }
-        .table-card-right { 
-            margin-left: 60px; 
-        }
-    }
-
-    @media (max-width: 1200px) {
-        .container-fluid { 
-            margin-left: 240px; 
-        }
-        .table-card-right { 
-            margin-left: 40px; 
-        }
-    }
-
-    @media (max-width: 992px) {
-        .container-fluid { 
-            margin-left: 0 !important;
-            padding: 1rem;
-            width: 100%;
-        }
-        .table-card-right { 
-            margin-left: 0 !important;
-            margin-right: 0;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .container-fluid { 
-            padding: 0.75rem;
-            margin-top: 1rem;
-        }
-        h1 { 
-            font-size: 1.8rem;
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        .row { 
-            flex-direction: column;
-            gap: 1rem;
-        }
-        .row > .col-md-4 { 
-            width: 100%;
-            min-width: 0;
-            margin-bottom: 1rem;
-        }
-        .card.table-card-right { 
-            margin-left: 0;
-            margin-right: 0;
-        }
-        .table { 
-            font-size: 13px;
-        }
-    }
-
-    @media (max-width: 600px) {
-        .container-fluid { 
-            padding: 0.5rem;
-        }
-        .card.table-card-right { 
-            padding: 0.75rem;
-        }
-        .table { 
-            font-size: 12px;
-        }
-        h1 {
-            font-size: 1.5rem;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .container-fluid { 
-            padding: 0.5rem;
-        }
-        .card.table-card-right { 
-            padding: 0.5rem;
-        }
-        .table { 
-            min-width: 100%;
-            font-size: 11px;
-        }
-        .btn-primary { 
-            width: 100%;
-            margin-bottom: 0.5rem;
-        }
-        h1 {
-            font-size: 1.3rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        h1 { 
-            font-size: 1.2rem;
-        }
-        .table { 
-            font-size: 10px;
-        }
-        .container-fluid {
-            padding: 0.3rem;
-        }
-    }
-
-    @media (max-width: 400px) {
-        h1 { 
-            font-size: 1.1rem;
-        }
-        .table {
-            font-size: 9px;
-        }
-    }
-
-    @media (max-width: 360px) {
-        h1 { 
-            font-size: 1rem;
-        }
-    }
-
-    @media (max-width: 320px) {
-        h1 { 
-            font-size: 0.9rem;
-        }
+    .table-card-right {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
     }
 
     /* Responsive Table Styles */
-    @media (max-width: 768px) {
-        .table-responsive {
-            border: 1px solid var(--border-brown);
-            border-radius: 8px;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .table thead th:first-child,
-        .table tbody td:first-child {
-            position: sticky;
-            left: 0;
-            background-color: white;
-            z-index: 10;
-            border-right: 2px solid var(--border-brown);
-        }
-        
-        .table thead th:first-child {
-            background-color: var(--primary-brown);
-            color: white;
-        }
+    .table-responsive {
+        border: 1px solid var(--border-brown);
+        border-radius: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .table thead th:first-child,
+    .table tbody td:first-child {
+        position: sticky;
+        left: 0;
+        background-color: white;
+        z-index: 10;
+        border-right: 2px solid var(--border-brown);
+    }
+    .table thead th:first-child {
+        background-color: var(--primary-brown);
+        color: white;
     }
 
     /* Card Styles */
@@ -188,13 +76,12 @@
         background-color: white;
         border-radius: 12px;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
+        animation: fadeIn 0.3s ease-out;
     }
-
     .card:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px var(--shadow-color);
     }
-
     .card-header {
         background-color: var(--primary-brown);
         color: white;
@@ -203,6 +90,12 @@
         font-weight: 600;
         padding: 1rem 1.5rem;
     }
+    @media (max-width: 768px) {
+        .card-header {
+            font-size: 1.1rem;
+            padding: 0.8rem 1rem;
+        }
+    }
 
     /* Form Styles */
     .form-label {
@@ -210,7 +103,6 @@
         font-weight: 500;
         margin-bottom: 0.5rem;
     }
-
     .form-control, .form-select {
         border: 1px solid var(--border-brown);
         border-radius: 8px;
@@ -219,11 +111,16 @@
         background-color: #fffaf5;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
-
     .form-control:focus, .form-select:focus {
         border-color: var(--primary-brown);
         box-shadow: 0 0 0 0.2rem rgba(93, 64, 55, 0.15);
         outline: none;
+    }
+    @media (max-width: 768px) {
+        .form-control, .form-select {
+            padding: 0.6rem 0.8rem;
+            font-size: 0.9rem;
+        }
     }
 
     /* Button Styles */
@@ -235,26 +132,22 @@
         border-radius: 8px;
         transition: all 0.2s ease;
     }
-
     .btn-primary:hover {
         background-color: var(--secondary-brown);
         border-color: var(--secondary-brown);
         transform: translateY(-1px);
     }
-
     .btn-danger {
         background-color: #dc3545;
         border-color: #dc3545;
         border-radius: 8px;
         transition: all 0.2s ease;
     }
-
     .btn-danger:hover {
         background-color: #c82333;
         border-color: #bd2130;
         transform: translateY(-1px);
     }
-
     .btn-warning {
         background-color: var(--light-brown);
         border-color: var(--light-brown);
@@ -262,32 +155,42 @@
         border-radius: 8px;
         transition: all 0.2s ease;
     }
-
     .btn-warning:hover {
         background-color: #9a7d74;
         border-color: #9a7d74;
         transform: translateY(-1px);
     }
-
     .btn-success {
         background-color: var(--secondary-brown);
         border-color: var(--secondary-brown);
         border-radius: 8px;
         transition: all 0.2s ease;
     }
-
     .btn-success:hover {
         background-color: #7d5c53;
         border-color: #7d5c53;
         transform: translateY(-1px);
+    }
+    @media (max-width: 768px) {
+        .btn {
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+        }
+    }
+    @media (max-width: 576px) {
+        .btn-primary {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
     }
 
     /* Table Styles */
     .table {
         border-radius: 8px;
         overflow: hidden;
+        width: 100%;
+        min-width: 600px;
     }
-
     .table thead th {
         background-color: var(--primary-brown);
         color: white;
@@ -297,7 +200,6 @@
         text-align: center;
         vertical-align: middle;
     }
-
     .table tbody td {
         padding: 1rem;
         vertical-align: middle;
@@ -305,14 +207,42 @@
         color: var(--text-dark);
         text-align: center;
     }
-
     .table tbody tr:hover {
         background-color: var(--background-brown);
         transition: background-color 0.2s ease;
     }
-
     .table tbody tr:last-child td {
         border-bottom: none;
+    }
+    @media (max-width: 992px) {
+        .table {
+            min-width: 500px;
+            font-size: 13px;
+        }
+    }
+    @media (max-width: 768px) {
+        .table {
+            min-width: 400px;
+            font-size: 12px;
+        }
+    }
+    @media (max-width: 576px) {
+        .table {
+            min-width: 350px;
+            font-size: 11px;
+        }
+    }
+    @media (max-width: 480px) {
+        .table {
+            min-width: 300px;
+            font-size: 10px;
+        }
+    }
+    @media (max-width: 400px) {
+        .table {
+            min-width: 250px;
+            font-size: 9px;
+        }
     }
 
     /* Badge Styles */
@@ -322,7 +252,6 @@
         padding: 0.5rem 0.75rem;
         border-radius: 20px;
     }
-
     .badge.bg-danger {
         background-color: #dc3545 !important;
         font-size: 0.75rem;
@@ -337,44 +266,25 @@
         gap: 0.5rem;
         align-items: stretch;
     }
-
     .action-buttons form,
     .action-buttons .btn {
         width: 100%;
         margin-bottom: 0.5rem;
     }
-
     .action-buttons .btn:last-child {
         margin-bottom: 0;
     }
-
     @media (min-width: 768px) {
         .action-buttons {
             flex-direction: row;
             justify-content: center;
             gap: 0.5rem;
         }
-        
         .action-buttons form,
         .action-buttons .btn {
             width: auto;
             margin-bottom: 0;
             flex: 1;
-        }
-    }
-
-    /* Desktop table positioning */
-    @media (min-width: 992px) {
-        .table-card-right {
-            margin-left: 80px;
-            max-width: 1000px;
-        }
-    }
-
-    @media (min-width: 1200px) {
-        .table-card-right {
-            margin-left: 120px;
-            max-width: 1100px;
         }
     }
 
@@ -384,7 +294,6 @@
         border-left: 4px solid var(--primary-brown);
         margin-bottom: 1rem;
     }
-
     .coupon-code {
         font-family: 'Courier New', monospace;
         font-weight: bold;
@@ -395,7 +304,6 @@
         border-radius: 4px;
         display: inline-block;
     }
-
     .coupon-discount {
         font-size: 1.2rem;
         font-weight: bold;
@@ -408,13 +316,11 @@
         padding: 2rem;
         color: var(--text-light);
     }
-
     .empty-state {
         text-align: center;
         padding: 3rem;
         color: var(--text-light);
     }
-
     .empty-state i {
         font-size: 3rem;
         margin-bottom: 1rem;
@@ -426,36 +332,10 @@
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
     }
-
-    .card {
-        animation: fadeIn 0.3s ease-out;
-    }
-
-    /* Mobile optimizations */
-    @media (max-width: 768px) {
-        .btn {
-            padding: 0.6rem 1rem;
-            font-size: 0.9rem;
-        }
-        
-        .card-header {
-            font-size: 1.1rem;
-            padding: 0.8rem 1rem;
-        }
-        
-        .form-control, .form-select {
-            padding: 0.6rem 0.8rem;
-            font-size: 0.9rem;
-        }
-        
-        .table thead th,
-        .table tbody td {
-            padding: 0.8rem 0.5rem;
-        }
-    }
 </style>
 
-<div class="container-fluid">
+<div class="main-content">
+  <div class="container-fluid">
     <h1 class="mt-4 table-card-right">Coupon Management</h1>
 
     <% if (success_msg && success_msg.length > 0) { %>
@@ -591,6 +471,7 @@
             </div>
         </div>
     </div>
+  </div>
 </div>
 
 <%- include("../../views/partials/admin/footer") %>

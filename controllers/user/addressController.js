@@ -1,5 +1,6 @@
 const User = require("../../models/userSchema");
 const Address = require("../../models/addressSchema");
+const mongoose = require("mongoose");
 
 const addAddress = async (req, res) => {
     try {
@@ -59,10 +60,28 @@ const editAddress = async (req, res) => {
     try {
         const addressId = req.params.id;
         const redirect = req.query.redirect || 'profile';
-        const currAddress = await Address.findOne({ "address._id": addressId });
+        const userId = req.session.user && req.session.user._id ? req.session.user._id : req.session.user;
+        
+       
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+        const addressObjectId = new mongoose.Types.ObjectId(addressId);
 
-        const addressData = currAddress?.address.find(item => item._id.toString() === addressId);
-        if (!addressData) return res.redirect("/pageNotFound");
+       
+        const currAddress = await Address.findOne({ 
+            userId: userObjectId,
+            "address._id": addressObjectId 
+        });
+
+        if (!currAddress) {
+            console.log("Address document not found for user:", userId);
+            return res.redirect("/pageNotFound");
+        }
+
+        const addressData = currAddress.address.find(item => item._id.toString() === addressId);
+        if (!addressData) {
+            console.log("Address item not found in array:", addressId);
+            return res.redirect("/pageNotFound");
+        }
 
         res.render("edit-address", {
             address: addressData,
@@ -78,33 +97,79 @@ const editAddress = async (req, res) => {
 const updateAddress = async (req, res) => {
     try {
         const addressId = req.params.id;
-        const userId = req.session.user;
+        const userId = req.session.user && req.session.user._id ? req.session.user._id : req.session.user;
         const redirect = req.query.redirect || 'profile';
+        
+        
         const { name, mobile, addressType, addressLine1, city, state, pincode } = req.body;
+        
+        if (!name || !mobile || !addressType || !addressLine1 || !city || !state || !pincode) {
+            return res.redirect(`/edit-address/${addressId}?redirect=${redirect}&error=missing_fields`);
+        }
 
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+        const addressObjectId = new mongoose.Types.ObjectId(addressId);
+        
+      
+        const pincodeNum = Number(pincode);
+        if (isNaN(pincodeNum) || pincodeNum <= 0) {
+            return res.redirect(`/edit-address/${addressId}?redirect=${redirect}&error=invalid_pincode`);
+        }
+
+       
+        const existingAddress = await Address.findOne({
+            userId: userObjectId,
+            "address._id": addressObjectId
+        });
+
+        if (!existingAddress) {
+            console.log("Address not found for user:", userId, "addressId:", addressId);
+            return res.redirect(`/edit-address/${addressId}?redirect=${redirect}&error=address_not_found`);
+        }
+
+        
         const result = await Address.updateOne(
-            { userId, "address._id": addressId },
+            { 
+                userId: userObjectId, 
+                "address._id": addressObjectId 
+            },
             {
                 $set: {
-                    "address.$.name": name,
-                    "address.$.phone": mobile,
-                    "address.$.addressType": addressType,
-                    "address.$.landMark": addressLine1,
-                    "address.$.city": city,
-                    "address.$.state": state,
-                    "address.$.pincode": pincode,
-                    "address.$.altPhone": mobile
+                    "address.$.name": name.trim(),
+                    "address.$.phone": mobile.trim(),
+                    "address.$.addressType": addressType.trim(),
+                    "address.$.landMark": addressLine1.trim(),
+                    "address.$.city": city.trim(),
+                    "address.$.state": state.trim(),
+                    "address.$.pincode": pincodeNum,
+                    "address.$.altPhone": mobile.trim(),
+                    "address.$.updatedAt": new Date()
                 }
             }
         );
 
-        if (!result.modifiedCount) {
-            return res.status(400).json({ success: false, message: 'No changes were made to the address.' });
+        console.log("Update result:", result);
+
+        if (result.matchedCount === 0) {
+            console.log("No document matched the query");
+            return res.redirect(`/edit-address/${addressId}?redirect=${redirect}&error=not_found`);
         }
-        res.redirect(redirect === 'checkout' ? "/user/checkout" : "/userProfile#address");
+
+        if (result.modifiedCount === 0) {
+            console.log("Document found but not modified (no changes detected)");
+         
+        }
+
+        
+        if (redirect === 'checkout') {
+            res.redirect("/user/checkout");
+        } else {
+            res.redirect("/userProfile#address");
+        }
+
     } catch (error) {
         console.error("Error updating address:", error);
-        res.status(500).json({ success: false, message: 'Failed to update address.' });
+        res.redirect("/pageNotFound");
     }
 };
 

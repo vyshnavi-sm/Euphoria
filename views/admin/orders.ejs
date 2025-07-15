@@ -574,6 +574,122 @@
         40% { transform: translateY(-5px); }
         60% { transform: translateY(-3px); }
     }
+
+    /* --- Responsive Enhancements for Orders Page --- */
+    @media (max-width: 1200px) {
+        .container-fluid {
+            padding: 1rem;
+        }
+        .page-title {
+            margin-left: 0;
+            font-size: 2rem;
+        }
+        .card-body {
+            margin-left: 0;
+        }
+    }
+    @media (max-width: 992px) {
+        .container-fluid {
+            padding: 0.5rem;
+        }
+        .page-title {
+            margin-left: 0;
+            font-size: 1.7rem;
+        }
+        .card-body {
+            margin-left: 0;
+            padding: 1rem;
+        }
+        .card {
+            margin-bottom: 1rem;
+        }
+    }
+    @media (max-width: 768px) {
+        .container-fluid {
+            padding: 0.25rem;
+        }
+        .page-title {
+            margin-left: 0;
+            font-size: 1.3rem;
+            padding-bottom: 0.5rem;
+        }
+        .card-body {
+            margin-left: 0;
+            padding: 0.5rem;
+        }
+        .card {
+            margin-bottom: 0.75rem;
+            border-radius: 6px;
+        }
+        #searchForm {
+            padding: 1rem 0.5rem;
+            border-radius: 8px;
+            flex-direction: column !important;
+        }
+        #searchForm .col-md-4,
+        #searchForm .col-md-3,
+        #searchForm .col-md-2 {
+            max-width: 100%;
+            flex: 0 0 100%;
+        }
+        #searchForm .form-control,
+        #searchForm .form-select,
+        #searchForm button {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .pagination-container {
+            flex-direction: column;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            align-items: stretch;
+        }
+        .page-size-selector {
+            width: 100%;
+            justify-content: flex-start;
+        }
+        .table-responsive {
+            border-radius: 6px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table {
+            min-width: 600px;
+            font-size: 0.95em;
+        }
+        .btn,
+        .btn-sm {
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+    }
+    @media (max-width: 600px) {
+        .container-fluid {
+            padding: 0.1rem;
+        }
+        .page-title {
+            font-size: 1.1rem;
+        }
+        .card {
+            padding: 0.25rem;
+        }
+        .table td {
+            font-size: 0.9em;
+        }
+        .modal-dialog {
+            margin: 0.5rem;
+            max-width: 98vw;
+        }
+        .modal-content {
+            padding: 0.5rem;
+        }
+        .modal-header, .modal-footer {
+            padding: 0.75rem 1rem;
+        }
+        .modal-title {
+            font-size: 1.1rem;
+        }
+    }
 </style>
 
 <div class="container-fluid px-4">

@@ -21,12 +21,7 @@
                 <p>Please check your mail address for OTP</p>
                 <br>
                 <div class="otp-input">
-                    <input type="text" maxlength="1">
-                    <input type="text" maxlength="1">
-                    <input type="text" maxlength="1">
-                    <input type="text" maxlength="1">
-                    <input type="text" maxlength="1">
-                    <input type="text" maxlength="1">
+                    <input type="text" id="otp" name="otp" maxlength="6" style="width: 160px; text-align: center; font-size: 18px; border: 1px solid #ccc; border-radius: 5px;" required>
                 </div>
                 <button class="confirm-btn">Confirm</button>
                 <br>
@@ -102,23 +97,17 @@
     // Start the timer when the page loads
     startTimer();
 
-    // Enable OTP input fields by default
-    document.querySelectorAll(".otp-input input").forEach(input => {
-        input.disabled = false;
-    });
+    // Enable OTP input field by default
+    document.getElementById("otp").disabled = false;
 
     function validateOTPForm(event) {
         event.preventDefault();  
         
-        // Collect OTP from input fields
-        const otpInputs = document.querySelectorAll(".otp-input input");
-        let otpValue = "";
-        otpInputs.forEach(input => {
-            otpValue += input.value;
-        });
+        // Collect OTP from single input field
+        const otpValue = document.getElementById("otp").value.trim();
 
         // Ensure OTP is 6 digits
-        if (otpValue.length !== 6) {
+        if (otpValue.length !== 6 || !/^\d{6}$/.test(otpValue)) {
             Swal.fire({
                 icon: "error",
                 title: "Invalid OTP",
@@ -173,11 +162,10 @@
         clearInterval(timerInterval); 
         startTimer();
 
-        // Enable all OTP input fields
-        document.querySelectorAll(".otp-input input").forEach(input => {
-            input.disabled = false;
-            input.value = ""; 
-        });
+        // Enable OTP input field and clear value
+        const otpInput = document.getElementById("otp");
+        otpInput.disabled = false;
+        otpInput.value = ""; 
 
         $.ajax({
             type: "POST",

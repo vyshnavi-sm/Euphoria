@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="/customer.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
@@ -26,74 +25,126 @@
                 <button type="submit"><i class="fas fa-search"></i></button>
                 <% if (searchQuery) { %>
                     <a href="/admin/customers" class="clear-btn">
-                        <i class="fas fa-times"></i> Clear
+                        <i class="fas fa-times"></i> <span class="clear-text">Clear</span>
                     </a>
                 <% } %>
             </form>
         </div>
-        <!-- Customer Table -->
-        <table class="customer-table">
-            <thead>
-                <tr>
-                    <th>Customer</th>
-                    <th>Customer ID</th>
-                    <th>Orders</th>
-                    <th>Balance</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (data && data.length > 0) { %>
-                    <% for (let i = 0; i < data.length; i++) { %>
+        
+        <!-- Customer Table - Desktop View -->
+        <div class="table-container">
+            <table class="customer-table desktop-table">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Customer ID</th>
+                        <th>Orders</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (data && data.length > 0) { %>
+                        <% for (let i = 0; i < data.length; i++) { %>
+                            <tr>
+                                <td><%= data[i].name %></td>
+                                <td><%= data[i].customerId || 'N/A' %></td>
+                                <td><%= data[i].orders || 0 %></td>
+                                <td>₹ <%= data[i].balance || 0 %></td>
+                                <td>
+                                    <span class="status <%= data[i].isBlocked ? 'blocked' : 'active' %>">
+                                        <%= data[i].isBlocked ? 'Blocked' : 'Active' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <% if (!data[i].isBlocked) { %>
+                                        <button class="btn btn-danger btn-sm" onclick="confirmBlock('<%= data[i]._id %>')">Block</button>
+                                    <% } else { %>
+                                        <button class="btn btn-success btn-sm" onclick="confirmUnblock('<%= data[i]._id %>')">Unblock</button>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% } %>
+                    <% } else { %>
                         <tr>
-                            <td><%= data[i].name %></td>
-                            <td><%= data[i].customerId || 'N/A' %></td>
-                            <td><%= data[i].orders || 0 %></td>
-                            <td>₹ <%= data[i].balance || 0 %></td>
-                            <td>
-                                <span class="status <%= data[i].isBlocked ? 'blocked' : 'active' %>">
-                                    <%= data[i].isBlocked ? 'Blocked' : 'Active' %>
-                                </span>
-                            </td>
-                            <td>
-                                <% if (!data[i].isBlocked) { %>
-                                    <button class="btn btn-danger" onclick="confirmBlock('<%= data[i]._id %>')">Block</button>
-                                <% } else { %>
-                                    <button class="btn btn-success" onclick="confirmUnblock('<%= data[i]._id %>')">Unblock</button>
-                                <% } %>
-                            </td>
+                            <td colspan="6" class="text-center">No customers found</td>
                         </tr>
                     <% } %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="6" class="text-center">No customers found</td>
-                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Customer Cards - Mobile View -->
+        <div class="mobile-cards">
+            <% if (data && data.length > 0) { %>
+                <% for (let i = 0; i < data.length; i++) { %>
+                    <div class="customer-card">
+                        <div class="card-header">
+                            <h5><%= data[i].name %></h5>
+                            <span class="status <%= data[i].isBlocked ? 'blocked' : 'active' %>">
+                                <%= data[i].isBlocked ? 'Blocked' : 'Active' %>
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-row">
+                                <span class="label">Customer ID:</span>
+                                <span class="value"><%= data[i].customerId || 'N/A' %></span>
+                            </div>
+                            <div class="card-row">
+                                <span class="label">Orders:</span>
+                                <span class="value"><%= data[i].orders || 0 %></span>
+                            </div>
+                            <div class="card-row">
+                                <span class="label">Balance:</span>
+                                <span class="value">₹ <%= data[i].balance || 0 %></span>
+                            </div>
+                            <div class="card-actions">
+                                <% if (!data[i].isBlocked) { %>
+                                    <button class="btn btn-danger btn-sm" onclick="confirmBlock('<%= data[i]._id %>')">
+                                        <i class="fas fa-ban"></i> Block
+                                    </button>
+                                <% } else { %>
+                                    <button class="btn btn-success btn-sm" onclick="confirmUnblock('<%= data[i]._id %>')">
+                                        <i class="fas fa-check"></i> Unblock
+                                    </button>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
                 <% } %>
-            </tbody>
-        </table>
+            <% } else { %>
+                <div class="no-data">
+                    <i class="fas fa-users"></i>
+                    <p>No customers found</p>
+                </div>
+            <% } %>
+        </div>
+
         <!-- Pagination -->
-        <div class="pagination">
-            <span>Show results:</span>
-            <select>
-                <option>2</option>
-                <option>5</option>
-                <option>10</option>
-            </select>
-            <div class="page-controls">
-                <a href="/admin/customers?page=1&search=<%= searchQuery %>" class="<%= currentPage === 1 ? 'active' : '' %>">1</a>
-                <% if (currentPage > 4) { %>
-                    <span>...</span>
-                <% } %>
-                <% for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) { %>
-                    <a href="/admin/customers?page=<%= i %>&search=<%= searchQuery %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
-                <% } %>
-                <% if (currentPage < totalPages - 3) { %>
-                    <span>...</span>
-                <% } %>
-                <% if (totalPages > 1) { %>
-                    <a href="/admin/customers?page=<%= totalPages %>&search=<%= searchQuery %>" class="<%= currentPage === totalPages ? 'active' : '' %>"><%= totalPages %></a>
-                <% } %>
+        <div class="pagination-container">
+            <div class="pagination">
+                <span class="results-label">Show results:</span>
+                <select class="results-select">
+                    <option>2</option>
+                    <option>5</option>
+                    <option>10</option>
+                </select>
+                <div class="page-controls">
+                    <a href="/admin/customers?page=1&search=<%= searchQuery %>" class="page-link <%= currentPage === 1 ? 'active' : '' %>">1</a>
+                    <% if (currentPage > 4) { %>
+                        <span class="dots">...</span>
+                    <% } %>
+                    <% for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) { %>
+                        <a href="/admin/customers?page=<%= i %>&search=<%= searchQuery %>" class="page-link <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+                    <% } %>
+                    <% if (currentPage < totalPages - 3) { %>
+                        <span class="dots">...</span>
+                    <% } %>
+                    <% if (totalPages > 1) { %>
+                        <a href="/admin/customers?page=<%= totalPages %>&search=<%= searchQuery %>" class="page-link <%= currentPage === totalPages ? 'active' : '' %>"><%= totalPages %></a>
+                    <% } %>
+                </div>
             </div>
         </div>
     </div>
@@ -133,50 +184,40 @@
     }
 </script>
 
-<!-- Remove or update any conflicting styles for .topbar, .sidebar, .main-content here. -->
 <style>
-    /* Only keep table, search, and status styles. Remove layout styles that conflict with admin header partial. */
-    .customer-table {
-        width: 100%;
-        border-collapse: collapse;
+    /* Base Styles */
+    .container {
+        padding: 15px;
+        max-width: 100%;
     }
-    .customer-table thead {
-        background: #5D4037;
-        color: white;
+
+    h2 {
+        font-size: 1.8rem;
+        margin-bottom: 20px;
+        color: #333;
     }
-    .customer-table th, .customer-table td {
-        padding: 12px;
-        text-align: left;
+
+    /* Top Controls */
+    .top-controls {
+        margin-bottom: 20px;
     }
-    .customer-table tbody tr {
-        border-bottom: 1px solid #ddd;
-    }
-    .status {
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 14px;
-        font-weight: bold;
-        display: inline-block;
-    }
-    .status.active {
-        background: #e3f8e0;
-        color: #2a7a1e;
-    }
-    .status.blocked {
-        background: #fde6e6;
-        color: #a60000;
-    }
+
     .search-box {
         display: flex;
         align-items: center;
         gap: 10px;
+        flex-wrap: wrap;
     }
+
     .search-box input {
         padding: 8px 12px;
         border: 1px solid #ddd;
         border-radius: 4px;
         font-size: 14px;
+        min-width: 200px;
+        flex: 1;
     }
+
     .search-box button {
         padding: 8px 12px;
         background-color: #5c3d2e;
@@ -184,7 +225,9 @@
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        white-space: nowrap;
     }
+
     .clear-btn {
         padding: 8px 12px;
         background-color: #dc3545;
@@ -193,45 +236,207 @@
         border-radius: 4px;
         text-decoration: none;
         cursor: pointer;
+        white-space: nowrap;
     }
+
     .clear-btn:hover {
         background-color: #c82333;
+        color: white;
+        text-decoration: none;
     }
+
+    /* Table Styles - Desktop */
+    .table-container {
+        overflow-x: auto;
+        margin-bottom: 20px;
+    }
+
+    .customer-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+
+    .customer-table thead {
+        background: #5D4037;
+        color: white;
+    }
+
+    .customer-table th, .customer-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .customer-table th {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .customer-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    /* Status Styles */
+    .status {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-block;
+        white-space: nowrap;
+    }
+
+    .status.active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status.blocked {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    /* Mobile Cards - Hidden by default */
+    .mobile-cards {
+        display: none;
+    }
+
+    .customer-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+        background: #f8f9fa;
+    }
+
+    .card-header h5 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .card-body {
+        padding: 15px;
+    }
+
+    .card-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .card-row .label {
+        font-weight: 600;
+        color: #666;
+    }
+
+    .card-row .value {
+        color: #333;
+        text-align: right;
+    }
+
+    .card-actions {
+        margin-top: 15px;
+        text-align: right;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+
+    .no-data i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        color: #ccc;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        margin-top: 20px;
+    }
+
     .pagination {
         display: flex;
         align-items: center;
-        margin-top: 20px;
+        gap: 15px;
+        flex-wrap: wrap;
     }
-    .pagination select {
-        margin: 0 10px;
+
+    .results-label {
+        font-weight: 500;
+        color: #666;
     }
+
+    .results-select {
+        padding: 5px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
     .page-controls {
         display: flex;
         align-items: center;
-        background: #d1d1d1;
+        background: #f8f9fa;
+        padding: 5px;
+        border-radius: 6px;
+        gap: 5px;
+    }
+
+    .page-link {
         padding: 5px 10px;
-        border-radius: 5px;
-        cursor: pointer;
+        color: #333;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: all 0.2s;
     }
-    .page-controls span {
-        margin: 0 5px;
+
+    .page-link:hover {
+        background: #e9ecef;
+        color: #333;
+        text-decoration: none;
     }
-    .page-controls .active {
+
+    .page-link.active {
         background: #916c30;
-        color: #fff;
-        border-radius: 3px;
-        padding: 2px 8px;
+        color: white;
     }
-    /* --- Sidebar compactness overrides for this page only --- */
+
+    .dots {
+        padding: 5px;
+        color: #666;
+    }
+
+    /* Button Styles */
+    .btn-sm {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+
+    /* Sidebar Styles */
     .sidebar {
         width: 240px !important;
         min-width: 240px !important;
         padding-top: 20px;
     }
+
     .main-content {
         margin-left: 240px !important;
         width: calc(100% - 240px) !important;
     }
+
     .nav-menu a {
         font-size: 0.90rem !important;
         padding: 6px 16px !important;
@@ -239,12 +444,13 @@
         min-height: 28px !important;
         line-height: 1.1 !important;
     }
+
     .nav-menu i {
         font-size: 1.05rem !important;
         min-width: 20px;
         text-align: center;
     }
-    /* Remove previous text hiding and tooltip styles */
+
     .nav-menu a span, .nav-menu a .menu-text {
         display: inline !important;
         position: static !important;
@@ -254,17 +460,144 @@
         border-radius: 0 !important;
         box-shadow: none !important;
     }
+
     .nav-menu a {
         justify-content: flex-start;
     }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .container {
+            padding: 10px;
+        }
+        
+        .customer-table th, .customer-table td {
+            padding: 8px;
+            font-size: 13px;
+        }
+    }
+
     @media (max-width: 992px) {
         .sidebar {
             width: 220px !important;
             min-width: 220px !important;
         }
+        
         .main-content {
             margin-left: 0 !important;
             width: 100% !important;
+        }
+        
+        h2 {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        /* Hide desktop table, show mobile cards */
+        .desktop-table {
+            display: none;
+        }
+        
+        .mobile-cards {
+            display: block;
+        }
+        
+        .container {
+            padding: 10px;
+        }
+        
+        h2 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+        
+        .search-box {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .search-box input {
+            min-width: auto;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .search-box button,
+        .clear-btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .pagination {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .page-controls {
+            align-self: center;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .container {
+            padding: 5px;
+        }
+        
+        .customer-card {
+            margin-bottom: 10px;
+        }
+        
+        .card-header,
+        .card-body {
+            padding: 10px;
+        }
+        
+        .card-header h5 {
+            font-size: 1rem;
+        }
+        
+        .card-row {
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .card-row .value {
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .status {
+            font-size: 11px;
+            padding: 3px 6px;
+        }
+        
+        .clear-text {
+            display: none;
+        }
+        
+        .page-controls {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .card-actions {
+            text-align: center;
+        }
+        
+        .card-actions .btn {
+            width: 100%;
+        }
+        
+        .pagination {
+            align-items: center;
+        }
+        
+        .results-label {
+            font-size: 14px;
         }
     }
 </style>

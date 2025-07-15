@@ -149,9 +149,9 @@
       <tbody>
         <% orders.forEach(order => { %>
           <tr>
-            <td><%= order._id %></td>
-            <td><%= order.userId ? order.userId.name : 'N/A' %></td>
-            <td><%= order.createdAt ? new Date(order.createdAt).toLocaleString('en-IN', {
+            <td data-label="Order ID"><%= order._id %></td>
+            <td data-label="Customer"><%= order.userId ? order.userId.name : 'N/A' %></td>
+            <td data-label="Order Date"><%= order.createdAt ? new Date(order.createdAt).toLocaleString('en-IN', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
@@ -159,7 +159,7 @@
                 minute: '2-digit',
                 hour12: true
             }) : 'N/A' %></td>
-            <td>
+            <td data-label="Products">
               <% order.orderedItems.forEach(item => {
                 if (item.product) { %>
                   <%= item.product.name %> (Qty: <%= item.quantity %>)<br>
@@ -168,9 +168,9 @@
                 <% }
               }); %>
             </td>
-            <td><%= (order.finalAmount !== undefined ? order.finalAmount : order.totalPrice).toFixed(2) %></td>
-            <td><%= ((order.couponDiscount || 0) + (order.discount || 0)).toFixed(2) %></td>
-            <td><%= order.paymentMethod %></td>
+            <td data-label="Final Amount (₹)"><%= (order.finalAmount !== undefined ? order.finalAmount : order.totalPrice).toFixed(2) %></td>
+            <td data-label="Discount (₹)"><%= ((order.couponDiscount || 0) + (order.discount || 0)).toFixed(2) %></td>
+            <td data-label="Payment"><%= order.paymentMethod %></td>
           </tr>
         <% }); %>
       </tbody>
