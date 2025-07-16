@@ -857,7 +857,6 @@
                 text: 'Please upload at least 4 product images.'
             });
             isValid = false;
-            // Crucially, we need to return false here to stop the form submission if validation fails
             return false;
         }
         
@@ -880,7 +879,6 @@
         });
     }
 
-    // Function to get URL parameters
     function getUrlParameter(name) {
         name = name.replace(/[\[]/, '\\\\[').replace(/[\]]/, '\\\\]');
         var regex = new RegExp('[\\\\?&]' + name + '=([^&#]*)');
@@ -888,7 +886,6 @@
         return results === null ? '' : decodeURIComponent(results[1].replace(/\\+/g, ' '));
     };
 
-    // Check for error message on page load
     window.onload = function() {
         const errorMessage = getUrlParameter('error');
         if (errorMessage) {
@@ -900,10 +897,9 @@
         }
     };
 
-    // Add event listener for product name duplication check on blur
     document.getElementById('product_name').addEventListener('blur', async function() {
         const productName = this.value.trim();
-        if (productName) { // Only check if name is not empty
+        if (productName) { 
             try {
                 const response = await fetch(`/admin/products/checkDuplicateName?productName=${encodeURIComponent(productName)}`);
                 const data = await response.json();
@@ -915,7 +911,6 @@
                         text: data.message,
                         confirmButtonColor: '#a0522d'
                     });
-                    // You might want to clear the input or disable the submit button here
                 }
             } catch (error) {
                 console.error('Error checking duplicate product name:', error);
@@ -972,12 +967,10 @@
         
         let inputValue = colorInput.value.trim();
         
-        // Check if input is a valid hex color
         if (/^#[0-9A-F]{6}$/i.test(inputValue)) {
             colorPicker.value = inputValue;
             updateColorInput();
         } else {
-            // Try to convert color names to hex
             const colorNameToHex = {
                 'black': '#000000',
                 'white': '#FFFFFF',

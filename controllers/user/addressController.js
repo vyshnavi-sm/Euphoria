@@ -55,18 +55,15 @@ const postAddAddress = async (req, res) => {
         res.redirect("/pageNotFound");
     }
 };
-
 const editAddress = async (req, res) => {
     try {
         const addressId = req.params.id;
         const redirect = req.query.redirect || 'profile';
         const userId = req.session.user && req.session.user._id ? req.session.user._id : req.session.user;
         
-       
         const userObjectId = new mongoose.Types.ObjectId(userId);
         const addressObjectId = new mongoose.Types.ObjectId(addressId);
 
-       
         const currAddress = await Address.findOne({ 
             userId: userObjectId,
             "address._id": addressObjectId 
@@ -100,7 +97,6 @@ const updateAddress = async (req, res) => {
         const userId = req.session.user && req.session.user._id ? req.session.user._id : req.session.user;
         const redirect = req.query.redirect || 'profile';
         
-        
         const { name, mobile, addressType, addressLine1, city, state, pincode } = req.body;
         
         if (!name || !mobile || !addressType || !addressLine1 || !city || !state || !pincode) {
@@ -110,13 +106,11 @@ const updateAddress = async (req, res) => {
         const userObjectId = new mongoose.Types.ObjectId(userId);
         const addressObjectId = new mongoose.Types.ObjectId(addressId);
         
-      
         const pincodeNum = Number(pincode);
         if (isNaN(pincodeNum) || pincodeNum <= 0) {
             return res.redirect(`/edit-address/${addressId}?redirect=${redirect}&error=invalid_pincode`);
         }
 
-       
         const existingAddress = await Address.findOne({
             userId: userObjectId,
             "address._id": addressObjectId
@@ -127,40 +121,37 @@ const updateAddress = async (req, res) => {
             return res.redirect(`/edit-address/${addressId}?redirect=${redirect}&error=address_not_found`);
         }
 
-        
-        const result = await Address.updateOne(
+        const result = await Address.findOneAndUpdate(
             { 
-                userId: userObjectId, 
-                "address._id": addressObjectId 
+                userId: userObjectId,
+                "address._id": addressObjectId
             },
             {
                 $set: {
-                    "address.$.name": name.trim(),
-                    "address.$.phone": mobile.trim(),
-                    "address.$.addressType": addressType.trim(),
-                    "address.$.landMark": addressLine1.trim(),
-                    "address.$.city": city.trim(),
-                    "address.$.state": state.trim(),
-                    "address.$.pincode": pincodeNum,
-                    "address.$.altPhone": mobile.trim(),
-                    "address.$.updatedAt": new Date()
+                    "address.$[elem].name": name.trim(),
+                    "address.$[elem].phone": mobile.trim(),
+                    "address.$[elem].addressType": addressType.trim(),
+                    "address.$[elem].landMark": addressLine1.trim(),
+                    "address.$[elem].city": city.trim(),
+                    "address.$[elem].state": state.trim(),
+                    "address.$[elem].pincode": pincodeNum,
+                    "address.$[elem].altPhone": mobile.trim(),
+                    "address.$[elem].updatedAt": new Date()
                 }
+            },
+            {
+                arrayFilters: [{ "elem._id": addressObjectId }],
+                new: true
             }
         );
 
         console.log("Update result:", result);
 
-        if (result.matchedCount === 0) {
+        if (!result) {
             console.log("No document matched the query");
             return res.redirect(`/edit-address/${addressId}?redirect=${redirect}&error=not_found`);
         }
 
-        if (result.modifiedCount === 0) {
-            console.log("Document found but not modified (no changes detected)");
-         
-        }
-
-        
         if (redirect === 'checkout') {
             res.redirect("/user/checkout");
         } else {
@@ -172,6 +163,7 @@ const updateAddress = async (req, res) => {
         res.redirect("/pageNotFound");
     }
 };
+
 
 const deleteAddress = async (req, res) => {
     try {
