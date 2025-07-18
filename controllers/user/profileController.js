@@ -6,6 +6,7 @@ const bcrypt = require("bcrypt");
 const multer = require("multer");
 const path = require("path");
 
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, 'public/images/profiles'),
   filename: (req, file, cb) =>
@@ -56,26 +57,50 @@ const getProfile = async (req, res) => {
 
     await user.save();
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
-    const skip = (page - 1) * limit;
+    const walletPage = parseInt(req.query.walletPage) || 1;
+    const walletlimit = 5;
+    const walletskip = (walletPage - 1) * walletlimit;
+
+    const totalWalletCount = await WalletTransaction.countDocuments({userId})
+
+    const walletHistory = await WalletTransaction.find({userId})
+    .sort({createdAt:-1})
+    .skip(walletskip)
+    .limit(walletlimit)
+
+
+      const orderPage = parseInt(req.query.orderPage) || 1;
+      const orderLimit = 5;
+      const orderSkip = (orderPage - 1) * orderLimit;
+
+      const totalWalletPages = Math.ceil(totalWalletCount / walletlimit);
+      
+
 
     const [orders, totalOrders, walletTransactions, userAddress] = await Promise.all([
-      Order.find({ userId }).populate("orderedItems.product").sort({ createdOn: -1 }).skip(skip).limit(limit),
+      Order.find({ userId }).populate("orderedItems.product").sort({ createdOn: -1 }).skip(orderSkip).limit(orderLimit),
       Order.countDocuments({ userId }),
       WalletTransaction.find({ userId }).sort({ createdAt: -1 }).limit(50),
       Address.findOne({ userId }),
     ]);
+    const totalOrderPages = Math.ceil(totalOrders / orderLimit);
 
-    res.render("user/profile", {
-      user,
+      res.render("user/profile", {
+      user: {
+        ...user.toObject(),
+        referralRewards: user.referralRewards || [],
+        referralToken: user.referralToken || '',
+      },
       orders,
-      walletTransactions,
+      walletTransactions: walletHistory,
       userAddress,
-      currentPage: page,
-      totalPages: Math.ceil(totalOrders / limit),
+      currentPage: orderPage,
+      totalPages: Math.ceil(totalOrders / orderLimit),
+      currentWalletPage: walletPage,
+      totalWalletPages: Math.ceil(totalWalletCount / walletlimit),
       searchQuery: req.query.query || "",
     });
+
   } catch (error) {
     console.error("Error fetching profile:", error);
     res.status(500).send("Error fetching profile");

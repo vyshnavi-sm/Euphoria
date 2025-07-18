@@ -136,7 +136,6 @@
         /* Table layout */
         .table-responsive {
             width: 100%;
-            overflow-x: auto;
             margin: 20px 0;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -144,9 +143,6 @@
 
         .table {
             width: 100%;
-            min-width: 600px;
-            background-color: white;
-            border-collapse: collapse;
         }
 
         .table th,
@@ -260,6 +256,10 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             padding: 20px;
             margin-bottom: 20px;
+            max-width: 1500px;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .card-header {
@@ -353,7 +353,7 @@
             }
             
             .table {
-                min-width: 500px;
+                width: 100%;
             }
             
             .table th,
@@ -404,7 +404,7 @@
             }
             
             .table {
-                min-width: 400px;
+                width: 100%;
             }
             
             .table th,
@@ -445,7 +445,7 @@
             }
             
             .table {
-                min-width: 350px;
+                width: 100%;
             }
             
             .table th,
@@ -594,8 +594,8 @@
   <div class="card">
     <div class="card-body">
       <div class="row">
-        <!-- Left Column -->
-        <div class="col-md-3">
+        <!-- Left Column: Add Brand Form -->
+        <div class="col-md-4">
           <form method="post" action="/admin/addBrand" enctype="multipart/form-data">
             <div class="mb-4">
               <label for="product_name" class="form-label">Brand Name</label>
@@ -614,17 +614,13 @@
             <br>
             <div class="d-grid">
               <button class="btn btn-primary mt-20" type="submit">
-                
                 Add Brand
               </button>
             </div>
           </form>
         </div>
-
-        <!-- Right Column -->
-        <div class="col-md-7 ml-105">
-          <!-- Search Form -->
-          
+        <!-- Right Column: Brands Table -->
+        <div class="col-md-8">
           <div class="table-responsive">
             <table class="table table-hover">
               <thead>
@@ -655,15 +651,12 @@
                   <td class="text-start">
                     <div class="status-badges">
                         <%if(brand.isBlocked===true){%>
-
                       <span class="badge-blocked">Blocked</span>
                       <%}else{%>
                       <span class="badge-active">Active</span>
                       <%}%>
                     </div>
                   </td>
-                  
-                  
                   <td class="text-start">
                     <div class="action-buttons">
                         <%if(brand.isBlocked===false){%>
@@ -686,7 +679,6 @@
             </table>
           </div>
         </div>
-
       </div>
     </div>
   </div>

@@ -2,10 +2,19 @@ const Coupon = require('../../models/couponSchema');
 
 const loadCouponPage = async (req, res) => {
     try {
-        const coupons = await Coupon.find().sort({ createdAt: -1 });
+        const page = parseInt(req.query.page) || 1;
+        const limit = 5;
+        const totalCoupons = await Coupon.countDocuments();
+        const totalPages = Math.ceil(totalCoupons / limit);
+        const coupons = await Coupon.find()
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
         res.render('admin/coupons', {
             title: 'Coupon Management',
             coupons,
+            currentPage: page,
+            totalPages,
             success_msg: req.flash('success'),
             error_msg: req.flash('error')
         });
@@ -35,12 +44,9 @@ const createCoupon = async (req, res) => {
             return res.redirect('/admin/coupons');
         }
 
-        if (discountType === 'percentage' && (discountValue < 0 || discountValue > 100)) {
-            req.flash('error', 'Percentage discount value must be between 0 and 100.');
-            return res.redirect('/admin/coupons');
-        }
-        if (discountType === 'fixed' && discountValue < 0) {
-             req.flash('error', 'Fixed discount value cannot be negative.');
+        // Only allow percentage
+        if (discountType !== 'percentage' || discountValue < 1 || discountValue > 100) {
+            req.flash('error', 'Discount value must be a percentage between 1 and 100.');
             return res.redirect('/admin/coupons');
         }
 

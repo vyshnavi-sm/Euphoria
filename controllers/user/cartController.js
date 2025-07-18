@@ -23,6 +23,15 @@ const addToCart = async (req, res) => {
             return res.status(400).json({ message: 'Requested quantity exceeds available stock' });
         }
 
+        if(product.salePrice<=0){
+            return res.status(400).json({message:"The product price is invalid"})
+
+        }
+
+        if(product.salePrice>product.totalPrice){
+            await Product.deleteOne({_id:product._id})
+        }
+
         const totalPrice = product.salePrice * quantity;
 
         let cart = await Cart.findOne({ userId });
@@ -86,6 +95,7 @@ const addToCart = async (req, res) => {
         res.status(500).json({ message: 'Internal server error' });
     }
 };
+
 
 const removeFromCart = async (req, res) => {
     try {

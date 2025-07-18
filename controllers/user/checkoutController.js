@@ -195,8 +195,9 @@ const getOrderSuccess = async (req, res) => {
 
 const handleRetryPayment = async (req, res) => {
     try {
-        const { orderId } = req.query;
-        const userId = req.session.user._id;
+
+        const { orderId } = req.params;
+        const userId = req.session.user._id || req.session.user;
         if (!orderId) return res.redirect('/shop');
 
         const failedOrder = await Order.findOne({
@@ -212,7 +213,6 @@ const handleRetryPayment = async (req, res) => {
 
         await Cart.findOneAndUpdate({ userId }, { $set: { items: cartItems } }, { upsert: true });
         res.redirect('/user/checkout?retryOrderId=' + orderId);
-
     } catch (error) {
         console.error('Error handling retry payment:', error);
         res.redirect('/shop');

@@ -362,17 +362,18 @@
                     <div class="col-md-4">
                         <label for="code" class="form-label">Coupon Code</label>
                         <input type="text" class="form-control" id="code" name="code" required>
+                        <div class="invalid-feedback" id="code-error"></div>
                     </div>
                     <div class="col-md-4">
                         <label for="discountType" class="form-label">Discount Type</label>
                         <select class="form-select" id="discountType" name="discountType" required>
                             <option value="percentage">Percentage (%)</option>
-                            <option value="fixed">Fixed Amount (₹)</option>
                         </select>
                     </div>
                     <div class="col-md-4">
                         <label for="discountValue" class="form-label">Discount Value</label>
                         <input type="number" class="form-control" id="discountValue" name="discountValue" step="0.01" min="0" required>
+                        <div class="invalid-feedback" id="discountValue-error"></div>
                     </div>
                 </div>
 
@@ -380,14 +381,17 @@
                      <div class="col-md-4">
                         <label for="minOrderAmount" class="form-label">Minimum Order Amount (₹)</label>
                         <input type="number" class="form-control" id="minOrderAmount" name="minOrderAmount" step="0.01" min="0">
+                        <div class="invalid-feedback" id="minOrderAmount-error"></div>
                     </div>
                     <div class="col-md-4">
                         <label for="maxDiscountAmount" class="form-label">Maximum Discount Amount (₹)</label>
                         <input type="number" class="form-control" id="maxDiscountAmount" name="maxDiscountAmount" step="0.01" min="0">
+                        <div class="invalid-feedback" id="maxDiscountAmount-error"></div>
                     </div>
                     <div class="col-md-4">
                         <label for="usageLimit" class="form-label">Usage Limit</label>
                         <input type="number" class="form-control" id="usageLimit" name="usageLimit" min="1">
+                        <div class="invalid-feedback" id="usageLimit-error"></div>
                     </div>
                 </div>
 
@@ -395,10 +399,12 @@
                     <div class="col-md-4">
                         <label for="startDate" class="form-label">Start Date</label>
                         <input type="date" class="form-control" id="startDate" name="startDate" required>
+                        <div class="invalid-feedback" id="startDate-error"></div>
                     </div>
                     <div class="col-md-4">
                         <label for="endDate" class="form-label">End Date</label>
                         <input type="date" class="form-control" id="endDate" name="endDate" required>
+                        <div class="invalid-feedback" id="endDate-error"></div>
                     </div>
                 </div>
 
@@ -469,6 +475,24 @@
                     </tbody>
                 </table>
             </div>
+            <!-- Pagination controls -->
+            <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+            <nav aria-label="Coupon pagination" class="mt-3">
+              <ul class="pagination justify-content-center">
+                <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                  <a class="page-link" href="?page=<%= currentPage - 1 %>" tabindex="-1">Previous</a>
+                </li>
+                <% for(let i = 1; i <= totalPages; i++) { %>
+                  <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                    <a class="page-link" href="?page=<%= i %>"><%= i %></a>
+                  </li>
+                <% } %>
+                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                  <a class="page-link" href="?page=<%= currentPage + 1 %>">Next</a>
+                </li>
+              </ul>
+            </nav>
+            <% } %>
         </div>
     </div>
   </div>
@@ -523,5 +547,84 @@
                 alert('Error updating coupon status.');
             }
         });
+    });
+
+    // Coupon form validation with inline error messages
+    const couponForm = document.querySelector('form[action="/admin/coupons"]');
+    couponForm.addEventListener('submit', function(e) {
+        let valid = true;
+        // Clear previous errors
+        ["code","discountValue","minOrderAmount","maxDiscountAmount","usageLimit","startDate","endDate"].forEach(id => {
+            document.getElementById(id+"-error").textContent = "";
+            document.getElementById(id).classList.remove("is-invalid");
+        });
+        const code = document.getElementById('code').value.trim();
+        const discountValue = parseFloat(document.getElementById('discountValue').value);
+        const minOrderAmount = parseFloat(document.getElementById('minOrderAmount').value);
+        const maxDiscountAmount = parseFloat(document.getElementById('maxDiscountAmount').value);
+        const usageLimit = parseInt(document.getElementById('usageLimit').value);
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const now = new Date();
+        // Code validation
+        if (!code || code.length < 3 || !/^[a-zA-Z0-9]+$/.test(code)) {
+            valid = false;
+            document.getElementById('code-error').textContent = 'Coupon code is required, at least 3 characters, and alphanumeric.';
+            document.getElementById('code').classList.add('is-invalid');
+        }
+        // Discount value validation
+        if (isNaN(discountValue) || discountValue <= 0 || discountValue > 100) {
+            valid = false;
+            document.getElementById('discountValue-error').textContent = 'Discount value must be between 1 and 100.';
+            document.getElementById('discountValue').classList.add('is-invalid');
+        }
+        // Min order amount
+        if (isNaN(minOrderAmount) || minOrderAmount < 1) {
+            valid = false;
+            document.getElementById('minOrderAmount-error').textContent = 'Minimum order amount is required and must be at least 1.';
+            document.getElementById('minOrderAmount').classList.add('is-invalid');
+        }
+        // Max discount amount
+        if (isNaN(maxDiscountAmount) || maxDiscountAmount < 1) {
+            valid = false;
+            document.getElementById('maxDiscountAmount-error').textContent = 'Maximum discount amount is required and must be at least 1.';
+            document.getElementById('maxDiscountAmount').classList.add('is-invalid');
+        } else if (!isNaN(discountValue) && maxDiscountAmount < discountValue) {
+            valid = false;
+            document.getElementById('maxDiscountAmount-error').textContent = 'Maximum discount amount cannot be less than discount value.';
+            document.getElementById('maxDiscountAmount').classList.add('is-invalid');
+        } else if (!isNaN(minOrderAmount) && maxDiscountAmount > minOrderAmount) {
+            valid = false;
+            document.getElementById('maxDiscountAmount-error').textContent = 'Maximum discount amount cannot be greater than minimum order amount.';
+            document.getElementById('maxDiscountAmount').classList.add('is-invalid');
+        }
+        // Usage limit
+        if (!isNaN(usageLimit) && usageLimit < 1) {
+            valid = false;
+            document.getElementById('usageLimit-error').textContent = 'Usage limit must be at least 1.';
+            document.getElementById('usageLimit').classList.add('is-invalid');
+        }
+        // Date validation
+        if (!startDate) {
+            valid = false;
+            document.getElementById('startDate-error').textContent = 'Start date is required.';
+            document.getElementById('startDate').classList.add('is-invalid');
+        } else if (new Date(startDate) < now.setHours(0,0,0,0)) {
+            valid = false;
+            document.getElementById('startDate-error').textContent = 'Start date cannot be in the past.';
+            document.getElementById('startDate').classList.add('is-invalid');
+        }
+        if (!endDate) {
+            valid = false;
+            document.getElementById('endDate-error').textContent = 'End date is required.';
+            document.getElementById('endDate').classList.add('is-invalid');
+        } else if (startDate && new Date(endDate) <= new Date(startDate)) {
+            valid = false;
+            document.getElementById('endDate-error').textContent = 'End date must be after start date.';
+            document.getElementById('endDate').classList.add('is-invalid');
+        }
+        if (!valid) {
+            e.preventDefault();
+        }
     });
 </script> 

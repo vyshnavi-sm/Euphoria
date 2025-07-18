@@ -129,7 +129,10 @@ const getListCategory = async (req, res) => {
 const getUnlistCategory = async (req, res) => {
     try {
         const id = req.query.id;
+        quantity
         await Category.updateOne({ _id: id }, { $set: { isListed: false } });
+
+        
         res.redirect("/admin/category");
     } catch (error) {
         console.error("Error unlisting category:", error);
@@ -186,3 +189,4 @@ module.exports = {
     editCategory,
     fixOldCategories,
 };
+

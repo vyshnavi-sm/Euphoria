@@ -16,11 +16,12 @@ const upload = require('../helpers/imageUpload');
 const homeController = require('../controllers/user/homeController');
 const couponController = require('../controllers/user/couponController');
 const cancelController = require('../controllers/user/cancelController');
-const returnController = require('../controllers/user/returnController')
-const addressController = require('../controllers/user/addressController')
+const returnController = require('../controllers/user/returnController');
+const addressController = require('../controllers/user/addressController');
 const forgotPasswordController = require('../controllers/user/forgotPasswordController');
 const PasswordController = require('../controllers/user/passwordController');
 const emailController = require('../controllers/user/emailController');
+
 
 // Basic routes
 router.get("/pageNotFound", userController.pageNotFound);
@@ -101,6 +102,7 @@ router.get("/user/checkout", userAuth, checkoutController.getCheckoutPage);
 router.get('/user/retry-payment', userAuth, checkoutController.handleRetryPayment);
 router.post("/user/place-order", userAuth, checkoutController.placeOrder);
 router.get("/user/order-success/:orderId", userAuth, checkoutController.getOrderSuccess);
+router.get('/user/orders/:orderId/retry-payment', userAuth, checkoutController.handleRetryPayment);
 
 // Coupon Routes
 router.post("/apply-coupon", userAuth, couponController.applyCoupon);
@@ -128,4 +130,11 @@ router.get("/referral/code", userAuth, referralController.getReferralCode);
 router.post("/referral/process", userAuth, referralController.processReferral);
 router.get("/referral/stats", userAuth, referralController.getReferralStats);
 
+
+
+
+
+
 module.exports = router;
+
+               

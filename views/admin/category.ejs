@@ -313,7 +313,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="categoryOfferForm">
+                <form id="categoryOfferForm" onsubmit="return validateCategoryOfferForm()">
                     <input type="hidden" id="categoryId" name="categoryId">
                     <div class="mb-3">
                         <label for="categoryNameDisplay" class="form-label">Category</label>
@@ -322,14 +322,17 @@
                     <div class="mb-3">
                         <label for="discountPercentage" class="form-label">Discount Percentage</label>
                         <input type="number" class="form-control" id="discountPercentage" name="discountPercentage" min="1" max="100" step="0.01" required>
+                        <div class="invalid-feedback" id="discountPercentage-error"></div>
                     </div>
                     <div class="mb-3">
                         <label for="startDate" class="form-label">Start Date</label>
                         <input type="datetime-local" class="form-control" id="startDate" name="startDate" required>
+                        <div class="invalid-feedback" id="startDate-error"></div>
                     </div>
                     <div class="mb-3">
                         <label for="endDate" class="form-label">End Date</label>
                         <input type="datetime-local" class="form-control" id="endDate" name="endDate" required>
+                        <div class="invalid-feedback" id="endDate-error"></div>
                     </div>
                 </form>
             </div>
@@ -566,7 +569,43 @@ function showCategoryOfferModal(categoryId, categoryName) {
     modal.show();
 }
 
+function validateCategoryOfferForm() {
+    let valid = true;
+    ["discountPercentage","startDate","endDate"].forEach(id => {
+        document.getElementById(id+"-error").textContent = "";
+        document.getElementById(id).classList.remove("is-invalid");
+    });
+    const discount = parseFloat(document.getElementById('discountPercentage').value);
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    const now = new Date();
+    if (isNaN(discount) || discount < 1 || discount > 100) {
+        valid = false;
+        document.getElementById('discountPercentage-error').textContent = 'Discount must be between 1 and 100.';
+        document.getElementById('discountPercentage').classList.add('is-invalid');
+    }
+    if (!startDate) {
+        valid = false;
+        document.getElementById('startDate-error').textContent = 'Start date is required.';
+        document.getElementById('startDate').classList.add('is-invalid');
+    } else if (new Date(startDate) < now.setHours(0,0,0,0)) {
+        valid = false;
+        document.getElementById('startDate-error').textContent = 'Start date cannot be in the past.';
+        document.getElementById('startDate').classList.add('is-invalid');
+    }
+    if (!endDate) {
+        valid = false;
+        document.getElementById('endDate-error').textContent = 'End date is required.';
+        document.getElementById('endDate').classList.add('is-invalid');
+    } else if (startDate && new Date(endDate) <= new Date(startDate)) {
+        valid = false;
+        document.getElementById('endDate-error').textContent = 'End date must be after start date.';
+        document.getElementById('endDate').classList.add('is-invalid');
+    }
+    return valid;
+}
 async function applyCategoryOffer() {
+    if (!validateCategoryOfferForm()) return;
     console.log('🎯 Applying category offer...');
     
     const form = document.getElementById('categoryOfferForm');

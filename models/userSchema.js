@@ -21,7 +21,7 @@ const userSchema = new Schema({
   },
   profilePicture: {
     type: String,
-    default: '/images/profiles/screenshot2.png'
+    default: '/public/images/profiles/Add image.png'
   },
   googleId: {
     type: String,

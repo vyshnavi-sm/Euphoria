@@ -26,14 +26,41 @@
         background-color: #f8f9fa;
     }
 
+    /* Override sidebar width for Add Products page only */
+    .sidebar {
+        width: 220px !important; /* Slightly wider than 180px, less than original 240px */
+        min-width: 210px !important;
+        height: 100vh !important; /* Decrease sidebar height for this page only */
+        transition: none !important; /* Remove sliding/transition effect */
+    }
+    .content-main {
+        margin-left: 180px; /* Match the new sidebar width */
+        transition: none !important;
+    }
+
+    /* Ensure main content is shifted right for sidebar */
     .content-main {
         display: flex;
         justify-content: center;
         align-items: flex-start;
-        min-height: 100vh;
+        min-height: 80vh;
         padding: 20px;
         width: 100%;
         margin-top: 60px;
+        margin-left: 180px; /* Match sidebar width */
+        transition: margin-left 0.3s ease;
+    }
+
+    @media (max-width: 1024px) {
+        .content-main {
+            margin-left: 0;
+            padding: 30px;
+        }
+    }
+    @media (max-width: 576px) {
+        .content-main {
+            padding: 10px;
+        }
     }
 
     .card {
@@ -475,6 +502,16 @@
         button {
             display: none;
         }
+    }
+
+    /* Make sidebar menu items shorter for Add Products page only */
+    .sidebar .nav-menu a {
+        padding: 4px 14px !important; /* Further reduce vertical padding */
+        font-size: 0.9rem !important;
+        min-height: 24px !important;
+    }
+    .sidebar .nav-menu li {
+        min-height: 24px !important;
     }
 </style>
 
