@@ -4,15 +4,15 @@ const WalletTransaction = require('../../models/walletTransactionSchema');
 
 const cancelOrder = async (req, res) => {
     try {
-        const { orderId } = req.params;
+        const { orderNumber } = req.params;
         const { reason } = req.body;
 
         const userId = req.session?.user_id || req.session?.userId || req.session?.user?._id || req.session?.user?.id || req.user?.id || req.user?._id || req.userId || req.body.userId || req.headers['x-user-id'];
 
-        if (!orderId) return res.status(400).json({ success: false, message: 'Order ID is required' });
+        if (!orderNumber) return res.status(400).json({ success: false, message: 'Order Number is required' });
         if (!userId) return res.status(401).json({ success: false, message: 'User not authenticated. Please log in again.' });
 
-        const order = await Order.findById(orderId);
+        const order = await Order.findOne(orderNumber);
         if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
         
         if (order.userId.toString() !== userId.toString())
@@ -44,9 +44,9 @@ const cancelOrder = async (req, res) => {
                     userId: user._id,
                     amount: refundAmount,
                     type: 'credit',
-                    description: `Order Cancelled - Refund (Order #${order.orderId || orderId})`,
+                    description: `Order Cancelled - Refund (Order #${order.orderNumber || orderNumber})`,
                     status: 'Cancelled',
-                    orderId: order._id,
+                    orderNumber: orderNumber,
                     transactionType: 'order_cancellation'
                 };
                 await WalletTransaction.create(transactionData);
@@ -77,19 +77,19 @@ const cancelOrder = async (req, res) => {
 
 const cancelItem = async (req, res) => {
     try {
-        const { orderId, itemId } = req.params;
+        const { orderNumber, itemId } = req.params;
         const { reason } = req.body;
 
         let userId = req.session?.user_id || req.session?.userId || req.session?.user?._id || req.session?.user?.id || req.user?.id || req.user?._id || req.userId || req.body.userId || req.headers['x-user-id'];
 
-        if (!orderId || !itemId)
+        if (!orderNumber || !itemId)
              return res.status(400).json({ success: false, message: 'Order ID and Item ID are required' });
         if (!userId) 
             return res.status(401).json({ success: false, message: 'User not authenticated. Please log in again.' });
         if (!reason?.trim()) 
             return res.status(400).json({ success: false, message: 'Cancellation reason is required' });
 
-        const order = await Order.findById(orderId);
+        const order = await Order.findOne(orderNumber);
         if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
         if (order.userId.toString() !== userId.toString()) return res.status(403).json({ success: false, message: 'Not authorized to cancel items in this order' });
         if (!['Processing', 'Confirmed', 'Pending'].includes(order.status)) return res.status(400).json({ success: false, message: 'Items cannot be cancelled in the current order status' });
@@ -128,9 +128,9 @@ const cancelItem = async (req, res) => {
                     userId: user._id,
                     amount: refundAmount,
                     type: 'credit',
-                    description: `Item Cancelled - Refund (Order #${order.orderId || orderId}) - ${item.productName || 'Item'}`,
+                    description: `Item Cancelled - Refund (Order #${order.orderNumber || orderNumber}) - ${item.productName || 'Item'}`,
                     status: 'Item Cancelled',
-                    orderId: order._id,
+                    orderNumber: orderNumber,
                     itemId: item._id,
                     transactionType: 'item_cancellation'
                 });

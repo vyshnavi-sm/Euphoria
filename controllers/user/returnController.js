@@ -6,14 +6,14 @@ const WalletTransaction = require('../../models/walletTransactionSchema');
 
 const returnSingleItem = async (req, res) => {
     try {
-        const { orderId, itemId } = req.params;
+        const { orderNumber, itemId } = req.params;
         const { reason } = req.body;
         const userId = req.session.user;
 
         if (!userId) return res.json({ success: false, message: 'User not logged in' });
         if (!reason?.trim()) return res.json({ success: false, message: 'Return reason is required' });
 
-        const order = await Order.findOne({ _id: orderId, userId });
+        const order = await Order.findOne({orderNumber : orderNumber, userId });
         if (!order) return res.json({ success: false, message: 'Order not found' });
 
         const item = order.orderedItems.id(itemId);
@@ -89,14 +89,14 @@ const returnSingleItem = async (req, res) => {
 
 const returnOrder = async (req, res) => {
     try {
-        const { orderId } = req.params;
+        const { orderNumber } = req.params;
         const { reason } = req.body;
         const userId = req.session.user;
 
         if (!userId) return res.json({ success: false, message: 'User not logged in' });
         if (!reason) return res.json({ success: false, message: 'Return reason is required' });
 
-        const order = await Order.findOne({ _id: orderId, userId })
+        const order = await Order.findOne({orderNumber : orderNumber, userId })
             .populate('orderedItems.product')
             .select('+orderedItems.adminRejectionReason +orderedItems.adminReturnReason +adminReturnRejectionReason +adminRejectionReason');
 

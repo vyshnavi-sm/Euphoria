@@ -602,7 +602,7 @@
 
     <!-- Search Form -->
     <form action="/user/orders" method="GET" class="search-container">
-      <input type="text" name="query" placeholder="Search by Order ID or Product" class="search-input" value="<%= searchQuery || '' %>">
+      <input type="text" name="query" placeholder="Search by orderNumber" class="search-input" value="<%= searchQuery || '' %>">
       <button type="submit" class="search-btn">
         <i class="fas fa-search"></i>
       </button>
@@ -613,7 +613,7 @@
         <div class="card mb-3">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="card-title mb-0">Order #<%= order.orderId %></h5>
+              <h5 class="card-title mb-0">Order <%= order.orderNumber %></h5>
               <span class="badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' || order.status === 'Payment Failed' ? 'danger' : order.status === 'Returned' ? 'info' : 'warning' %>">
                 <%= order.status %>
               </span>
@@ -640,9 +640,9 @@
                 </p> -->
               </div>
               <div class="col-md-6 text-md-end">
-                <a href="/user/orders/<%= order._id %>" class="btn btn-sm btn-brown">View Details</a>
+                <a href="/user/orders/<%= order.orderNumber %>" class="btn btn-sm btn-brown">View Details</a>
                 <% if (['Processing', 'Pending'].includes(order.status)) { %>
-                  <button type="button" class="btn btn-sm btn-danger" onclick="showCancelOrderModal('<%= order._id %>')">
+                  <button type="button" class="btn btn-sm btn-danger" onclick="showCancelOrderModal('<%= order.orderNumber %>')">
                     <i class="fas fa-times"></i> Cancel Order
                   </button>
                 <% } %>
@@ -720,7 +720,7 @@
         </div>
         <div class="modal-body">
           <form id="cancelOrderForm">
-            <input type="hidden" id="cancelOrderId" name="orderId">
+            <input type="hidden" id="cancelOrderId" name="orderNumber">
             <div class="mb-3">
               <label for="cancelReason" class="form-label">Reason for Cancellation <span class="text-danger">*</span></label>
               <textarea class="form-control" id="cancelReason" name="reason" rows="3" required></textarea>
@@ -739,44 +739,45 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <script>
-  function showCancelOrderModal(orderId) {
-    document.getElementById('cancelOrderId').value = orderId;
-    new bootstrap.Modal(document.getElementById('cancelOrderModal')).show();
+function showCancelOrderModal(orderNumber) {
+  document.getElementById('cancelOrderId').value = orderNumber;
+  new bootstrap.Modal(document.getElementById('cancelOrderModal')).show();
+}
+
+async function submitCancelOrder() {
+  const orderNumber = document.getElementById('cancelOrderId').value;
+  const reason = document.getElementById('cancelReason').value.trim();
+
+  if (!reason) {
+    showToast('Please provide a reason for cancellation', 'error');
+    return;
   }
 
-  async function submitCancelOrder() {
-    const orderId = document.getElementById('cancelOrderId').value;
-    const reason = document.getElementById('cancelReason').value.trim();
-    
-    if (!reason) {
-      showToast('Please provide a reason for cancellation', 'error');
-      return;
+  try {
+    const response = await fetch(`/user/orders/${orderNumber}/cancel`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json' 
+      },
+      body: JSON.stringify({ reason })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showToast('Order cancelled successfully', 'success');
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showToast(data.message || 'Error cancelling order', 'error');
     }
-    
-    try {
-      const response = await fetch(`/user/orders/${orderId}/cancel`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json' 
-        },
-        body: JSON.stringify({ reason })
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        showToast('Order cancelled successfully', 'success');
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        showToast(data.message || 'Error cancelling order', 'error');
-      }
-    } catch (error) {
-      console.error('Error cancelling order:', error);
-      showToast('Error cancelling order', 'error');
-    }
-    
-    bootstrap.Modal.getInstance(document.getElementById('cancelOrderModal')).hide();
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    showToast('Error cancelling order', 'error');
   }
+
+  bootstrap.Modal.getInstance(document.getElementById('cancelOrderModal')).hide();
+}
+
 
   function showToast(message, type = 'success') {
     const toast = document.createElement('div');
