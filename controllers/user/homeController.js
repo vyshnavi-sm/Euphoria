@@ -172,17 +172,20 @@ const filterProduct = async (req, res) => {
         const totalPages = Math.ceil(products.length / itemsPerPage);
         const currentProducts = products.slice(startIndex, startIndex + itemsPerPage);
 
-        res.render("shop", {
-            user: user ? await User.findOne({ _id: user }).lean() : null,
-            products: currentProducts,
-            categories,
-            brands,
-            totalPages,
-            currentPage: parseInt(page),
-            selectedCategory: categoryId,
-            selectedBrand: brandId,
-            search
-        });
+       res.render("shop", {
+       user: user ? await User.findOne({ _id: user }).lean() : null,
+        products: currentProducts,
+        categories,
+        brands,
+        totalPages,
+        currentPage: parseInt(page),
+        selectedCategory: categoryId,
+        selectedBrand: brandId,
+        search,
+        sort,              
+        priceRange        
+});
+
 
     } catch (error) {
         console.error("Error in filterProduct:", error);
@@ -192,17 +195,20 @@ const filterProduct = async (req, res) => {
         ]);
 
         res.render("shop", {
-            user: req.session.user ? await User.findOne({ _id: req.session.user }).lean() : null,
-            products: [],
-            categories,
-            brands,
-            totalPages: 0,
-            currentPage: 1,
-            selectedCategory: req.query.category || null,
-            selectedBrand: req.query.brand || null,
-            search: req.query.search || '',
-            errorMessage: "Error loading filtered products. Please try again."
-        });
+        user: req.session.user ? await User.findOne({ _id: req.session.user }).lean() : null,
+        products: [],
+        categories,
+        brands,
+        totalPages: 0,
+        currentPage: 1,
+        selectedCategory: req.query.category || null,
+        selectedBrand: req.query.brand || null,
+        search: req.query.search || '',
+        sort: req.query.sort || '',             
+        priceRange: req.query.gt && req.query.lt ? `${req.query.gt}-${req.query.lt}` : '', 
+        errorMessage: "Error loading filtered products. Please try again."
+    });
+
     }
 };
 
