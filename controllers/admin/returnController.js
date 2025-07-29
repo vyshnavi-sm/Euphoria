@@ -1,20 +1,22 @@
 const Order = require('../../models/orderSchema');
 const User = require('../../models/userSchema');
 const WalletTransaction = require('../../models/walletTransactionSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const handleReturnRequest = async (req, res) => {
     try {
         const { orderId } = req.params;
         const { action, refundAmount } = req.body;
 
-        if (!orderId) return res.status(400).json({ message: 'Order ID is required' });
+        if (!orderId) return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'Order ID is required' });
 
         const order = await Order.findById(orderId)
             .populate('userId')
             .populate('orderedItems.product');
 
-        if (!order) return res.status(404).json({ message: 'Order not found' });
-        if (order.status !== 'Return Request') return res.status(400).json({ message: 'Order is not in return request status' });
+        if (!order) return res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Order not found' });
+        if (order.status !== 'Return Request') return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'Order is not in return request status' });
 
         if (action === 'accept') {
             order.status = 'Returned';
@@ -24,7 +26,7 @@ const handleReturnRequest = async (req, res) => {
 
             if (refundAmount > 0) {
                 const user = await User.findById(order.userId._id);
-                if (!user) return res.status(404).json({ message: 'User not found' });
+                if (!user) return res.status(STATUS_CODE.NOT_FOUND).json({ message: 'User not found' });
 
                 user.wallet += refundAmount;
                 await user.save();
@@ -51,7 +53,7 @@ const handleReturnRequest = async (req, res) => {
 
     } catch (error) {
         console.error('Error handling return request:', error);
-        res.status(500).json({ success: false, message: 'Error processing return request' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error processing return request' });
     }
 };
 
@@ -60,14 +62,14 @@ const handleItemReturnRequest = async (req, res) => {
         const { orderId, itemId } = req.params;
         const { action, refundAmount, rejectReason } = req.body;
 
-        if (!orderId || !itemId) return res.status(400).json({ message: 'Order ID and Item ID are required' });
+        if (!orderId || !itemId) return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'Order ID and Item ID are required' });
 
         const order = await Order.findById(orderId).populate('userId').populate('orderedItems.product');
-        if (!order) return res.status(404).json({ message: 'Order not found' });
+        if (!order) return res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Order not found' });
 
         const item = order.orderedItems.id(itemId);
-        if (!item) return res.status(404).json({ message: 'Item not found in order' });
-        if (item.status !== 'Return Requested') return res.status(400).json({ message: 'Item is not in return request status' });
+        if (!item) return res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Item not found in order' });
+        if (item.status !== 'Return Requested') return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'Item is not in return request status' });
 
         const recalculateProportionalSplits = (excludeItemId = null) => {
             const activeItems = order.orderedItems.filter(i => i.status !== 'Cancelled' && i.status !== 'Returned' && (!excludeItemId || i._id.toString() !== excludeItemId.toString()));
@@ -236,7 +238,7 @@ const handleItemReturnRequest = async (req, res) => {
 
     } catch (error) {
         console.error('Error handling item return request:', error);
-        res.status(500).json({ success: false, message: 'Error processing item return request', error: error.message });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error processing item return request', error: error.message });
     }
 };
 

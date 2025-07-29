@@ -5,6 +5,8 @@ const WalletTransaction = require("../../models/walletTransactionSchema");
 const bcrypt = require("bcrypt");
 const multer = require("multer");
 const path = require("path");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 
 const storage = multer.diskStorage({
@@ -103,7 +105,7 @@ const getProfile = async (req, res) => {
 
   } catch (error) {
     console.error("Error fetching profile:", error);
-    res.status(500).send("Error fetching profile");
+    res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).send("Error fetching profile");
   }
 };
 
@@ -113,22 +115,22 @@ const updateProfile = async (req, res) => {
     const userId = req.session.user;
     const { name, phone } = req.body;
 
-    if (!name) return res.status(400).json({ success: false, message: "Name is required" });
+    if (!name) return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: "Name is required" });
     if (phone && !/^\d{10}$/.test(phone)) {
-      return res.status(400).json({ success: false, message: "Please enter a valid 10-digit phone number" });
+      return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: "Please enter a valid 10-digit phone number" });
     }
 
     const updateData = { name, ...(phone && { phone }) };
     if (req.file) updateData.profilePicture = req.file.path;
 
     const updatedUser = await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true });
-    if (!updatedUser) return res.status(404).json({ success: false, message: "User not found" });
+    if (!updatedUser) return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: "User not found" });
 
     req.session.user = updatedUser;
-    res.status(200).json({ success: true, message: "Profile updated successfully" });
+    res.status(STATUS_CODE.SUCCESS).json({ success: true, message: "Profile updated successfully" });
   } catch (error) {
     console.error("Error updating profile:", error);
-    res.status(500).json({ success: false, message: "An error occurred while updating profile" });
+    res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "An error occurred while updating profile" });
   }
 };
 

@@ -4,11 +4,13 @@ const bcrypt = require("bcrypt");
 const Order = require("../../models/orderSchema");
 const Category = require("../../models/categorySchema");
 const Brand = require("../../models/brandSchema");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const getDashboardData = async (req, res) => {
   try {
     if (!req.session.admin) {
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return res.status(STATUS_CODE.UNAUTHORIZED).json({ success: false, message: "Unauthorized" });
     }
 
     console.log("Fetching dashboard data...");
@@ -124,7 +126,7 @@ const getDashboardData = async (req, res) => {
     });
   } catch (error) {
     console.error("getDashboardData error:", error);
-    res.status(500).json({
+    res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: "Failed to load dashboard data",
       error: error.message,

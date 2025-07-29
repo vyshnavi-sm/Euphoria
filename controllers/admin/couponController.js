@@ -1,4 +1,6 @@
 const Coupon = require('../../models/couponSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const loadCouponPage = async (req, res) => {
     try {
@@ -44,7 +46,7 @@ const createCoupon = async (req, res) => {
             return res.redirect('/admin/coupons');
         }
 
-        // Only allow percentage
+        
         if (discountType !== 'percentage' || discountValue < 1 || discountValue > 100) {
             req.flash('error', 'Discount value must be a percentage between 1 and 100.');
             return res.redirect('/admin/coupons');

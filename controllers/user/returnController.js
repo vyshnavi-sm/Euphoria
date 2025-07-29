@@ -3,6 +3,8 @@ const Product = require('../../models/productSchema');
 const { createPDF } = require('../../utils/pdfGenerator');
 const User = require('../../models/userSchema');
 const WalletTransaction = require('../../models/walletTransactionSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const returnSingleItem = async (req, res) => {
     try {
@@ -83,7 +85,7 @@ const returnSingleItem = async (req, res) => {
             }
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: 'Error submitting return request', error: error.message });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error submitting return request', error: error.message });
     }
 };
 
@@ -118,7 +120,7 @@ const returnOrder = async (req, res) => {
         res.json({ success: true, message: 'Return request submitted successfully' });
     } catch (error) {
         console.error('Error processing return:', error);
-        res.status(500).json({ success: false, message: 'Error processing return', error: error.message });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error processing return', error: error.message });
     }
 };
 

@@ -4,6 +4,8 @@ const Address = require('../../models/addressSchema');
 const Order = require('../../models/orderSchema');
 const Coupon = require('../../models/couponSchema');
 const WalletTransaction = require('../../models/walletTransactionSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const calculateOrderTotal = (cart, coupon, deliveryCharge = 0) => {
     const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -63,7 +65,7 @@ const getCheckoutPage = async (req, res) => {
         
     } catch (error) {
         console.error('Error loading checkout page:', error);
-        res.status(500).render('error', { message: 'Internal server error' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).render('error', { message: 'Internal server error' });
     }
 };
 
@@ -162,7 +164,7 @@ const placeOrder = async (req, res) => {
 
     } catch (error) {
         console.error('Error placing order:', error);
-        res.status(500).json({ success: false, message: 'Error placing order: ' + error.message });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error placing order: ' + error.message });
     }
 };
 

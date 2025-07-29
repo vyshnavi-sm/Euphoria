@@ -3,6 +3,8 @@ const Product = require('../../models/productSchema');
 const { createPDF } = require('../../utils/pdfGenerator');
 const User = require('../../models/userSchema');
 const WalletTransaction = require('../../models/walletTransactionSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const getUserOrders = async (req, res) => {
     try {
@@ -51,7 +53,7 @@ const getUserOrders = async (req, res) => {
 
     } catch (error) {
         console.error('Error loading orders page:', error);
-        res.status(500).send('Error loading orders');
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).send('Error loading orders');
     }
 };
 
@@ -91,7 +93,7 @@ const getSingleOrder = async (req, res) => {
         res.render('user/order-details', { order });
     } catch (error) {
         console.error('Error loading order details:', error);
-        res.status(500).send('Error loading order details');
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).send('Error loading order details');
     }
 };
 
@@ -136,7 +138,7 @@ const downloadInvoice = async (req, res) => {
         res.send(pdfBuffer);
     } catch (error) {
         console.error('Error generating invoice:', error);
-        res.status(500).send('Error generating invoice');
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).send('Error generating invoice');
     }
 };
 

@@ -1,5 +1,7 @@
 const User = require('../../models/userSchema');
 const Order = require('../../models/orderSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const customerInfo = async (req, res) => {
     try {
@@ -48,7 +50,7 @@ const customerInfo = async (req, res) => {
 
     } catch (error) {
         console.error("Error fetching customers:", error);
-        res.status(500).send("Internal Server Error");
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).send("Internal Server Error");
     }
 };
 
@@ -57,12 +59,12 @@ const customerBlocked = async (req, res) => {
         
         const { id } = req.query;  
         if (!id) {
-            return res.status(400).send("Customer ID is required");
+            return res.status(STATUS_CODE.BAD_REQUEST).send("Customer ID is required");
         }
 
         const user = await User.findByIdAndUpdate(id, { isBlocked: true });
         if (!user) {
-            return res.status(404).send("User not found");
+            return res.status(STATUS_CODE.NOT_FOUND).send("User not found");
         }
 
         res.redirect('/admin/customers');  
@@ -76,12 +78,12 @@ const customerUnblocked = async (req, res) => {
     try {
         const { id } = req.query;  
         if (!id) {
-            return res.status(400).send("Customer ID is required");
+            return res.status(STATUS_CODE.BAD_REQUEST).send("Customer ID is required");
         }
 
         const user = await User.findByIdAndUpdate(id, { isBlocked: false });
         if (!user) {
-            return res.status(404).send("User not found");
+            return res.status(STATUS_CODE.NOT_FOUND).send("User not found");
         }
 
         res.redirect('/admin/customers');  

@@ -1,6 +1,8 @@
 const Order = require('../../models/orderSchema');
 const User = require('../../models/userSchema');
 const WalletTransaction = require('../../models/walletTransactionSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const cancelOrder = async (req, res) => {
     try {
@@ -9,34 +11,34 @@ const cancelOrder = async (req, res) => {
 
         const userId = req.session?.user_id || req.session?.userId || req.session?.user?._id || req.session?.user?.id || req.user?.id || req.user?._id || req.userId || req.body.userId || req.headers['x-user-id'];
 
-        if (!orderNumber) return res.status(400).json({ success: false, message: 'Order Number is required' });
-        if (!userId) return res.status(401).json({ success: false, message: 'User not authenticated. Please log in again.' });
+        if (!orderNumber) return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Order Number is required' });
+        if (!userId) return res.status(STATUS_CODE.UNAUTHORIZED).json({ success: false, message: 'User not authenticated. Please log in again.' });
 
         const order = await Order.findOne(orderNumber);
-        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
+        if (!order) return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: 'Order not found' });
         
         if (order.userId.toString() !== userId.toString())
-            return res.status(403).json({ success: false, message: 'Not authorized to cancel this order' });
+            return res.status(STATUS_CODE.FORBIDDEN).json({ success: false, message: 'Not authorized to cancel this order' });
         if (!['Processing', 'Confirmed', 'Pending'].includes(order.status)) 
-            return res.status(400).json({ success: false, message: 'Order cannot be cancelled in its current status' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Order cannot be cancelled in its current status' });
         if (order.status === 'Cancelled')
-             return res.status(400).json({ success: false, message: 'Order is already cancelled' });
+             return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Order is already cancelled' });
 
         let refundProcessed = false, refundAmount = 0;
 
         if (['Paid', 'Pending'].includes(order.paymentStatus)) {
             const user = await User.findById(userId);
-            if (!user) return res.status(404).json({ success: false, message: 'User not found for wallet refund' });
+            if (!user) return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: 'User not found for wallet refund' });
 
             refundAmount = Math.abs(Number(order.finalAmount)) || 0;
-            if (refundAmount <= 0) return res.status(400).json({ success: false, message: 'Invalid refund amount calculated' });
+            if (refundAmount <= 0) return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Invalid refund amount calculated' });
 
             user.wallet = Math.round(((Number(user.wallet) || 0) + refundAmount) * 100) / 100;
             try {
                 await user.save();
                 refundProcessed = true;
             } catch (err) {
-                return res.status(500).json({ success: false, message: 'Failed to process wallet refund' });
+                return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to process wallet refund' });
             }
 
             try {
@@ -69,9 +71,9 @@ const cancelOrder = async (req, res) => {
 
     } catch (error) {
         console.error('Error cancelling order:', error);
-        if (error.name === 'CastError') return res.status(400).json({ success: false, message: 'Invalid Order ID format' });
-        if (error.name === 'ValidationError') return res.status(400).json({ success: false, message: 'Validation error: ' + error.message });
-        res.status(500).json({ success: false, message: 'Internal server error while cancelling order' });
+        if (error.name === 'CastError') return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Invalid Order ID format' });
+        if (error.name === 'ValidationError') return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Validation error: ' + error.message });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error while cancelling order' });
     }
 };
 
@@ -83,22 +85,22 @@ const cancelItem = async (req, res) => {
         let userId = req.session?.user_id || req.session?.userId || req.session?.user?._id || req.session?.user?.id || req.user?.id || req.user?._id || req.userId || req.body.userId || req.headers['x-user-id'];
 
         if (!orderNumber || !itemId)
-             return res.status(400).json({ success: false, message: 'Order ID and Item ID are required' });
+             return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Order ID and Item ID are required' });
         if (!userId) 
-            return res.status(401).json({ success: false, message: 'User not authenticated. Please log in again.' });
+            return res.status(STATUS_CODE.UNAUTHORIZED).json({ success: false, message: 'User not authenticated. Please log in again.' });
         if (!reason?.trim()) 
-            return res.status(400).json({ success: false, message: 'Cancellation reason is required' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Cancellation reason is required' });
 
         const order = await Order.findOne(orderNumber);
-        if (!order) return res.status(404).json({ success: false, message: 'Order not found' });
-        if (order.userId.toString() !== userId.toString()) return res.status(403).json({ success: false, message: 'Not authorized to cancel items in this order' });
-        if (!['Processing', 'Confirmed', 'Pending'].includes(order.status)) return res.status(400).json({ success: false, message: 'Items cannot be cancelled in the current order status' });
+        if (!order) return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: 'Order not found' });
+        if (order.userId.toString() !== userId.toString()) return res.status(STATUS_CODE.FORBIDDEN).json({ success: false, message: 'Not authorized to cancel items in this order' });
+        if (!['Processing', 'Confirmed', 'Pending'].includes(order.status)) return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Items cannot be cancelled in the current order status' });
 
         const itemIndex = order.orderedItems.findIndex(item => item._id.toString() === itemId.toString());
-        if (itemIndex === -1) return res.status(404).json({ success: false, message: 'Item not found in order' });
+        if (itemIndex === -1) return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: 'Item not found in order' });
 
         const item = order.orderedItems[itemIndex];
-        if (item.status === 'Cancelled') return res.status(400).json({ success: false, message: 'Item is already cancelled' });
+        if (item.status === 'Cancelled') return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Item is already cancelled' });
 
         const itemTotal = Number(item.price) * Number(item.quantity);
         const activeItems = order.orderedItems.filter(item => item.status !== 'Cancelled');
@@ -117,7 +119,7 @@ const cancelItem = async (req, res) => {
 
         if (['Paid', 'Pending'].includes(order.paymentStatus) && refundAmount > 0) {
             const user = await User.findById(userId);
-            if (!user) return res.status(404).json({ success: false, message: 'User not found for wallet refund' });
+            if (!user) return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: 'User not found for wallet refund' });
 
             user.wallet = Math.round(((Number(user.wallet) || 0) + refundAmount) * 100) / 100;
             await user.save();
@@ -177,10 +179,10 @@ const cancelItem = async (req, res) => {
         console.error('Error cancelling item:', error);
 
         if (['CastError', 'ValidationError'].includes(error.name)) {
-            return res.status(400).json({ success: false, message: error.name === 'CastError' ? 'Invalid ID format' : 'Validation error: ' + error.message });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: error.name === 'CastError' ? 'Invalid ID format' : 'Validation error: ' + error.message });
         }
 
-        res.status(500).json({ success: false, message: 'Internal server error while cancelling item' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Internal server error while cancelling item' });
     }
 };
 

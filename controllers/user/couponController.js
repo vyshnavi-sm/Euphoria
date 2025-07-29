@@ -1,5 +1,7 @@
 const Cart = require('../../models/cartSchema');
 const Coupon = require('../../models/couponSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 function calculateOrderTotal(cart, coupon) {
     const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -79,7 +81,7 @@ const applyCoupon = async (req, res) => {
 
     } catch (error) {
         console.error('Error applying coupon:', error);
-        res.status(500).json({ success: false, message: 'An error occurred while applying the coupon.' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'An error occurred while applying the coupon.' });
     }
 };
 
@@ -107,7 +109,7 @@ const removeCoupon = async (req, res) => {
 
     } catch (error) {
         console.error('Error removing coupon:', error);
-        res.status(500).json({ success: false, message: 'An error occurred while removing the coupon.' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'An error occurred while removing the coupon.' });
     }
 };
 

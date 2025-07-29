@@ -1,5 +1,7 @@
 const Brand = require("../../models/brandSchema");
 const Coupon = require("../../models/couponSchema");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const getBrandPage = async (req, res) => {
     try {
@@ -98,13 +100,13 @@ const deleteBrand = async (req, res) => {
     try {
         const { id } = req.query;
         if (!id) {
-            return res.status(400).redirect("/pageerror");
+            return res.status(STATUS_CODE.BAD_REQUEST).redirect("/pageerror");
         }
         await Brand.deleteOne({ _id: id });
         res.redirect("/admin/brands");
     } catch (error) {
         console.error("Error deleting brand:", error);
-        res.status(500).redirect("/pageerror");
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).redirect("/pageerror");
     }
 };
 

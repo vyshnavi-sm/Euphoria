@@ -1,6 +1,8 @@
 const Product = require("../../models/productSchema");
 const User = require("../../models/userSchema");
 const { CategoryOffer } = require('../../models/offerSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const productDetails = async (req,res)=>{
     try {

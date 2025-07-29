@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const Order = require("../../models/orderSchema");
 const Product = require("../../models/productSchema");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const loadDashboard = async (req, res) => {
   try {
@@ -40,7 +42,7 @@ const loadDashboard = async (req, res) => {
 const getRecentOrders = async (req, res) => {
   try {
     if (!req.session.admin)
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return res.status(STATUS_CODE.UNAUTHORIZED).json({ success: false, message: "Unauthorized" });
 
     const recentOrders = await Order.find()
       .populate("userId", "name email")
@@ -52,14 +54,14 @@ const getRecentOrders = async (req, res) => {
     res.json({ success: true, orders: recentOrders });
   } catch (error) {
     console.error("getRecentOrders error:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch recent orders" });
+    res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to fetch recent orders" });
   }
 };
 
 const getLowStockProducts = async (req, res) => {
   try {
     if (!req.session.admin)
-      return res.status(401).json({ success: false, message: "Unauthorized" });
+      return res.status(STATUS_CODE.UNAUTHORIZED).json({ success: false, message: "Unauthorized" });
 
     const products = await Product.find({ quantity: { $lt: 10 }, isBlocked: false })
       .populate("category", "name")
@@ -72,7 +74,7 @@ const getLowStockProducts = async (req, res) => {
     res.json({ success: true, products });
   } catch (error) {
     console.error("getLowStockProducts error:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch low stock products" });
+    res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to fetch low stock products" });
   }
 };
 

@@ -2,6 +2,8 @@ const User = require("../../models/userSchema")
 const Category = require("../../models/categorySchema");
 const Product = require("../../models/productSchema");
 const Brand = require("../../models/brandSchema");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const loadHomepage = async (req, res) => {
     try {
@@ -45,7 +47,7 @@ const loadHomepage = async (req, res) => {
 
     } catch (error) {
         console.log("Home page not found:", error);
-        res.status(500).send("Server error");
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).send("Server error");
     }
 };
 
@@ -116,7 +118,7 @@ const loadShoppingPage = async (req, res) => {
 
     } catch (error) {
         console.error('Error loading shop page:', error);
-        res.status(500).render('error', { message: 'Error loading shop page' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).render('error', { message: 'Error loading shop page' });
     }
 };
 

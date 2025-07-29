@@ -4,6 +4,8 @@ const Brand = require("../../models/brandSchema");
 const { ProductOffer, CategoryOffer } = require('../../models/offerSchema');
 const fs = require("fs");
 const path = require("path");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const getProductPage = async (req, res) => {
     try {
@@ -17,6 +19,7 @@ const getProductPage = async (req, res) => {
         res.redirect("/pageerror");
     }
 };
+
 
 const addProducts = async (req, res) => {
     try {
@@ -242,10 +245,10 @@ const deleteSingleImage = async (req, res) => {
     try {
         const { imageNameToServer, productIdToServer } = req.body;
         if (!imageNameToServer || !productIdToServer)
-            return res.status(400).json({ status: false, message: 'Missing parameters' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ status: false, message: 'Missing parameters' });
 
         const product = await Product.findByIdAndUpdate(productIdToServer, { $pull: { productImage: imageNameToServer } }, { new: true });
-        if (!product) return res.status(404).json({ status: false, message: 'Product not found' });
+        if (!product) return res.status(STATUS_CODE.NOT_FOUND).json({ status: false, message: 'Product not found' });
 
         const imagePath = path.join(process.cwd(), 'public', 'uploads', 'product-images', imageNameToServer);
         if (fs.existsSync(imagePath)) fs.unlinkSync(imagePath);
@@ -253,7 +256,7 @@ const deleteSingleImage = async (req, res) => {
         res.json({ status: true, message: 'Image deleted successfully' });
     } catch (error) {
         console.error('Error deleting image:', error);
-        res.status(500).json({ status: false, message: 'Error deleting image', error: error.message });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ status: false, message: 'Error deleting image', error: error.message });
     }
 };
 
@@ -267,7 +270,7 @@ const checkDuplicateProductName = async (req, res) => {
         res.json(exists ? { isDuplicate: true, message: 'Product with this name already exists.' } : { isDuplicate: false });
     } catch (error) {
         console.error('Error checking product name:', error);
-        res.status(500).json({ isDuplicate: false, message: 'Error checking duplicate name.' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ isDuplicate: false, message: 'Error checking duplicate name.' });
     }
 };
 

@@ -2,6 +2,8 @@ const User = require('../../models/userSchema');
 const Coupon = require('../../models/couponSchema');
 const { ReferralOffer } = require('../../models/offerSchema');
 const WalletTransaction = require('../../models/walletTransactionSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const referralController = {
     getReferralCode: async (req, res) => {
@@ -10,7 +12,7 @@ const referralController = {
             const user = await User.findById(userId);
             
             if (!user) {
-                return res.status(404).json({ message: 'User not found' });
+                return res.status(STATUS_CODE.NOT_FOUND).json({ message: 'User not found' });
             }
 
             res.json({ 
@@ -20,7 +22,7 @@ const referralController = {
             });
         } catch (error) {
             console.error('Error getting referral code:', error);
-            res.status(500).json({ message: 'Internal server error' });
+            res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });
         }
     },
 
@@ -30,17 +32,17 @@ const referralController = {
             const newUserId = req.session.user_id;
 
             if (!referralCode) {
-                return res.status(400).json({ message: 'Referral code is required' });
+                return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'Referral code is required' });
             }
 
             const referrer = await User.findOne({ referalCode: referralCode });
             if (!referrer) {
-                return res.status(404).json({ message: 'Invalid referral code' });
+                return res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Invalid referral code' });
             }
 
             const newUser = await User.findById(newUserId);
             if (!newUser) {
-                return res.status(404).json({ message: 'User not found' });
+                return res.status(STATUS_CODE.NOT_FOUND).json({ message: 'User not found' });
             }
 
             newUser.referredBy = referrer._id;
@@ -78,7 +80,7 @@ const referralController = {
             });
         } catch (error) {
             console.error('Error processing referral:', error);
-            res.status(500).json({ message: 'Internal server error' });
+            res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });
         }
     },
 
@@ -89,7 +91,7 @@ const referralController = {
                 .populate('referralRewards.referredUser', 'name email');
 
             if (!user) {
-                return res.status(404).json({ message: 'User not found' });
+                return res.status(STATUS_CODE.NOT_FOUND).json({ message: 'User not found' });
             }
 
             const stats = {
@@ -102,7 +104,7 @@ const referralController = {
             res.json(stats);
         } catch (error) {
             console.error('Error getting referral stats:', error);
-            res.status(500).json({ message: 'Internal server error' });
+            res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });
         }
     }
 };

@@ -1,5 +1,7 @@
 const Order = require('../../models/orderSchema');
 const mongoose = require('mongoose');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const getAllOrders = async (req, res) => {
     try {
@@ -93,7 +95,7 @@ const getAllOrders = async (req, res) => {
         });
     } catch (error) {
         console.error('Error in getAllOrders:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
     }
 };
 
@@ -105,7 +107,7 @@ const getOrderDetails = async (req, res) => {
             .populate('address')
             .lean();
 
-        if (!order) return res.status(404).json({ error: 'Order not found' });
+        if (!order) return res.status(STATUS_CODE.NOT_FOUND).json({ error: 'Order not found' });
 
         const activeItems = order.orderedItems.filter(item => item.status !== 'Cancelled' && item.status !== 'Returned');
         const totalItemsValue = activeItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -129,7 +131,7 @@ const getOrderDetails = async (req, res) => {
         res.json(order);
     } catch (error) {
         console.error('Error in getOrderDetails:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
     }
 };
 
@@ -138,18 +140,18 @@ const updateOrderStatus = async (req, res) => {
         const { orderId } = req.params;
         const { status } = req.body;
 
-        if (!orderId) return res.status(400).json({ error: 'Order ID is required' });
+        if (!orderId) return res.status(STATUS_CODE.BAD_REQUEST).json({ error: 'Order ID is required' });
 
         const validStatuses = [
             'Pending', 'Processing', 'Shipped', 'Out for Delivery',
             'Delivered', 'Cancelled', 'Return Request', 'Returned', 'Payment Failed'
         ];
         if (!validStatuses.includes(status)) {
-            return res.status(400).json({ error: 'Invalid status' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ error: 'Invalid status' });
         }
 
         const order = await Order.findById(orderId);
-        if (!order) return res.status(404).json({ error: 'Order not found' });
+        if (!order) return res.status(STATUS_CODE.NOT_FOUND).json({ error: 'Order not found' });
 
         const allowedTransitions = {
             'Pending': ['Processing', 'Cancelled', 'Payment Failed'],
@@ -170,7 +172,7 @@ const updateOrderStatus = async (req, res) => {
              ['Cancelled', 'Return Request'].includes(status));
 
         if (!isAllowed) {
-            return res.status(400).json({ error: `Invalid status transition from '${currentStatus}' to '${status}'` });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ error: `Invalid status transition from '${currentStatus}' to '${status}'` });
         }
 
         order.status = status;
@@ -189,7 +191,7 @@ const updateOrderStatus = async (req, res) => {
         res.json({ message: 'Order status updated successfully', order });
     } catch (error) {
         console.error('Error in updateOrderStatus:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ error: 'Internal server error' });
     }
 };
 

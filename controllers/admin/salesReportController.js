@@ -7,6 +7,8 @@ const { generateOtp } = require('../../utils/otpService');
 const { sendVerificationEmail } = require('../../utils/emailService');
 const Product = require('../../models/productSchema');
 const Coupon = require('../../models/couponSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const loadSalesReport = async (req, res) => {
   try {
@@ -133,7 +135,7 @@ const loadSalesReport = async (req, res) => {
     });
   } catch (error) {
     console.error('Error loading sales report:', error);
-    res.status(500).send('Error loading sales report');
+    res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).send('Error loading sales report');
   }
 };
 
@@ -152,7 +154,7 @@ const generateSalesReport = async (req, res) => {
       }
     }
     if (errorMessage) {
-      return res.status(400).send(errorMessage);
+      return res.status(STATUS_CODE.BAD_REQUEST).send(errorMessage);
     }
     let query = {};
 
@@ -443,11 +445,11 @@ const generateSalesReport = async (req, res) => {
 
       await workbook.xlsx.write(res);
     } else {
-      res.status(400).send('Invalid format specified');
+      res.status(STATUS_CODE.BAD_REQUEST).send('Invalid format specified');
     }
   } catch (error) {
     console.error('Error generating sales report:', error);
-    res.status(500).send('Error generating sales report');
+    res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).send('Error generating sales report');
   }
 };
 

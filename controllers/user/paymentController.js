@@ -1,6 +1,8 @@
 const Razorpay = require('razorpay');
 const Order = require('../../models/orderSchema');
 const crypto = require('crypto');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 let razorpay;
 try {
@@ -113,14 +115,12 @@ const handlePaymentFailure = async (req, res) => {
         
         if (orderId) {
             try {
-                // Update order status
                 await Order.findByIdAndUpdate(orderId, {
                     paymentStatus: 'Failed',
                     status: 'Payment Failed'
                 });
                 console.log('Updated order status to failed');
 
-                // Restore stock
                 const order = await Order.findById(orderId).populate('orderedItems.product');
                 if (order) {
                     for (const item of order.orderedItems) {

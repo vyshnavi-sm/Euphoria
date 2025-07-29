@@ -2,6 +2,8 @@ const User = require("../../models/userSchema");
 const bcrypt = require("bcrypt");
 const { generateOtp } = require("../../utils/otpService");
 const { sendVerificationEmail } = require("../../utils/emailService");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 
 const postNewPassword = async (req, res) => {
@@ -12,21 +14,21 @@ const postNewPassword = async (req, res) => {
             const userId = req.session.user._id;
             
             if (!oldPassword || !newPassword || !confirmPassword) {
-                return res.status(400).json({
+                return res.status(STATUS_CODE.BAD_REQUEST).json({
                     success: false,
                     message: 'All fields are required'
                 });
             }
 
             if (newPassword !== confirmPassword) {
-                return res.status(400).json({
+                return res.status(STATUS_CODE.BAD_REQUEST).json({
                     success: false,
                     message: 'New passwords do not match'
                 });
             }
 
             if (newPassword.length < 6) {
-                return res.status(400).json({
+                return res.status(STATUS_CODE.BAD_REQUEST).json({
                     success: false,
                     message: 'Password must be at least 6 characters long'
                 });
@@ -34,7 +36,7 @@ const postNewPassword = async (req, res) => {
 
             const user = await User.findById(userId);
             if (!user) {
-                return res.status(404).json({
+                return res.status(STATUS_CODE.NOT_FOUND).json({
                     success: false,
                     message: 'User not found'
                 });
@@ -42,7 +44,7 @@ const postNewPassword = async (req, res) => {
 
             const isMatch = await bcrypt.compare(oldPassword, user.password);
             if (!isMatch) {
-                return res.status(401).json({
+                return res.status(STATUS_CODE.UNAUTHORIZED).json({
                     success: false,
                     message: 'The current password you entered is incorrect. Please try again.'
                 });
@@ -53,7 +55,7 @@ const postNewPassword = async (req, res) => {
             await user.save();
             req.session.user = user;
 
-            return res.status(200).json({
+            return res.status(STATUS_CODE.SUCCESS).json({
                 success: true,
                 message: 'Password updated successfully',
                 redirectUrl: '/userProfile'
@@ -63,14 +65,14 @@ const postNewPassword = async (req, res) => {
             const email = req.session.email;
             
             if (!email) {
-                return res.status(400).json({
+                return res.status(STATUS_CODE.BAD_REQUEST).json({
                     success: false,
                     message: "Session expired. Please try again."
                 });
             }
             
             if (newPass1 !== newPass2) {
-                return res.status(400).json({
+                return res.status(STATUS_CODE.BAD_REQUEST).json({
                     success: false,
                     message: "Passwords do not match"
                 });
@@ -86,7 +88,7 @@ const postNewPassword = async (req, res) => {
             delete req.session.userOtp;
             delete req.session.user;
             
-            return res.status(200).json({
+            return res.status(STATUS_CODE.SUCCESS).json({
                 success: true,
                 message: "Password updated successfully",
                 redirectUrl: "/login"
@@ -94,7 +96,7 @@ const postNewPassword = async (req, res) => {
         }
     } catch (error) {
         console.error('Error in postNewPassword:', error);
-        return res.status(500).json({
+        return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: 'An error occurred while updating password'
         });
@@ -183,7 +185,7 @@ const verifyChangePassOtp = async (req, res) => {
             });
         }
     } catch (error) {
-        res.status(500).json({ success: false, message: "An error occurred. Please try again later" });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "An error occurred. Please try again later" });
     }
 };
 

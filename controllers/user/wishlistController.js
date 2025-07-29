@@ -1,5 +1,7 @@
 const Wishlist = require('../../models/wishlistSchema');
 const Product = require('../../models/productSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const getWishlistStatus = async (req, res) => {
     try {
@@ -18,7 +20,7 @@ const getWishlistStatus = async (req, res) => {
         res.json({ isInWishlist });
     } catch (error) {
         console.error('Error checking wishlist status:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });
     }
 };
 
@@ -28,11 +30,11 @@ const toggleWishlist = async (req, res) => {
         const userId = req.session.user;
 
         if (!userId) {
-            return res.status(401).json({ message: 'Please login to manage wishlist' });
+            return res.status(STATUS_CODE.UNAUTHORIZED).json({ message: 'Please login to manage wishlist' });
         }
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
+            return res.status(STATUS_CODE.NOT_FOUND).json({ message: 'Product not found' });
         }
 
         let wishlist = await Wishlist.findOne({ userId });
@@ -76,7 +78,7 @@ const toggleWishlist = async (req, res) => {
         }
     } catch (error) {
         console.error('Error toggling wishlist:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });
     }
 };
 
@@ -97,7 +99,7 @@ const getWishlist = async (req, res) => {
         });
     } catch (error) {
         console.error('Error getting wishlist:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });
     }
 };
 

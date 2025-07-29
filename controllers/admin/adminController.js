@@ -1,5 +1,6 @@
 const User = require("../../models/userSchema");
 const bcrypt = require("bcrypt");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
 
 
 const pageerror = (req, res) => res.render("pageerror");
@@ -36,7 +37,7 @@ const login = async (req, res) => {
     res.json({ success: true, redirect: "/admin/dashboard" });
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(500).json({ success: false, message: "An error occurred. Please try again." });
+    res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "An error occurred. Please try again." });
   }
 };
 
@@ -61,7 +62,7 @@ const logout = (req, res) => {
 const validateAdminSession = (req, res, next) => {
   if (!req.session.admin) {
     return req.xhr || req.headers.accept.includes("json")
-      ? res.status(401).json({ success: false, message: "Session expired" })
+      ? res.status(STATUS_CODE.UNAUTHORIZED).json({ success: false, message: "Session expired" })
       : res.redirect("/admin/login");
   }
   req.session.admin.lastActivity = Date.now();

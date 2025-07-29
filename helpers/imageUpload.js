@@ -26,5 +26,4 @@ const upload = multer({
     }
 });
 
-// Export the multer instance directly
 module.exports = upload;

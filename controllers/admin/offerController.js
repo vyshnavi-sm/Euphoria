@@ -1,13 +1,15 @@
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const { ProductOffer, CategoryOffer } = require('../../models/offerSchema');
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const applyProductOffer = async (req, res) => {
     try {
         const { productId, discountPercentage, startDate, endDate } = req.body;
 
         if (!productId || !discountPercentage || !startDate || !endDate) {
-            return res.status(400).json({ success: false, message: 'All fields are required' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'All fields are required' });
         }
 
         const discount = parseFloat(discountPercentage);
@@ -15,15 +17,15 @@ const applyProductOffer = async (req, res) => {
         const end = new Date(endDate);
 
         if (isNaN(discount) || discount < 0 || discount > 100) {
-            return res.status(400).json({ success: false, message: 'Discount percentage must be between 0 and 100' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Discount percentage must be between 0 and 100' });
         }
         if (isNaN(start) || isNaN(end) || start >= end) {
-            return res.status(400).json({ success: false, message: 'Invalid or mismatched date range' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Invalid or mismatched date range' });
         }
 
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({ success: false, message: 'Product not found' });
+            return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: 'Product not found' });
         }
 
         const newOffer = new ProductOffer({ product: productId, discountPercentage: discount, startDate: start, endDate: end, isActive: true });
@@ -36,14 +38,14 @@ const applyProductOffer = async (req, res) => {
         res.json({ success: true, message: 'Offer applied successfully', newSalePrice: product.salePrice, discountPercentage: discount });
     } catch (error) {
         console.error('Error applying offer:', error);
-        res.status(500).json({ success: false, message: 'Failed to apply offer' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to apply offer' });
     }
 };
 
 const removeProductOffer = async (req, res) => {
     try {
         const product = await Product.findById(req.body.productId);
-        if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+        if (!product) return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: 'Product not found' });
 
         product.offerDiscount = 0;
         product.salePrice = product.regularPrice;
@@ -52,7 +54,7 @@ const removeProductOffer = async (req, res) => {
         res.json({ success: true, message: 'Offer removed successfully', newSalePrice: product.salePrice });
     } catch (error) {
         console.error('Error removing offer:', error);
-        res.status(500).json({ success: false, message: 'Failed to remove offer' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to remove offer' });
     }
 };
 
@@ -86,7 +88,7 @@ const getAllActiveOffers = async (req, res) => {
         });
     } catch (error) {
         console.error('Error fetching active offers:', error);
-        res.status(500).json({
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: 'Error fetching active offers',
             error: error.message
@@ -106,7 +108,7 @@ const getActiveOffers = async (req, res) => {
         res.json({ success: true, offers: activeOffers });
     } catch (error) {
         console.error('Error fetching active offers:', error);
-        res.status(500).json({
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: 'Error fetching active offers',
             error: error.message
@@ -119,7 +121,7 @@ const applyCategoryOffer = async (req, res) => {
         const { categoryId, discountPercentage, startDate, endDate } = req.body;
 
         if (!categoryId || !discountPercentage || !startDate || !endDate) {
-            return res.status(400).json({ success: false, message: 'All fields are required' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'All fields are required' });
         }
 
         const discount = parseFloat(discountPercentage);
@@ -128,17 +130,17 @@ const applyCategoryOffer = async (req, res) => {
         const now = new Date();
 
         if (isNaN(discount) || discount <= 0 || discount > 100)
-            return res.status(400).json({ success: false, message: 'Discount must be between 1 and 100' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Discount must be between 1 and 100' });
         if (isNaN(start.getTime()) || isNaN(end.getTime()))
-            return res.status(400).json({ success: false, message: 'Invalid date format' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Invalid date format' });
         if (start >= end)
-            return res.status(400).json({ success: false, message: 'End date must be after start date' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'End date must be after start date' });
         if (end <= now)
-            return res.status(400).json({ success: false, message: 'End date must be in the future' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'End date must be in the future' });
 
         const category = await Category.findById(categoryId);
         if (!category)
-            return res.status(404).json({ success: false, message: 'Category not found' });
+            return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: 'Category not found' });
 
         await CategoryOffer.updateMany({ category: categoryId, isActive: true }, { $set: { isActive: false } });
 
@@ -147,7 +149,8 @@ const applyCategoryOffer = async (req, res) => {
             discountPercentage: discount,
             startDate: start,
             endDate: end,
-            isActive: true
+            isActive: true,
+
         }).save();
 
         const products = await Product.find({ category: categoryId });
@@ -162,11 +165,12 @@ const applyCategoryOffer = async (req, res) => {
                 product.salePrice = Math.max(0, Math.round((product.regularPrice - discountAmount) * 100) / 100);
                 await product.save();
                 updatedCount++;
+
+
             } catch (err) {
                 console.error(`Error updating product ${product._id}:`, err);
             }
         }
-
         res.json({
             success: true,
             message: `Category offer applied successfully! Updated ${updatedCount} products with ${discount}% discount.`,
@@ -174,21 +178,25 @@ const applyCategoryOffer = async (req, res) => {
             offerDetails: { discount, startDate: start, endDate: end }
         });
 
+       
+
     } catch (error) {
         console.error('Error applying category offer:', error);
-        res.status(500).json({ success: false, message: 'Failed to apply category offer: ' + error.message });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to apply category offer: ' + error.message });
     }
+
 };
+
 
 const removeCategoryOffer = async (req, res) => {
     try {
         const { categoryId } = req.body;
         if (!categoryId)
-            return res.status(400).json({ success: false, message: 'Category ID is required' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Category ID is required' });
 
         const category = await Category.findById(categoryId);
         if (!category)
-            return res.status(404).json({ success: false, message: 'Category not found' });
+            return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: 'Category not found' });
 
         await CategoryOffer.updateMany({ category: categoryId, isActive: true }, { $set: { isActive: false } });
 
@@ -218,7 +226,7 @@ const removeCategoryOffer = async (req, res) => {
 
     } catch (error) {
         console.error('Error removing category offer:', error);
-        res.status(500).json({ success: false, message: 'Failed to remove category offer: ' + error.message });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to remove category offer: ' + error.message });
     }
 };
 

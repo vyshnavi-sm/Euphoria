@@ -2,13 +2,15 @@ const User = require("../../models/userSchema")
 const env = require("dotenv").config();
 const nodemailer = require("nodemailer")
 const bcrypt = require("bcrypt")
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 const loadSignup = async(req,res)=>{
     try {
         res.render("signup")
     } catch (error) {
        
         console.log("Home page not loading:",error)
-        res.status(500).send("Server Error")
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).send("Server Error")
     }
 }
 const emailOTPs = new Map();
@@ -22,10 +24,10 @@ const sendEmailOTP = async (req, res) => {
         const { email } = req.body;
 
         if (!email || !email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/))
-            return res.status(400).json({ message: 'Please provide a valid email address' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'Please provide a valid email address' });
 
         if (await User.findOne({ email }))
-            return res.status(400).json({ message: 'This email is already registered' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'This email is already registered' });
 
         const otp = generateOTP();
         emailOTPs.set(email, { otp, expiresAt: Date.now() + 10 * 60 * 1000 });
@@ -45,7 +47,7 @@ const sendEmailOTP = async (req, res) => {
         res.json({ message: 'OTP sent successfully' });
     } catch (error) {
         console.error('Error sending OTP:', error);
-        res.status(500).json({ message: 'Error sending OTP' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ message: 'Error sending OTP' });
     }
 };
 
@@ -55,19 +57,19 @@ const verifyEmailOTP = async (req, res) => {
         const userId = req.session.user_id;
 
         if (!email || !otp)
-            return res.status(400).json({ message: 'Email and OTP are required' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'Email and OTP are required' });
 
         const storedData = emailOTPs.get(email);
         if (!storedData)
-            return res.status(400).json({ message: 'OTP expired or not found' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'OTP expired or not found' });
 
         if (Date.now() > storedData.expiresAt) {
             emailOTPs.delete(email);
-            return res.status(400).json({ message: 'OTP has expired' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'OTP has expired' });
         }
 
         if (otp !== storedData.otp)
-            return res.status(400).json({ message: 'Invalid OTP' });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'Invalid OTP' });
 
         await User.findByIdAndUpdate(userId, { email });
         emailOTPs.delete(email);
@@ -75,7 +77,7 @@ const verifyEmailOTP = async (req, res) => {
         res.json({ message: 'Email updated successfully' });
     } catch (error) {
         console.error('Error verifying OTP:', error);
-        res.status(500).json({ message: 'Error verifying OTP' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ message: 'Error verifying OTP' });
     }
 };
 
@@ -159,7 +161,7 @@ const securePassword = async(password)=>{
         const { otp } = req.body;
 
         if (otp !== req.session.userOtp)
-            return res.status(400).json({ success: false, message: "Invalid OTP, Please try again" });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: "Invalid OTP, Please try again" });
 
         const userData = req.session.userData;
         const newUser = new User({
@@ -188,7 +190,7 @@ const securePassword = async(password)=>{
 
     } catch (error) {
         console.error("Error Verifying OTP", error);
-        res.status(500).json({ success: false, message: "An error occurred" });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "An error occurred" });
     }
 };
   const resendOtp = async (req, res) => {
@@ -196,7 +198,7 @@ const securePassword = async(password)=>{
         const { email } = req.session.userData;
 
         if (!email)
-            return res.status(400).json({ success: false, message: "Email not found in session" });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: "Email not found in session" });
 
         const otp = generateOTP();
         req.session.userOtp = otp;
@@ -205,14 +207,14 @@ const securePassword = async(password)=>{
 
         if (emailSent) {
             console.log("Resend OTP:", otp);
-            res.status(200).json({ success: true, message: "OTP Resend Successfully" });
+            res.status(STATUS_CODE.SUCCESS).json({ success: true, message: "OTP Resend Successfully" });
         } else {
-            res.status(500).json({ success: false, message: "Failed to resend OTP. Please try again" });
+            res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to resend OTP. Please try again" });
         }
 
     } catch (error) {
         console.error("Error resending OTP", error);
-        res.status(500).json({ success: false, message: "Internal Server Error. Please try again" });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal Server Error. Please try again" });
     }
 };
 const loadLogin = async(req,res)=>{
@@ -238,14 +240,14 @@ const loadLogin = async(req,res)=>{
 
         const findUser = await User.findOne({ isAdmin: 0, email });
         if (!findUser)
-            return res.status(400).json({ success: false, errorMessage: "User not found" });
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, errorMessage: "User not found" });
 
         if (findUser.isBlocked)
-            return res.status(403).json({ success: false, errorMessage: "User is blocked by admin" });
+            return res.status(STATUS_CODE.FORBIDDEN).json({ success: false, errorMessage: "User is blocked by admin" });
 
         const passwordMatch = await bcrypt.compare(password, findUser.password);
         if (!passwordMatch)
-            return res.status(401).json({ success: false, errorMessage: "Incorrect Password" });
+            return res.status(STATUS_CODE.UNAUTHORIZED).json({ success: false, errorMessage: "Incorrect Password" });
 
         req.session.user = findUser;
 
@@ -253,7 +255,7 @@ const loadLogin = async(req,res)=>{
 
     } catch (error) {
         console.error("Login error", error);
-        res.status(500).json({ success: false, errorMessage: "Login failed. Please try again later" });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, errorMessage: "Login failed. Please try again later" });
     }
 };
 

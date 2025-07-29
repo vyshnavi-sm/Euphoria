@@ -1,6 +1,8 @@
 const User = require("../../models/userSchema");
 const { generateOtp } = require("../../utils/otpService");
 const { sendVerificationEmail } = require("../../utils/emailService");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const getForgotPassPage = async (req, res) => {
     try {
@@ -68,7 +70,7 @@ const verifyForgotPassOtp = async (req, res) => {
         }
     } catch (error) {
         console.error("Error verifying OTP:", error);
-        return res.status(500).json({
+        return res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: "An error occurred. Please try again"
         });
@@ -95,7 +97,7 @@ const resendOtp = async (req, res) => {
         const email = req.session.emailToUpdate || req.session.email;
         
         if (!email) {
-            return res.status(400).json({
+            return res.status(STATUS_CODE.BAD_REQUEST).json({
                 success: false,
                 message: "Session expired. Please start over."
             });
@@ -107,13 +109,13 @@ const resendOtp = async (req, res) => {
         const emailSent = await sendVerificationEmail(email, otp);
         if (emailSent) {
             console.log("Resend OTP:", otp);
-            res.status(200).json({ success: true, message: "New OTP has been sent to your email" });
+            res.status(STATUS_CODE.SUCCESS).json({ success: true, message: "New OTP has been sent to your email" });
         } else {
-            res.status(500).json({ success: false, message: "Failed to send OTP" });
+            res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to send OTP" });
         }
     } catch (error) {
         console.error("Error in resend otp", error);
-        res.status(500).json({ success: false, message: "Internal Server Error" });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal Server Error" });
     }
 };
 

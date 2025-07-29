@@ -1,6 +1,8 @@
 const User = require("../../models/userSchema");
 const Address = require("../../models/addressSchema");
 const mongoose = require("mongoose");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const addAddress = async (req, res) => {
     try {
@@ -170,25 +172,25 @@ const deleteAddress = async (req, res) => {
         const addressId = req.query.id;
         const userId = req.session.user;
 
-        if (!addressId) return res.status(400).json({ success: false, message: "Address ID is required" });
+        if (!addressId) return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: "Address ID is required" });
 
         const findAddress = await Address.findOne({ userId, "address._id": addressId });
-        if (!findAddress) return res.status(404).json({ success: false, message: "Address not found" });
+        if (!findAddress) return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: "Address not found" });
 
         const addressBelongsToUser = findAddress.address.some(addr => addr._id.toString() === addressId);
-        if (!addressBelongsToUser) return res.status(403).json({ success: false, message: "Unauthorized to delete this address" });
+        if (!addressBelongsToUser) return res.status(STATUS_CODE.FORBIDDEN).json({ success: false, message: "Unauthorized to delete this address" });
 
         const result = await Address.updateOne(
             { userId, "address._id": addressId },
             { $pull: { address: { _id: addressId } } }
         );
 
-        if (!result.modifiedCount) return res.status(404).json({ success: false, message: "Address not found or already deleted" });
+        if (!result.modifiedCount) return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: "Address not found or already deleted" });
 
         res.redirect("/userProfile#address");
     } catch (error) {
         console.error("Error in delete address:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal server error" });
     }
 };
 

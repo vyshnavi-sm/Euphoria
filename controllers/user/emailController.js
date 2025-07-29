@@ -1,6 +1,8 @@
 const User = require("../../models/userSchema");
 const { generateOtp } = require("../../utils/otpService");
 const { sendVerificationEmail } = require("../../utils/emailService");
+const { STATUS_CODE } = require("../../utils/statusCodes.js");
+
 
 const changeEmail = async (req, res) => {
     try {
