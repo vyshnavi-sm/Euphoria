@@ -315,14 +315,14 @@
                             <div id="brand-error" class="error-message"></div>
                         </div>
                         <div class="col-lg-4 mb-4">
-                            <label class="form-label">Category</label>
+                            <!-- <label class="form-label">Category</label>
                             <select class="form-select border" name="category">
                             <% for (let i = 0; i < cat.length; i++) { %>
                                 <option value="<%= cat[i].name %>" 
                                     <% if (product.category && product.category._id && cat[i]._id.toString() === product.category._id.toString()) { %>selected<% } %>>
                                     <%= cat[i].name %>
                                 </option>
-                            <% } %>
+                            <% } %> -->
                             </select>
                             <div id="category-error" class="error-message"></div>
                         </div>
@@ -531,10 +531,11 @@ $(document).ready(function() {
         if (salePrice && (isNaN(salePrice) || parseFloat(salePrice) < 0)) {
             $('#salePrice-error').text('Sale price must be a valid positive number').show();
             isValid = false;
-        } else if (salePrice && parseFloat(salePrice) >= parseFloat(regularPrice)) {
-            $('#salePrice-error').text('Sale price must be less than regular price').show();
+       } else if (salePrice && parseFloat(salePrice) > parseFloat(regularPrice)) {
+            $('#salePrice-error').text('Sale price must be less than or equal to regular price').show();
             isValid = false;
         }
+
         
         // Quantity validation
         const quantity = $('input[name="quantity"]').val().trim();

@@ -55,11 +55,9 @@ const verifyEmailOTP = async (req, res) => {
     try {
         const { email, otp } = req.body;
         const userId = req.session.user_id;
-
-        if (!email || !otp)
+    if (!email || !otp)
             return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'Email and OTP are required' });
-
-        const storedData = emailOTPs.get(email);
+     const storedData = emailOTPs.get(email);
         if (!storedData)
             return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'OTP expired or not found' });
 
@@ -80,8 +78,7 @@ const verifyEmailOTP = async (req, res) => {
         res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ message: 'Error verifying OTP' });
     }
 };
-
- async function sendVerificationEmail(email, otp) {
+    async function sendVerificationEmail(email, otp) {
     try {
         const transporter = nodemailer.createTransport({
             service: "gmail",
@@ -112,11 +109,29 @@ const signup = async (req, res) => {
     try {
         const { name, phone, email, password, cPassword, referralCode } = req.body;
 
-        if (password !== cPassword) 
-            return res.json({ status: "error", message: "Passwords do not match" });
+        if(!name || !phone || !email || !password || !cPassword){
+            return res.json({status:"error",field:null,message:"All fields are required"})
+        }
+        
+        if(!/^[A-Z][a-zA-Z\s]*$/.test(name)){
+            return res.json({status:"error",field:"name",  message:"Name must be start with capital letter and contains only letters"})
+        }
+        if(!/^[6-9]\d{9}$/.test(phone)){
+            return res.json({status:"error", field:"phone",message:"Numbers must be 10 digits Indian number"})
+        }
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.json({status:"error",field:"email",message:"Email is not valid"})
+        }
+          if (!/^[A-Z][a-z]*@.*$/.test(password)) {
+            return res.json({ status: "error",field:"password", message: "Password must start with a capital letter, have lowercase letters, and contain '@'" });
+}
 
+        if (password !== cPassword) {
+            return res.json({ status: "error",field:"cPassword" ,message: "Passwords do not match" });
+        }
+        
         if (await User.findOne({ email }))
-            return res.json({ status: "error", message: "User with this email already exists" });
+            return res.json({ status: "error", field:"email",message: "User with this email already exists" });
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const otp = generateOTP();
@@ -130,19 +145,16 @@ const signup = async (req, res) => {
             const emailSent = await sendVerificationEmail(email, otp);
             emailSent ? console.log("OTP sent:", otp) : console.error("Failed to send verification email");
         }, 0);
-
     } catch (error) {
         console.error("signup error", error);
         res.json({ status: "error", message: "Server error occurred" });
-    }
-};
+    }};
 const pageNotFound = async(req,res) => {
     try {
         res.render("page.404")
     } catch (error) {
         res.render("pageNotFound")
-    }
-}
+    }}
 const securePassword = async(password)=>{
     try {
         
@@ -153,8 +165,7 @@ const securePassword = async(password)=>{
     } catch (error) {
         console.error("Error hashing password:", error);
         throw error;
-    }
-}
+    }}
 
  const verifyOtp = async (req, res) => {
     try {
@@ -179,8 +190,7 @@ const securePassword = async(password)=>{
                 referrer.referralRewards.push({ amount: 100, referredUser: newUser._id });
                 referrer.wallet += 100;
                 await referrer.save();
-            }
-        }
+            }}
 
         await newUser.save();
         delete req.session.userData;
@@ -191,8 +201,7 @@ const securePassword = async(password)=>{
     } catch (error) {
         console.error("Error Verifying OTP", error);
         res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "An error occurred" });
-    }
-};
+    }};
   const resendOtp = async (req, res) => {
     try {
         const { email } = req.session.userData;
@@ -211,12 +220,10 @@ const securePassword = async(password)=>{
         } else {
             res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to resend OTP. Please try again" });
         }
-
     } catch (error) {
         console.error("Error resending OTP", error);
         res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "Internal Server Error. Please try again" });
-    }
-};
+    }};
 const loadLogin = async(req,res)=>{
         try {
             res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
@@ -231,8 +238,7 @@ const loadLogin = async(req,res)=>{
         } catch (error) {
             console.log(error)
             res.redirect("/pageNotFound")
-        }
-    }
+        }}
 
   const login = async (req, res) => {
     try {
@@ -256,8 +262,7 @@ const loadLogin = async(req,res)=>{
     } catch (error) {
         console.error("Login error", error);
         res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, errorMessage: "Login failed. Please try again later" });
-    }
-};
+    }};
 
  const logout = async (req, res) => {
         try {
@@ -275,8 +280,7 @@ const loadLogin = async(req,res)=>{
         } catch (error) {
             console.log("Logout error", error);
             res.redirect("/pageNotFound");
-        }
-    };
+        }};
 
     const loadVerifyOtp = async (req, res) => {
         try {
@@ -287,7 +291,6 @@ const loadLogin = async(req,res)=>{
         } catch (error) {
             console.error("Error loading verify OTP page:", error);
             res.redirect('/pageNotFound');
-        }
-    };
+        }};
 
 module.exports = { pageNotFound,loadSignup,signup,verifyOtp,resendOtp,loadLogin,login,logout,loadVerifyOtp,sendEmailOTP,verifyEmailOTP}

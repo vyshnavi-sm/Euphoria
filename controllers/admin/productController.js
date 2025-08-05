@@ -28,12 +28,18 @@ const addProducts = async (req, res) => {
 
         if (!productName?.trim() || !description?.trim() || !category || !brand)
             return res.redirect("/admin/addProducts?error=All fields are required");
-
-        const regPrice = parseFloat(regularPrice);
+         if (!/^[A-Za-z\s]+$/.test(productName.trim())) {
+            return res.redirect("/admin/addProducts?error=" + encodeURIComponent("Product name must only contain letters and spaces."));
+        }
+         const regPrice = parseFloat(regularPrice);
         const sPrice = parseFloat(salePrice);
         const qty = parseInt(quantity);
 
-        if (isNaN(regPrice) || regPrice < 0 || isNaN(sPrice) || sPrice < 0 || sPrice > regPrice || isNaN(qty) || qty < 0)
+            if (
+                isNaN(regPrice) || regPrice < 0 ||
+                isNaN(sPrice) || sPrice < 0 || sPrice > regPrice ||  
+                isNaN(qty) || qty < 0
+            )
             return res.redirect("/admin/addProducts?error=Invalid price or quantity");
 
         if (!files || files.length < 4)
@@ -193,6 +199,13 @@ const editProduct = async (req, res) => {
         const quantity = parseInt(data.quantity);
         const isBlocked = data.isBlocked === 'on';
         const newStatus = quantity === 0 ? "out of stock" : "Available";
+
+        if (isNaN(quantity) || quantity !== 4) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Quantity must be exactly 4.`);
+        }
+         if (isNaN(regPrice) || isNaN(sPrice) || sPrice > regPrice) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Sale price must be less than or equal to the regular price.`);
+        }
 
         const [existingProduct, category, brand, product] = await Promise.all([
             Product.findOne({ productName: data.productName.trim(), _id: { $ne: id } }),

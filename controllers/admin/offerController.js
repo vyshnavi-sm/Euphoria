@@ -121,7 +121,8 @@ const applyCategoryOffer = async (req, res) => {
         const { categoryId, discountPercentage, startDate, endDate } = req.body;
 
         if (!categoryId || !discountPercentage || !startDate || !endDate) {
-            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'All fields are required' });
+            return res.status(STATUS_CODE.BAD_REQUEST)
+                .json({ success: false, message: 'All fields are required' });
         }
 
         const discount = parseFloat(discountPercentage);
@@ -130,27 +131,33 @@ const applyCategoryOffer = async (req, res) => {
         const now = new Date();
 
         if (isNaN(discount) || discount <= 0 || discount > 100)
-            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Discount must be between 1 and 100' });
+            return res.status(STATUS_CODE.BAD_REQUEST)
+                .json({ success: false, message: 'Discount must be between 1 and 100' });
+
         if (isNaN(start.getTime()) || isNaN(end.getTime()))
-            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'Invalid date format' });
+            return res.status(STATUS_CODE.BAD_REQUEST)
+                .json({ success: false, message: 'Invalid date format' });
+
         if (start >= end)
-            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'End date must be after start date' });
+            return res.status(STATUS_CODE.BAD_REQUEST)
+                .json({ success: false, message: 'End date must be after start date' });
+
         if (end <= now)
-            return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: 'End date must be in the future' });
+            return res.status(STATUS_CODE.BAD_REQUEST)
+                .json({ success: false, message: 'End date must be in the future' });
 
         const category = await Category.findById(categoryId);
         if (!category)
-            return res.status(STATUS_CODE.NOT_FOUND).json({ success: false, message: 'Category not found' });
+            return res.status(STATUS_CODE.NOT_FOUND)
+                .json({ success: false, message: 'Category not found' });
 
         await CategoryOffer.updateMany({ category: categoryId, isActive: true }, { $set: { isActive: false } });
-
-        const newOffer = await new CategoryOffer({
+        await new CategoryOffer({
             category: categoryId,
             discountPercentage: discount,
             startDate: start,
             endDate: end,
             isActive: true,
-
         }).save();
 
         const products = await Product.find({ category: categoryId });
@@ -158,19 +165,25 @@ const applyCategoryOffer = async (req, res) => {
 
         for (let product of products) {
             try {
-                product.categoryOfferDiscount = discount;
                 const productOfferDiscount = product.productOfferDiscount || 0;
-                const effectiveDiscount = Math.max(discount, productOfferDiscount);
-                const discountAmount = product.regularPrice * (effectiveDiscount / 100);
-                product.salePrice = Math.max(0, Math.round((product.regularPrice - discountAmount) * 100) / 100);
+
+                if (productOfferDiscount >= discount) {
+                    continue;
+                }
+
+                product.categoryOfferDiscount = discount;
+                product.salePrice = Math.round(
+                    product.regularPrice * (1 - discount / 100) * 100
+                ) / 100;
+
                 await product.save();
                 updatedCount++;
-
 
             } catch (err) {
                 console.error(`Error updating product ${product._id}:`, err);
             }
         }
+
         res.json({
             success: true,
             message: `Category offer applied successfully! Updated ${updatedCount} products with ${discount}% discount.`,
@@ -178,13 +191,11 @@ const applyCategoryOffer = async (req, res) => {
             offerDetails: { discount, startDate: start, endDate: end }
         });
 
-       
-
     } catch (error) {
         console.error('Error applying category offer:', error);
-        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to apply category offer: ' + error.message });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR)
+            .json({ success: false, message: 'Failed to apply category offer: ' + error.message });
     }
-
 };
 
 

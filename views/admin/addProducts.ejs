@@ -863,10 +863,11 @@
             }
             
             // Compare regular price and sale price if both are valid
-            if (parseFloat(price) <= parseFloat(salePrice) && isValid) {
-                displayErrorMessage('salePrice-error', 'Sale price must be less than regular price.');
-                isValid = false;
-            }
+           if (parseFloat(salePrice) > parseFloat(price) && isValid) {
+                    displayErrorMessage('salePrice-error', 'Sale price must be less than or equal to regular price.');
+                    isValid = false;
+                }
+
         }
         
         // Color validation

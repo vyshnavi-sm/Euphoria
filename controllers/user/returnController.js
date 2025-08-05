@@ -8,14 +8,14 @@ const { STATUS_CODE } = require("../../utils/statusCodes.js");
 
 const returnSingleItem = async (req, res) => {
     try {
-        const { orderNumber, itemId } = req.params;
+        const { orderId, itemId } = req.params;
         const { reason } = req.body;
         const userId = req.session.user;
 
         if (!userId) return res.json({ success: false, message: 'User not logged in' });
         if (!reason?.trim()) return res.json({ success: false, message: 'Return reason is required' });
 
-        const order = await Order.findOne({orderNumber : orderNumber, userId });
+        const order = await Order.findOne({_id : orderId, userId });
         if (!order) return res.json({ success: false, message: 'Order not found' });
 
         const item = order.orderedItems.id(itemId);
@@ -91,14 +91,14 @@ const returnSingleItem = async (req, res) => {
 
 const returnOrder = async (req, res) => {
     try {
-        const { orderNumber } = req.params;
+        const { orderId } = req.params;
         const { reason } = req.body;
         const userId = req.session.user;
 
         if (!userId) return res.json({ success: false, message: 'User not logged in' });
         if (!reason) return res.json({ success: false, message: 'Return reason is required' });
 
-        const order = await Order.findOne({orderNumber : orderNumber, userId })
+        const order = await Order.findOne({_id : orderId, userId })
             .populate('orderedItems.product')
             .select('+orderedItems.adminRejectionReason +orderedItems.adminReturnReason +adminReturnRejectionReason +adminRejectionReason');
 

@@ -19,33 +19,46 @@
         <div class="form-section">
             <div class="form-card">
                 <h2>Create Account</h2>
+
                 <form id="signupForm" onsubmit="return validateSignupForm(event)">
-                    <div class="form-group">
-                        <label for="name">Full Name</label>
-                        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" placeholder="Enter your email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="cPassword">Confirm Password</label>
-                        <input type="password" id="cPassword" name="cPassword" placeholder="Confirm your password" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="referralCode">Referral Code (Optional)</label>
-                        <input type="text" id="referralCode" name="referralCode" placeholder="Enter referral code if you have one">
-                    </div>
-                    <button type="submit" class="signup-btn">Sign Up</button>
-                </form>
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                <small class="error" id="nameError"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" required>
+                <small class="error" id="phoneError"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                <small class="error" id="emailError"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                <small class="error" id="passwordError"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="cPassword">Confirm Password</label>
+                <input type="password" id="cPassword" name="cPassword" placeholder="Confirm your password" required>
+                <small class="error" id="cPasswordError"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="referralCode">Referral Code (Optional)</label>
+                <input type="text" id="referralCode" name="referralCode" placeholder="Enter referral code if you have one">
+            </div>
+
+            <button type="submit" class="signup-btn">Sign Up</button>
+        </form>
+
                 
                 <div class="divider">
                     <span>OR</span>
@@ -452,100 +465,129 @@
                 font-size: 1.2rem;
             }
         }
+                   .error {
+                    color: #d9534f; /* Softer red tone */
+                    font-size: 0.85rem;
+                    margin-top: 4px;
+                    display: block;
+                    font-weight: 500;
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    letter-spacing: 0.3px;
+                    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Smooth fade-in animation for error messages */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
     </style>
-
-    <script>
-        // Prevent going back to previous page
+<script>
+    // Prevent going back to previous page
+    window.history.pushState(null, null, window.location.href);
+    window.onpopstate = function () {
         window.history.pushState(null, null, window.location.href);
-        window.onpopstate = function () {
-            window.history.pushState(null, null, window.location.href);
-        };
+    };
 
-        // Function to get query parameter by name
-        function getQueryParam(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
+    // Function to get query parameter by name
+    function getQueryParam(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name);
+    }
+
+    // Pre-fill referral code if present in URL
+    document.addEventListener('DOMContentLoaded', function () {
+        const referralCodeInput = document.getElementById('referralCode');
+        const referralToken = getQueryParam('ref');
+        if (referralToken && referralCodeInput) {
+            referralCodeInput.value = referralToken;
+        }
+    });
+
+    function validateSignupForm(event) {
+        event.preventDefault();
+
+        // Clear old error messages
+        document.querySelectorAll(".error").forEach(e => e.textContent = "");
+
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const cPassword = document.getElementById('cPassword').value;
+        const referralCode = document.getElementById('referralCode').value.trim();
+
+        // Quick front-end check for password match
+        if (password !== cPassword) {
+            document.getElementById("cPasswordError").textContent = "Passwords do not match";
+            return false;
         }
 
-        // Check for referral token in URL and pre-fill input
-        document.addEventListener('DOMContentLoaded', function() {
-            const referralCodeInput = document.getElementById('referralCode');
-            const referralToken = getQueryParam('ref');
-            if (referralToken && referralCodeInput) {
-                referralCodeInput.value = referralToken;
-            }
-        });
+        // Show loading state on button
+        const submitBtn = document.querySelector('.signup-btn');
+        submitBtn.classList.add('loading');
+        submitBtn.textContent = 'Signing up...';
 
-        function validateSignupForm(event) {
-            event.preventDefault();
-            
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const cPassword = document.getElementById('cPassword').value;
-            const referralCode = document.getElementById('referralCode').value;
-            
-            // Basic validation
-            if (password !== cPassword) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Password Mismatch',
-                    text: 'Passwords do not match'
-                });
-                return false;
-            }
-            
-            // Show loading state
-            const submitBtn = document.querySelector('.signup-btn');
-            submitBtn.classList.add('loading');
-            submitBtn.textContent = 'Signing up...';
+        // Send AJAX request to backend
+        $.ajax({
+            url: '/signup',
+            method: 'POST',
+            data: {
+                name,
+                phone,
+                email,
+                password,
+                cPassword,
+                referralCode
+            },
+            success: function (response) {
+                submitBtn.classList.remove('loading');
+                submitBtn.textContent = 'Sign Up';
 
-            // Send AJAX request to backend
-            $.ajax({
-                url: '/signup',
-                method: 'POST',
-                data: {
-                    name,
-                    phone,
-                    email,
-                    password,
-                    cPassword,
-                    referralCode
-                },
-                success: function(response) {
-                    submitBtn.classList.remove('loading');
-                    submitBtn.textContent = 'Sign Up';
-                    if (response.status === 'success') {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: 'Account created successfully! Please check your email for OTP.',
-                            showConfirmButton: false,
-                            timer: 1500
-                        }).then(() => {
-                            window.location.href = '/verify-otp';
-                        });
+                // Clear old errors
+                document.querySelectorAll(".error").forEach(e => e.textContent = "");
+
+                if (response.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'Account created successfully! Please check your email for OTP.',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        window.location.href = '/verify-otp';
+                    });
+                } else {
+                    if (response.field && document.getElementById(response.field + 'Error')) {
+                        // Show backend error under the relevant input
+                        document.getElementById(response.field + 'Error').textContent = response.message;
                     } else {
+                        // Show generic error in popup
                         Swal.fire({
                             icon: 'error',
                             title: 'Signup Failed',
                             text: response.message || 'An error occurred.'
                         });
                     }
-                },
-                error: function(xhr) {
-                    submitBtn.classList.remove('loading');
-                    submitBtn.textContent = 'Sign Up';
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Signup Failed',
-                        text: xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'An error occurred.'
-                    });
                 }
-            });
-            return false;
-        }
-    </script>
+            },
+            error: function (xhr) {
+                submitBtn.classList.remove('loading');
+                submitBtn.textContent = 'Sign Up';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Signup Failed',
+                    text: xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'An error occurred.'
+                });
+            }
+        });
+
+        return false;
+    }
+</script>
+
+
 </body>
 </html>

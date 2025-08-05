@@ -115,12 +115,26 @@ const updateProfile = async (req, res) => {
     const userId = req.session.user;
     const { name, phone } = req.body;
 
-    if (!name) return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: "Name is required" });
-    if (phone && !/^\d{10}$/.test(phone)) {
-      return res.status(STATUS_CODE.BAD_REQUEST).json({ success: false, message: "Please enter a valid 10-digit phone number" });
-    }
+    if (!name) {
+    return res.status(STATUS_CODE.BAD_REQUEST).json({ 
+        success: false, 
+        message: "Name is required" 
+    });
+}
+if (!/^[A-Z][a-zA-Z]*(?: [A-Z][a-zA-Z]*)*$/.test(name)) {
+    return res.status(STATUS_CODE.BAD_REQUEST).json({ 
+        success: false, 
+        message: "Name must start with a capital letter and contain only letters" 
+    });
+}
 
-    const updateData = { name, ...(phone && { phone }) };
+if (phone && !/^[6-9]\d{9}$/.test(phone)) {
+    return res.status(STATUS_CODE.BAD_REQUEST).json({ 
+        success: false, 
+        message: "Please enter a valid Indian phone number" 
+    });
+}
+  const updateData = { name, ...(phone && { phone }) };
     if (req.file) updateData.profilePicture = req.file.path;
 
     const updatedUser = await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true });

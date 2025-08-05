@@ -3,7 +3,6 @@ const { generateOtp } = require("../../utils/otpService");
 const { sendVerificationEmail } = require("../../utils/emailService");
 const { STATUS_CODE } = require("../../utils/statusCodes.js");
 
-
 const getForgotPassPage = async (req, res) => {
     try {
         res.render("forgot-password", { message: '' });
