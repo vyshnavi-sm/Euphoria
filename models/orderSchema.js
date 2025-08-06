@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const {Schema} = mongoose;
-const {v4:uuidv4} = require("uuid");
+const { Schema } = mongoose;
+const { v4: uuidv4 } = require("uuid");
 
 const orderSchema = new Schema({
     userId: {
@@ -8,33 +8,43 @@ const orderSchema = new Schema({
         ref: "User",
         required: true
     },
-    orderId:{
+    orderId: {
         type: String,
         default: uuidv4,
         unique: true
     },
-    orderedItems:[{
-        product:{
+    orderedItems: [{
+        product: {
             type: Schema.Types.ObjectId,
             ref: "Product",
             required: true
         },
-        quantity:{
+        quantity: {
             type: Number,
             required: true
         },
-        price:{
+        price: {
             type: Number,
             required: true
         },
         status: {
             type: String,
-            enum: ["Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Returned", "Return Requested"],
+            enum: [
+                "Pending",               
+                "Processing",
+                "Shipped",
+                "Out for Delivery",
+                "Delivered",
+                "Cancelled",
+                "Returned",
+                "Return Requested",
+                "Payment Failed"
+            ],
             default: "Processing"
         },
         cancellationReason: String,
         returnReason: String,
-        
+
         returnStatus: {
             type: String,
             enum: ["Pending", "Accepted", "Rejected"],
@@ -47,7 +57,7 @@ const orderSchema = new Schema({
             images: [String],
             description: String
         },
-        
+
         proportionalDiscount: {
             type: Number,
             default: 0
@@ -61,11 +71,11 @@ const orderSchema = new Schema({
             default: false
         }
     }],
-    totalPrice:{
+    totalPrice: {
         type: Number,
         required: true
     },
-    discount:{
+    discount: {
         type: Number,
         default: 0
     },
@@ -73,11 +83,11 @@ const orderSchema = new Schema({
         type: Number,
         default: 50
     },
-    finalAmount:{
+    finalAmount: {
         type: Number,
         required: true
     },
-    address:{
+    address: {
         type: Schema.Types.ObjectId,
         ref: "Address",
         required: true
@@ -90,29 +100,40 @@ const orderSchema = new Schema({
         pincode: String,
         phone: String
     },
-    invoiceDate:{
+    invoiceDate: {
         type: Date
     },
-    status:{
+    status: {
         type: String,
         required: true,
-        enum: ["Pending", "Processing", "Shipped", "Out for Delivery", "Delivered", "Cancelled", "Return Request", "Returned"]
+        enum: [
+            "Awaiting Payment",    
+            "Pending",             
+            "Processing",
+            "Shipped",
+            "Out for Delivery",
+            "Delivered",
+            "Cancelled",
+            "Return Request",
+            "Returned",
+            "Payment Failed"       
+        ]
     },
-    createdOn:{
+    createdOn: {
         type: Date,
         default: Date.now,
         required: true
     },
     estimatedDeliveryDate: {
         type: Date,
-        default: function() {
+        default: function () {
             const date = new Date();
             date.setDate(date.getDate() + 4);
             date.setHours(23, 59, 59, 999);
             return date;
         }
     },
-    couponApplied:{
+    couponApplied: {
         type: Boolean,
         default: false
     },
@@ -131,13 +152,13 @@ const orderSchema = new Schema({
     },
     cancellationReason: String,
     returnReason: String,
-    
+
     returnStatus: {
         type: String,
         enum: ["Pending", "Accepted", "Rejected", "Partial"],
     },
     returnCompletedAt: Date,
-    
+
     returnHistory: [{
         itemId: {
             type: Schema.Types.ObjectId,
@@ -174,7 +195,7 @@ const orderSchema = new Schema({
     }]
 });
 
-orderSchema.pre('save', function(next) {
+orderSchema.pre('save', function (next) {
     if (!this.orderId) {
         this.orderId = uuidv4();
     }

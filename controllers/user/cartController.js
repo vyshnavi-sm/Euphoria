@@ -1,7 +1,7 @@
 const Cart = require('../../models/cartSchema');
 const Product = require('../../models/productSchema');
 const { STATUS_CODE } = require("../../utils/statusCodes.js");
-
+const Wishlist = require('../../models/wishlistSchema'); 
 
 const addToCart = async (req, res) => {
     try {
@@ -25,13 +25,12 @@ const addToCart = async (req, res) => {
             return res.status(STATUS_CODE.BAD_REQUEST).json({ message: 'Requested quantity exceeds available stock' });
         }
 
-        if(product.salePrice<=0){
-            return res.status(STATUS_CODE.BAD_REQUEST).json({message:"The product price is invalid"})
-
+        if (product.salePrice <= 0) {
+            return res.status(STATUS_CODE.BAD_REQUEST).json({ message: "The product price is invalid" });
         }
 
-        if(product.salePrice>product.totalPrice){
-            await Product.deleteOne({_id:product._id})
+        if (product.salePrice > product.totalPrice) {
+            await Product.deleteOne({ _id: product._id });
         }
 
         const totalPrice = product.salePrice * quantity;
@@ -90,14 +89,22 @@ const addToCart = async (req, res) => {
             }
         }
 
+        await Wishlist.updateOne(
+            { userId },
+            { $pull: { items: { productId } } }
+        );
+
         await cart.save();
-        res.status(STATUS_CODE.SUCCESS).json({ message: 'Product added to cart successfully', cart });
+        res.status(STATUS_CODE.SUCCESS).json({ 
+            message: 'Product added to cart successfully', 
+            cart, 
+            removedFromWishlist: true 
+        });
     } catch (error) {
         console.error('Error adding to cart:', error);
         res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ message: 'Internal server error' });
     }
 };
-
 
 const removeFromCart = async (req, res) => {
     try {
@@ -222,18 +229,31 @@ const getCart = async (req, res) => {
             return res.redirect('/login');
         }
 
-        const cart = await Cart.findOne({ userId })
-            .populate('items.productId');
-            
-        res.render('user/cart', { 
+        let cart = await Cart.findOne({ userId })
+            .populate('items.productId')
+            .lean();
+
+        if (cart) {
+            cart.items = cart.items.filter(item => item.productId);
+
+            await Cart.updateOne(
+                { userId },
+                { $pull: { items: { productId: null } } }
+            );
+        }
+
+        res.render('user/cart', {
             cart: cart || { items: [] },
-            user: req.session.user 
+            user: req.session.user
         });
+
     } catch (error) {
         console.error('Error getting cart:', error);
-        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).render('error', { message: 'Internal server error' });
+        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR)
+           .render('error', { message: 'Internal server error' });
     }
 };
+
 
 module.exports = {
     addToCart,

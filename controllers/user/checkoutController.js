@@ -6,7 +6,6 @@ const Coupon = require('../../models/couponSchema');
 const WalletTransaction = require('../../models/walletTransactionSchema');
 const { STATUS_CODE } = require("../../utils/statusCodes.js");
 
-
 const calculateOrderTotal = (cart, coupon, deliveryCharge = 0) => {
     const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
     let couponDiscountAmount = 0;
@@ -74,8 +73,7 @@ const placeOrder = async (req, res) => {
         const userId = req.session.user;
         if (!userId) return res.json({ success: false, message: 'User not logged in' });
 
-        const { addressId, address, paymentMethod, paymentId } = req.body;
-        console.log('Place order request:', { addressId, paymentMethod, paymentId });
+        const { addressId, address, paymentMethod } = req.body;
 
         const cart = await Cart.findOne({ userId }).populate('items.productId');
         if (!cart || cart.items.length === 0) {
@@ -85,86 +83,129 @@ const placeOrder = async (req, res) => {
         for (const item of cart.items) {
             const product = item.productId;
             if (!product) return res.json({ success: false, message: `Product ${item.productId} not found` });
-            if (product.quantity <= 0) return res.json({ success: false, message: `Product ${product.productName} is out of stock` });
+            if (product.quantity <= 0) return res.json({ success: false, message: `${product.productName} is out of stock` });
             if (item.quantity > product.quantity) {
                 return res.json({ success: false, message: `Only ${product.quantity} units of ${product.productName} are available` });
             }
-
-            product.quantity -= item.quantity;
-            if (product.quantity === 0) product.status = 'out of stock';
-            await product.save();
         }
 
         const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
         const deliveryCharge = subtotal >= 1000 ? 0 : 50;
         const appliedCoupon = req.session.appliedCouponId ? await Coupon.findById(req.session.appliedCouponId) : null;
-        const { subtotal: calculatedSubtotal, taxes, discount, total } = calculateOrderTotal(cart, appliedCoupon, deliveryCharge);
-
-        console.log('Order totals:', { subtotal, taxes, discount, deliveryCharge, total });
+        const { taxes, discount, total } = calculateOrderTotal(cart, appliedCoupon, deliveryCharge);
 
         if (paymentMethod === 'cod' && total > 1000) {
-            return res.json({ success: false, message: 'Cash on Delivery is not available for orders above ₹1000. Please choose another payment method.' });
+            return res.json({ success: false, message: 'Cash on Delivery not available for orders above ₹1000' });
         }
 
-    
         if (paymentMethod === 'wallet') {
             const user = await User.findById(userId);
             if (!user) return res.json({ success: false, message: 'User not found' });
-            if (user.wallet < total) return res.json({ success: false, message: 'Insufficient wallet balance. Please choose another payment method.' });
+            if (user.wallet < total) return res.json({ success: false, message: 'Insufficient wallet balance' });
 
             user.wallet -= total;
             await user.save();
-            await WalletTransaction.create({
-                userId: user._id, amount: total, type: 'debit',
-                description: `Payment for order`, orderId: null 
+
+            const order = new Order({
+                userId,
+                orderedItems: cart.items.map(item => ({
+                    product: item.productId._id,
+                    quantity: item.quantity,
+                    price: item.productId.salePrice || item.productId.price,
+                    status: 'Processing'
+                })),
+                totalPrice: subtotal,
+                discount,
+                finalAmount: total,
+                deliveryCharge,
+                address: addressId,
+                addressDetails: address,
+                paymentMethod,
+                paymentStatus: 'Paid',
+                status: 'Processing',
+                createdOn: new Date()
+            });
+
+            await order.save();
+            cart.items = [];
+            await cart.save();
+            req.session.appliedCouponId = null;
+
+            return res.json({ success: true, message: 'Order placed successfully', orderId: order._id });
+        }
+
+        if (paymentMethod === 'razorpay') {
+            const order = new Order({
+                userId,
+                orderedItems: cart.items.map(item => ({
+                    product: item.productId._id,
+                    quantity: item.quantity,
+                    price: item.productId.salePrice || item.productId.price,
+                    status: 'Pending'
+                })),
+                totalPrice: subtotal,
+                discount,
+                finalAmount: total,
+                deliveryCharge,
+                address: addressId,
+                addressDetails: address,
+                paymentMethod: 'razorpay',
+                paymentStatus: 'Pending',
+                status: 'Awaiting Payment',
+                createdOn: new Date()
+            });
+
+            const savedOrder = await order.save();
+
+            return res.json({
+                success: true,
+                createRazorpayOrder: true,
+                total,
+                orderId: savedOrder._id 
             });
         }
 
-        const paymentStatus = paymentMethod === 'wallet' || (paymentMethod === 'razorpay' && paymentId) ? 'Paid' : 'Pending';
-        console.log('Payment status determined:', paymentStatus);
-
-        const order = new Order({
-            userId,
-            orderedItems: cart.items.map(item => ({
-                product: item.productId._id, quantity: item.quantity,
-                price: item.productId.salePrice || item.productId.price, status: 'Processing'
-            })),
-            totalPrice: subtotal, discount, finalAmount: total, deliveryCharge,
-            address: addressId, addressDetails: address, status: 'Processing',
-            paymentMethod, paymentStatus, paymentId: paymentId || null,
-            couponApplied: !!appliedCoupon, createdOn: new Date()
-        });
-
-        const savedOrder = await order.save();
-        console.log('Order saved successfully:', savedOrder._id);
-
-        if (paymentMethod === 'wallet') {
-            await WalletTransaction.updateOne(
-                { userId, orderId: null, type: 'debit' },
-                { orderId: savedOrder._id },
-                { sort: { createdAt: -1 } }
-            );
-        }
-
-        cart.items = [];
-        await cart.save();
-
-        if (appliedCoupon) {
-            const coupon = await Coupon.findById(appliedCoupon._id);
-            if (coupon) {
-                coupon.usageCount += 1;
-                coupon.usedBy.push(userId);
-                await coupon.save();
+        if (paymentMethod === 'cod') {
+            for (const item of cart.items) {
+                const product = item.productId;
+                product.quantity -= item.quantity;
+                if (product.quantity <= 0) product.status = 'out of stock';
+                await product.save();
             }
+
+            const order = new Order({
+                userId,
+                orderedItems: cart.items.map(item => ({
+                    product: item.productId._id,
+                    quantity: item.quantity,
+                    price: item.productId.salePrice || item.productId.price,
+                    status: 'Processing'
+                })),
+                totalPrice: subtotal,
+                discount,
+                finalAmount: total,
+                deliveryCharge,
+                address: addressId,
+                addressDetails: address,
+                paymentMethod,
+                paymentStatus: 'Pending',
+                status: 'Processing',
+                createdOn: new Date()
+            });
+
+            await order.save();
+            cart.items = [];
+            await cart.save();
             req.session.appliedCouponId = null;
+
+            return res.json({ success: true, message: 'Order placed successfully', orderId: order._id });
         }
 
-        console.log('Order placed successfully, returning response');
-        res.json({ success: true, message: 'Order placed successfully', orderId: savedOrder._id, total });
+        res.json({ success: false, message: 'Invalid payment method' });
 
     } catch (error) {
         console.error('Error placing order:', error);
-        res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Error placing order: ' + error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

@@ -1513,7 +1513,6 @@ body {
 
 
 <script>
-        // Initialize zoom
         document.addEventListener('DOMContentLoaded', function() {
           const mainImage = document.getElementById('mainImage');
           const zoomContainer = document.getElementById('zoomContainer');
@@ -1521,19 +1520,16 @@ body {
           let zoomResult = document.getElementById('zoomResultNew');
           const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
-          // Create zoom result if not exists (desktop only)
           if (!isMobile) {
             if (!zoomResult) {
               zoomResult = document.createElement('div');
               zoomResult.id = 'zoomResultNew';
               zoomContainer.appendChild(zoomResult);
             }
-            // Position zoomResult beside image
             zoomResult.style.display = 'none';
             zoomResult.style.left = '105%';
             zoomResult.style.top = '0';
 
-            // Mouse events for zoom (loupe effect)
             mainImage.addEventListener('mouseenter', function(e) {
               zoomLens.style.display = 'block';
               updateZoom(e);
@@ -1546,7 +1542,6 @@ body {
               const rect = mainImage.getBoundingClientRect();
               const x = e.clientX - rect.left;
               const y = e.clientY - rect.top;
-              // Lens position
               const lensSize = zoomLens.offsetWidth;
               let lensX = x - lensSize/2;
               let lensY = y - lensSize/2;
@@ -1554,20 +1549,17 @@ body {
               lensY = Math.max(0, Math.min(rect.height - lensSize, lensY));
               zoomLens.style.left = lensX + 'px';
               zoomLens.style.top = lensY + 'px';
-              // Loupe effect: set lens background to zoomed image
               const scaleX = mainImage.naturalWidth / rect.width;
               const scaleY = mainImage.naturalHeight / rect.height;
               const bgSizeX = rect.width * scaleX;
               const bgSizeY = rect.height * scaleY;
               zoomLens.style.backgroundImage = `url('${mainImage.src}')`;
               zoomLens.style.backgroundSize = `${mainImage.naturalWidth}px ${mainImage.naturalHeight}px`;
-              // Position background so the area under the lens is centered
               const bgPosX = -((x * scaleX) - lensSize/2);
               const bgPosY = -((y * scaleY) - lensSize/2);
               zoomLens.style.backgroundPosition = `${bgPosX}px ${bgPosY}px`;
             }
           }
-          // Mobile: tap to open modal with pinch-zoom
           const mobileZoomModal = document.getElementById('mobileZoomModal');
           const modalZoomImg = document.getElementById('modalZoomImg');
           const closeZoomModal = document.getElementById('closeZoomModal');
@@ -1583,18 +1575,15 @@ body {
               if (e.target === mobileZoomModal) mobileZoomModal.style.display = 'none';
             });
           }
-          // Update zoom when thumbnail changes
           window.changeMainImage = function(imageSrc) {
             mainImage.src = imageSrc;
             if (modalZoomImg) modalZoomImg.src = imageSrc;
-            // Update active thumbnail
             document.querySelectorAll('.thumbnail').forEach(thumb => {
               thumb.classList.remove('active');
               if (thumb.querySelector('img').src.includes(imageSrc)) {
                 thumb.classList.add('active');
               }
             });
-            // Update lens background for new image
             if (zoomLens) {
               zoomLens.style.backgroundImage = `url('${imageSrc}')`;
             }
@@ -1607,7 +1596,6 @@ body {
           mainImage.src = newSrc;
           mainImage.setAttribute('data-zoom-image', newSrc);
           
-          // Update active thumbnail
           document.querySelectorAll('.thumbnail').forEach(thumb => {
               thumb.classList.remove('active');
               if (thumb.querySelector('img').src.includes(imageSrc)) {
@@ -1616,17 +1604,14 @@ body {
           });
         }
 
-        // Add this script to the bottom of your product detail page before the closing </body> tag
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize variables
   let currentQuantity = 1;
   const maxQuantity = parseInt(document.getElementById('maxQuantity').value);
   const quantityElement = document.getElementById('quantity');
   const addToCartBtn = document.getElementById('addToCartBtn');
   const stockError = document.getElementById('stockError');
 
-  // Quantity Controls
   window.increaseQuantity = function() {
     if (currentQuantity < Math.min(maxQuantity, 5)) {
       currentQuantity++;
@@ -1657,10 +1642,8 @@ document.addEventListener('DOMContentLoaded', function() {
     quantityElement.textContent = currentQuantity;
   }
 
-  // Initialize quantity
   updateQuantityDisplay();
 
-  // Add to Cart functionality with enhanced auth handling
   if (addToCartBtn) {
     addToCartBtn.addEventListener('click', async function(e) {
       e.preventDefault();
