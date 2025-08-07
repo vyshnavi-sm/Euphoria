@@ -63,6 +63,16 @@ const editAddress = async (req, res) => {
         const redirect = req.query.redirect || 'profile';
         const userId = req.session.user && req.session.user._id ? req.session.user._id : req.session.user;
         
+        if (!mongoose.Types.ObjectId.isValid(addressId)) {
+            console.log("Invalid addressId format:", addressId);
+            return res.redirect("/pageNotFound");
+        }
+        
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            console.log("Invalid userId format:", userId);
+            return res.redirect("/pageNotFound");
+        }
+
         const userObjectId = new mongoose.Types.ObjectId(userId);
         const addressObjectId = new mongoose.Types.ObjectId(addressId);
 
@@ -99,6 +109,16 @@ const updateAddress = async (req, res) => {
         const userId = req.session.user && req.session.user._id ? req.session.user._id : req.session.user;
         const redirect = req.query.redirect || 'profile';
         
+        if (!mongoose.Types.ObjectId.isValid(addressId)) {
+            console.log("Invalid addressId format:", addressId);
+            return res.redirect(`/edit-address/${addressId}?redirect=${redirect}&error=invalid_address_id`);
+        }
+        
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            console.log("Invalid userId format:", userId);
+            return res.redirect(`/edit-address/${addressId}?redirect=${redirect}&error=invalid_user_id`);
+        }
+        
         const { name, mobile, addressType, addressLine1, city, state, pincode } = req.body;
         
         if (!name || !mobile || !addressType || !addressLine1 || !city || !state || !pincode) {
@@ -109,7 +129,7 @@ const updateAddress = async (req, res) => {
         const addressObjectId = new mongoose.Types.ObjectId(addressId);
         
         const pincodeNum = Number(pincode);
-        if (isNaN(pincodeNum) || pincodeNum <= 0) {
+        if (isNaN(pincodeNum) || pincodeNum <= 0 || pincode.length !== 6) {
             return res.redirect(`/edit-address/${addressId}?redirect=${redirect}&error=invalid_pincode`);
         }
 

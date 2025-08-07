@@ -28,7 +28,7 @@ const getCheckoutPage = async (req, res) => {
         const userId = req.session.user;
         if (!userId) return res.redirect('/login');
 
-        const [cart, userData, addressData] = await Promise.all([
+        let [cart, userData, addressData] = await Promise.all([
             Cart.findOne({ userId }).populate({ path: 'items.productId', select: 'productName productImage price' }),
             User.findById(userId).lean(),
             Address.findOne({ userId }).lean()
@@ -37,10 +37,17 @@ const getCheckoutPage = async (req, res) => {
         if (!cart || cart.items.length === 0) return res.redirect('/user/cart');
         if (!userData) return res.redirect('/login');
 
+        // ✅ Filter out items where productId is null
+        const validItems = cart.items.filter(item => item.productId);
+        if (validItems.length !== cart.items.length) {
+            cart.items = validItems;
+            await cart.save(); // optional cleanup in DB
+        }
+
         const address = (addressData?.address?.length > 0) 
             ? (addressData.address.find(a => a._id.equals(req.query.addressId)) || addressData.address[0])
             : null;
-            
+
         const subtotal = cart.items.reduce((sum, item) => sum + item.totalPrice, 0);
         const deliveryCharge = subtotal >= 1000 ? 0 : 50;
 
@@ -67,6 +74,7 @@ const getCheckoutPage = async (req, res) => {
         res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).render('error', { message: 'Internal server error' });
     }
 };
+
 
 const placeOrder = async (req, res) => {
     try {

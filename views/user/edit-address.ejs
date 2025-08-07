@@ -110,7 +110,6 @@
         margin: 0 10px;
     }
 </style>
-
 <div class="content-main">
     <div class="form-container">
         <div class="breadcrumb">
@@ -122,16 +121,16 @@
         <h2 class="page-title">Edit Address</h2>
         
         <div class="form-card">
-            <form id="addressForm" method="post" action="/edit-address/<%= address._id %>?redirect=<%= redirect || 'profile' %>" onsubmit="return validateForm()">
+        <form id="addressForm" method="post" action="/edit-address/<%= address._id %>?redirect=<%= redirect || 'profile' %>" onsubmit="return validateForm()">
                 <div class="form-group">
                     <label class="form-label" for="name">Full Name</label>
-                    <input type="text" class="form-control" id="name" name="name" value="<%= address.name %>" required pattern="[a-zA-Z\s]{2,50}">
+                    <input type="text" class="form-control" id="name" name="name" value="<%= address.name || '' %>" required pattern="[a-zA-Z\s]{2,50}">
                     <div class="error-message" id="name-error"></div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="mobile">Mobile Number</label>
-                    <input type="tel" class="form-control" id="mobile" name="mobile" value="<%= address.phone %>" required pattern="[0-9]{10}">
+                    <input type="tel" class="form-control" id="mobile" name="mobile" value="<%= address.phone || '' %>" required pattern="[0-9]{10}">
                     <div class="error-message" id="mobile-error"></div>
                 </div>
 
@@ -148,25 +147,25 @@
 
                 <div class="form-group">
                     <label class="form-label" for="addressLine1">Address Line 1</label>
-                    <input type="text" class="form-control" id="addressLine1" name="addressLine1" value="<%= address.landMark %>" required pattern=".{5,100}">
+                    <input type="text" class="form-control" id="addressLine1" name="addressLine1" value="<%= address.landMark || '' %>" required pattern=".{5,100}">
                     <div class="error-message" id="address1-error"></div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="city">City</label>
-                    <input type="text" class="form-control" id="city" name="city" value="<%= address.city %>" required pattern="[a-zA-Z\s]{2,50}">
+                    <input type="text" class="form-control" id="city" name="city" value="<%= address.city || '' %>" required pattern="[a-zA-Z\s]{2,50}">
                     <div class="error-message" id="city-error"></div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="state">State</label>
-                    <input type="text" class="form-control" id="state" name="state" value="<%= address.state %>" required pattern="[a-zA-Z\s]{2,50}">
+                    <input type="text" class="form-control" id="state" name="state" value="<%= address.state || '' %>" required pattern="[a-zA-Z\s]{2,50}">
                     <div class="error-message" id="state-error"></div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="pincode">Pincode</label>
-                    <input type="text" class="form-control" id="pincode" name="pincode" value="<%= address.pincode %>" required pattern="[0-9]{6}">
+                    <input type="text" class="form-control" id="pincode" name="pincode" value="<%= address.pincode || '' %>" required pattern="[0-9]{6}">
                     <div class="error-message" id="pincode-error"></div>
                 </div>
 
@@ -184,13 +183,12 @@ function validateForm() {
     const pincodeRegex = /^[0-9]{6}$/;
     const cityStateRegex = /^[a-zA-Z\s]{2,50}$/;
 
-    // Name validation
+    document.querySelectorAll('.error-message').forEach(error => error.textContent = '');
+
     const name = document.getElementById('name').value.trim();
     if (!nameRegex.test(name)) {
         document.getElementById('name-error').textContent = 'Please enter a valid name (2-50 characters, letters only)';
         isValid = false;
-    } else {
-        document.getElementById('name-error').textContent = '';
     }
 
     // Mobile validation
@@ -198,8 +196,6 @@ function validateForm() {
     if (!mobileRegex.test(mobile)) {
         document.getElementById('mobile-error').textContent = 'Please enter a valid 10-digit mobile number';
         isValid = false;
-    } else {
-        document.getElementById('mobile-error').textContent = '';
     }
 
     // Address Type validation
@@ -207,8 +203,6 @@ function validateForm() {
     if (!addressType) {
         document.getElementById('type-error').textContent = 'Please select an address type';
         isValid = false;
-    } else {
-        document.getElementById('type-error').textContent = '';
     }
 
     // Address Line 1 validation
@@ -216,8 +210,6 @@ function validateForm() {
     if (addressLine1.length < 5 || addressLine1.length > 100) {
         document.getElementById('address1-error').textContent = 'Please enter a valid address (5-100 characters)';
         isValid = false;
-    } else {
-        document.getElementById('address1-error').textContent = '';
     }
 
     // City validation
@@ -225,8 +217,6 @@ function validateForm() {
     if (!cityStateRegex.test(city)) {
         document.getElementById('city-error').textContent = 'Please enter a valid city name (2-50 characters, letters only)';
         isValid = false;
-    } else {
-        document.getElementById('city-error').textContent = '';
     }
 
     // State validation
@@ -234,8 +224,6 @@ function validateForm() {
     if (!cityStateRegex.test(state)) {
         document.getElementById('state-error').textContent = 'Please enter a valid state name (2-50 characters, letters only)';
         isValid = false;
-    } else {
-        document.getElementById('state-error').textContent = '';
     }
 
     // Pincode validation
@@ -243,8 +231,6 @@ function validateForm() {
     if (!pincodeRegex.test(pincode)) {
         document.getElementById('pincode-error').textContent = 'Please enter a valid 6-digit pincode';
         isValid = false;
-    } else {
-        document.getElementById('pincode-error').textContent = '';
     }
 
     return isValid;
@@ -254,21 +240,23 @@ function validateForm() {
 document.addEventListener('DOMContentLoaded', function() {
     const inputs = document.querySelectorAll('input, select');
     inputs.forEach(input => {
-        input.addEventListener('input', function() {
-            validateForm();
-        });
-        input.addEventListener('blur', function() {
-            validateForm();
-        });
+        input.addEventListener('input', validateForm);
+        input.addEventListener('blur', validateForm);
     });
 
     const form = document.getElementById('addressForm');
     form.addEventListener('submit', function(e) {
         e.preventDefault();
+        
+        if (!validateForm()) {
+            return false;
+        }
+
         const name = document.getElementById('name').value.trim();
         const mobile = document.getElementById('mobile').value.trim();
         const nameRegex = /^[a-zA-Z\s]{2,50}$/;
         const mobileRegex = /^[0-9]{10}$/;
+
         if (!nameRegex.test(name)) {
             Swal.fire({
                 icon: 'error',
@@ -278,6 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             return false;
         }
+
         if (!mobileRegex.test(mobile)) {
             Swal.fire({
                 icon: 'error',
@@ -287,35 +276,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             return false;
         }
-        // AJAX submit
-        const formData = new FormData(form);
-        fetch(form.action, {
-            method: 'POST',
-            body: formData
-        })
-        .then(async response => {
-            if (response.ok) {
-                // If redirect, follow it
-                window.location.href = '<%= redirect === "checkout" ? "/user/checkout" : "/userProfile#address" %>';
-            } else {
-                const data = await response.json();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Update Failed',
-                    text: data.message || 'No changes were made to the address.',
-                    confirmButtonColor: '#5C4033'
-                });
-            }
-        })
-        .catch(() => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Update Failed',
-                text: 'Something went wrong. Please try again.',
-                confirmButtonColor: '#5C4033'
-            });
-        });
-        return false;
+
+        // Submit the form normally (not AJAX since you're doing redirects)
+        form.submit();
     });
 });
 </script>
