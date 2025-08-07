@@ -1046,7 +1046,7 @@
                         <div class="orders-card card shadow-sm">
                           <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
                             <div>
-                              <div style="font-size: 1.05rem; font-weight: 600; color: #5D4037; margin-bottom: 2px;">Order #<%= order.orderId %></div>
+                              <div style="font-size: 1.05rem; font-weight: 600; color: #5D4037; margin-bottom: 2px;">Order <%= order.orderId %></div>
                               <div style="font-size: 0.98rem; color: #222; margin-bottom: 1px;"><b>Order Date:</b> <%= new Date(order.createdOn).toLocaleString('en-IN') %></div>
                               <div style="font-size: 0.98rem; color: #222;"><b>Total Amount:</b> ₹<%= order.finalAmount.toFixed(2) %></div>
                             </div>
