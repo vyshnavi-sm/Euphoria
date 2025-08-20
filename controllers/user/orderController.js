@@ -22,13 +22,11 @@ const getUserOrders = async (req, res) => {
         let query = { userId };
 
         if (searchQuery) {
-            // First try to find orders by orderId
             const orderIdQuery = { 
                 userId, 
                 orderId: { $regex: searchQuery, $options: 'i' }
             };
             
-            // Also search by product names
             const productResults = await Product.find({
                 productName: { $regex: searchQuery, $options: 'i' }
             }).select('_id');
@@ -52,7 +50,6 @@ const getUserOrders = async (req, res) => {
             .skip(skip)
             .limit(limit);
 
-        // Process orders to add delivery charge and format product data for EJS compatibility
         orders.forEach(order => {
             if (order.totalPrice < 1000) {
                 order.deliveryCharge = 50;
@@ -60,7 +57,6 @@ const getUserOrders = async (req, res) => {
                 order.deliveryCharge = 0;
             }
 
-            // Enhanced debugging: Log product information
             console.log(`\n=== Order ${order.orderId} ===`);
             console.log('Total ordered items:', order.orderedItems.length);
             
@@ -77,7 +73,6 @@ const getUserOrders = async (req, res) => {
                         console.log('- Product Images array:', item.product.images);
                         console.log('- Product Image field:', item.product.productImage);
                         
-                        // Check which image source is available
                         let availableImage = null;
                         if (item.product.images && Array.isArray(item.product.images) && item.product.images.length > 0) {
                             availableImage = item.product.images[0];
@@ -93,7 +88,6 @@ const getUserOrders = async (req, res) => {
                 }
             });
 
-            // Add products array for EJS template compatibility
             order.products = order.orderedItems.map(item => ({
                 productId: item.product,
                 quantity: item.quantity,
@@ -232,7 +226,7 @@ const getOrderDetails = async (req, res) => {
 
         const formattedOrder = {
             ...order._doc,
-            createdOnFormatted: moment(order.createdOn).tz("Asia/Kolkata").format("DD MMM YYYY, hh:mm A"),
+            createdOnFormatted: moment().tz("Asia/Kolkata").format("DD MMM YYYY, hh:mm A"),
             updatedAtFormatted: moment(order.updatedAt).tz("Asia/Kolkata").format("DD MMM YYYY, hh:mm A"),
             estimatedDeliveryFormatted: order.estimatedDeliveryDate 
                 ? moment(order.estimatedDeliveryDate).tz("Asia/Kolkata").format("DD MMM YYYY, hh:mm A")
