@@ -143,7 +143,6 @@ const generateSalesReport = async (req, res) => {
   try {
     const { format, filter, startDate, endDate } = req.query;
     let errorMessage = null;
-    // Date validation for custom filter
     if (filter === 'custom') {
       if (!startDate || !endDate) {
         errorMessage = 'Both start and end dates are required.';
@@ -211,8 +210,6 @@ const generateSalesReport = async (req, res) => {
         select: 'name email'
       })
       .sort({ createdAt: -1, createdOn: -1 });
-
-
 
     const processedOrders = orders.map(order => {
       const orderObj = order.toObject();

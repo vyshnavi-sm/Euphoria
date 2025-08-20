@@ -30,6 +30,27 @@ const createPDF = async (type, data) => {
                 doc.restore(); 
             };
 
+            // Helper function to format date safely
+            const formatDate = (dateInput) => {
+                try {
+                    if (!dateInput) {
+                        return new Date().toLocaleDateString('en-IN');
+                    }
+                    
+                    const date = new Date(dateInput);
+                    
+                    // Check if the date is valid
+                    if (isNaN(date.getTime())) {
+                        return new Date().toLocaleDateString('en-IN');
+                    }
+                    
+                    return date.toLocaleDateString('en-IN');
+                } catch (error) {
+                    // Fallback to current date if any error occurs
+                    return new Date().toLocaleDateString('en-IN');
+                }
+            };
+
             const pageWidth = 595.28; 
             const pageHeight = 841.89; 
             const margin = 30;
@@ -119,7 +140,7 @@ const createPDF = async (type, data) => {
                 .font('Helvetica-Bold')
                 .text('Invoice Date:', rightColumnX, orderDetailsY, { width: columnWidth })
                 .font('Helvetica')
-                .text(new Date(data.order.createdAt).toLocaleDateString('en-IN'), rightColumnX, orderDetailsY + 15, { width: columnWidth });
+                .text(formatDate(data.order.createdAt), rightColumnX, orderDetailsY + 15, { width: columnWidth });
 
             currentY += orderDetailsHeight + 10; 
 

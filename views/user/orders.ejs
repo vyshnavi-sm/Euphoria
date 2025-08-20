@@ -372,7 +372,6 @@
       border-radius: 5px;
     }
 
-    /* Modal styles */
     .modal-content {
       border-radius: 15px;
       border: none;
@@ -424,7 +423,6 @@
       box-shadow: 0 0 0 0.2rem rgba(93, 64, 55, 0.25);
     }
 
-    /* Responsive Design for Orders Page */
     @media (max-width: 992px) {
       .orders-container {
         margin: 40px auto 30px;
@@ -608,49 +606,51 @@
       </button>
     </form>
 
-    <% if (orders && orders.length > 0) { %>
-      <% orders.forEach(order => { %>
-        <div class="card mb-3">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="card-title mb-0">Order <%= order.orderNumber %></h5>
-              <span class="badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' || order.status === 'Payment Failed' ? 'danger' : order.status === 'Returned' ? 'info' : 'warning' %>">
-                <%= order.status %>
-              </span>
+   <% if (orders && orders.length > 0) { %>
+  <% orders.forEach(order => { %>
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-0">Order <%= order.orderId %></h5>
+          <span class="badge bg-<%= order.status === 'Delivered' ? 'success' : order.status === 'Cancelled' || order.status === 'Payment Failed' ? 'danger' : order.status === 'Returned' ? 'info' : 'warning' %>">
+            <%= order.status %>
+          </span>
+        </div>
+
+        <!-- ✅ PRODUCT IMAGES + DETAILS -->
+        <div class="d-flex flex-wrap mb-3">
+          <% order.orderedItems.forEach(item => { %>
+            <div class="me-3 mb-2 text-center" style="width: 120px;">
+              <img 
+                src="<%= item.product.productImage || (item.product.images && item.product.images[0]) %>" 
+                alt="<%= item.product.productName %>" 
+                class="img-fluid rounded border"
+                style="height: 100px; object-fit: contain;"
+              />
+              <small><%= item.product.productName %></small><br>
+              <small>Qty: <%= item.quantity %></small>
             </div>
-            <div class="row">
-              <div class="col-md-6">
-                <p class="mb-1"><strong>Order Date:</strong> <%= order.createdOn && !isNaN(new Date(order.createdOn)) ? new Date(order.createdOn).toLocaleString('en-IN', {
-                  year: 'numeric',
-                  month: 'short',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: true
-                }) : 'Invalid Date' %></p>
-                <p class="mb-1"><strong>Total Amount:</strong> ₹<%= order.finalAmount ? order.finalAmount.toFixed(2) : '0.00' %></p>
-                <!-- <p class="mb-1">
-                    <strong>Delivery Charge:</strong>
-                    <% if (order.totalPrice >= 1000) { %>
-                        <span style="text-decoration: line-through; color: #999;">₹50</span> FREE
-                    <% } else { %>
-                        ₹<%= order.deliveryCharge ? order.deliveryCharge.toFixed(2) : '50.00' %>
-                    <% } %>
-                </p> -->
-              </div>
-              <div class="col-md-6 text-md-end">
-                <a href="/user/orders/<%= order.orderNumber %>" class="btn btn-sm btn-brown">View Details</a>
-                <% if (['Processing', 'Pending'].includes(order.status)) { %>
-                  <button type="button" class="btn btn-sm btn-danger" onclick="showCancelOrderModal('<%= order.orderNumber %>')">
-                    <i class="fas fa-times"></i> Cancel Order
-                  </button>
-                <% } %>
-              </div>
-            </div>
+          <% }) %>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <p class="mb-1"><strong>Order Date:</strong> <%= order.createdOnIST || 'Invalid Date' %></p>
+            <p class="mb-1"><strong>Total Amount:</strong> ₹<%= order.finalAmount ? order.finalAmount.toFixed(2) : '0.00' %></p>
+          </div>
+          <div class="col-md-6 text-md-end">
+            <a href="/user/orders/<%= order._id %>" class="btn btn-sm btn-brown">View Details</a>
+            <% if (['Processing', 'Pending'].includes(order.status)) { %>
+              <button type="button" class="btn btn-sm btn-danger" onclick="showCancelOrderModal('<%= order._id %>')">
+                <i class="fas fa-times"></i> Cancel Order
+              </button>
+            <% } %>
           </div>
         </div>
-      <% }) %>
+      </div>
+    </div>
+  <% }) %>
+<% } %>
 
       <!-- Pagination -->
       <% if (totalPages > 1) { %>

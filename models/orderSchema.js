@@ -101,7 +101,8 @@ const orderSchema = new Schema({
         phone: String
     },
     invoiceDate: {
-        type: Date
+        type: Date,
+        default: Date.now   
     },
     status: {
         type: String,
@@ -198,6 +199,9 @@ const orderSchema = new Schema({
 orderSchema.pre('save', function (next) {
     if (!this.orderId) {
         this.orderId = uuidv4();
+    }
+    if (!this.invoiceDate) {
+        this.invoiceDate = new Date();
     }
     next();
 });

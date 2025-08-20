@@ -42,7 +42,6 @@ app.use(session({
     }
 }));
 
-// Add security headers
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
@@ -86,6 +85,19 @@ app.use((req, res, next) => {
 app.use("/", userRouter);
 app.use("/admin", adminRouter);
 
+app.use("/admin/*", (req, res) => {
+    res.status(404).render("admin/pageerror", {
+        title: "Admin Page Not Found",
+        message: "Oops! The admin page you're looking for doesn't exist."
+    });
+})
+
+app.use((req, res, next) => {
+    res.status(404).render("user/404", {
+        title: "Page Not Found",
+        message: "Oops! The page you're looking for doesn't exist."
+    });
+});
 
 require('events').EventEmitter.defaultMaxListeners = 15;
 

@@ -2,7 +2,6 @@ const User = require("../../models/userSchema");
 const bcrypt = require("bcrypt");
 const { STATUS_CODE } = require("../../utils/statusCodes.js");
 
-
 const pageerror = (req, res) => res.render("pageerror");
 
 const loadLogin = (req, res) => {
@@ -14,13 +13,22 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password)
-      return res.json({ success: false, message: "Please provide both email and password" });
+      return res.json({
+        success: false,
+        message: "Please provide both email and password",
+      });
 
     const admin = await User.findOne({ email, isAdmin: true });
     if (!admin)
-      return res.json({ success: false, message: "Invalid email or not an admin account" });
+      return res.json({
+        success: false,
+        message: "Invalid email or not an admin account",
+      });
     if (admin.isBlocked)
-      return res.json({ success: false, message: "This admin account has been blocked" });
+      return res.json({
+        success: false,
+        message: "This admin account has been blocked",
+      });
 
     const passwordMatch = await bcrypt.compare(password, admin.password);
     if (!passwordMatch)
@@ -33,11 +41,16 @@ const login = async (req, res) => {
       name: admin.name,
       lastActivity: Date.now(),
     };
-    await new Promise(resolve => req.session.save(resolve));
+    await new Promise((resolve) => req.session.save(resolve));
     res.json({ success: true, redirect: "/admin/dashboard" });
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(STATUS_CODE.INTERNAL_SERVER_ERROR).json({ success: false, message: "An error occurred. Please try again." });
+    res
+      .status(STATUS_CODE.INTERNAL_SERVER_ERROR)
+      .json({
+        success: false,
+        message: "An error occurred. Please try again.",
+      });
   }
 };
 
@@ -45,7 +58,7 @@ const logout = (req, res) => {
   try {
     if (req.session) {
       delete req.session.admin;
-      req.session.save(err => {
+      req.session.save((err) => {
         if (err) return res.redirect("/pageerror");
         res.redirect("/admin/login");
       });
@@ -58,23 +71,22 @@ const logout = (req, res) => {
   }
 };
 
-
 const validateAdminSession = (req, res, next) => {
   if (!req.session.admin) {
     return req.xhr || req.headers.accept.includes("json")
-      ? res.status(STATUS_CODE.UNAUTHORIZED).json({ success: false, message: "Session expired" })
+      ? res
+          .status(STATUS_CODE.UNAUTHORIZED)
+          .json({ success: false, message: "Session expired" })
       : res.redirect("/admin/login");
   }
   req.session.admin.lastActivity = Date.now();
   next();
 };
 
-
-
 module.exports = {
   loadLogin,
   login,
   pageerror,
   logout,
-  validateAdminSession
+  validateAdminSession,
 };

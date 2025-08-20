@@ -6,7 +6,6 @@ const fs = require("fs");
 const path = require("path");
 const { STATUS_CODE } = require("../../utils/statusCodes.js");
 
-
 const getProductPage = async (req, res) => {
     try {
         const [cat, brand] = await Promise.all([
@@ -19,7 +18,6 @@ const getProductPage = async (req, res) => {
         res.redirect("/pageerror");
     }
 };
-
 
 const addProducts = async (req, res) => {
     try {
@@ -141,7 +139,6 @@ const getAllProducts = async (req, res) => {
         res.redirect('/pageerror');
     }
 };
-
 const blockProduct = async (req, res) => {
     try {
         const product = await Product.findById(req.body.productId);
@@ -157,7 +154,6 @@ const blockProduct = async (req, res) => {
         res.json({ success: false, message: "Error blocking product" });
     }
 };
-
 const unblockProduct = async (req, res) => {
     try {
         const product = await Product.findById(req.body.productId);
@@ -171,7 +167,6 @@ const unblockProduct = async (req, res) => {
         res.json({ success: false, message: "Error unblocking product" });
     }
 };
-
 const getEditProduct = async (req, res) => {
     try {
         const [product, category, brand] = await Promise.all([
@@ -196,15 +191,31 @@ const editProduct = async (req, res) => {
     const id = req.params.id;
     try {
         const data = req.body;
+        
         const quantity = parseInt(data.quantity);
+        const regPrice = parseFloat(data.regularPrice);
+        const sPrice = parseFloat(data.salePrice);
         const isBlocked = data.isBlocked === 'on';
         const newStatus = quantity === 0 ? "out of stock" : "Available";
 
-        if (isNaN(quantity) || quantity !== 4) {
-            return res.redirect(`/admin/editProduct?id=${id}&error=Quantity must be exactly 4.`);
+        if (isNaN(quantity) || quantity < 0) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Quantity must be a valid number.`);
         }
-         if (isNaN(regPrice) || isNaN(sPrice) || sPrice > regPrice) {
+
+        if (isNaN(regPrice) || isNaN(sPrice) || regPrice <= 0 || sPrice <= 0) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Prices must be valid positive numbers.`);
+        }
+        
+        if (sPrice > regPrice) {
             return res.redirect(`/admin/editProduct?id=${id}&error=Sale price must be less than or equal to the regular price.`);
+        }
+
+        if (!data.productName || !data.productName.trim()) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Product name is required.`);
+        }
+
+        if (!data.description || !data.description.trim()) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Product description is required.`);
         }
 
         const [existingProduct, category, brand, product] = await Promise.all([
@@ -213,41 +224,67 @@ const editProduct = async (req, res) => {
             Brand.findOne({ brandName: data.brand }),
             Product.findById(id)
         ]);
-        if (existingProduct) return res.redirect(`/admin/editProduct?id=${id}&error=Product with this name already exists.`);
-        if (!category || !brand || !product) return res.redirect(`/admin/editProduct?id=${id}&error=Invalid category, brand, or product.`);
+
+        if (existingProduct) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Product with this name already exists.`);
+        }
+        
+        if (!category) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Invalid category selected.`);
+        }
+        
+        if (!brand) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Invalid brand selected.`);
+        }
+        
+        if (!product) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Product not found.`);
+        }
 
         let images = [...product.productImage];
-        if (req.files?.length) {
+        if (req.files && req.files.length > 0) {
             const newImages = req.files.map(f => f.path);
-            if (images.length + newImages.length > 4)
-                return res.redirect(`/admin/editProduct?id=${id}&error=Max 4 product images allowed. Currently: ${images.length}, Adding: ${newImages.length}`);
+            if (images.length + newImages.length > 4) {
+                return res.redirect(`/admin/editProduct?id=${id}&error=Maximum 4 product images allowed. Currently: ${images.length}, Trying to add: ${newImages.length}`);
+            }
             images.push(...newImages);
         }
 
-        Object.assign(product, {
+        const updateData = {
             productName: data.productName.trim(),
             description: data.description.trim(),
             category: category._id,
             brand: brand._id,
-            regularPrice: parseFloat(data.regularPrice),
-            salePrice: parseFloat(data.salePrice),
-            quantity,
+            regularPrice: regPrice,
+            salePrice: sPrice,
+            quantity: quantity,
             status: newStatus,
-            color: data.color.trim(),
-            isBlocked,
+            color: data.color ? data.color.trim() : '',
+            isBlocked: isBlocked,
             productImage: images
-        });
+        };
 
-        await product.save();
+        const updatedProduct = await Product.findByIdAndUpdate(
+            id, 
+            updateData, 
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedProduct) {
+            return res.redirect(`/admin/editProduct?id=${id}&error=Failed to update product.`);
+        }
 
         if (isBlocked || quantity === 0) {
-            await require('../../models/cartSchema').updateMany(
+            const Cart = require('../../models/cartSchema');
+            await Cart.updateMany(
                 { 'items.productId': id },
                 { $pull: { items: { productId: id } } }
             );
         }
 
+        console.log('Product updated successfully:', updatedProduct);
         res.redirect('/admin/products?success=Product updated successfully');
+        
     } catch (error) {
         console.error('Error updating product:', error);
         res.redirect(`/admin/editProduct?id=${id}&error=${encodeURIComponent(error.message)}`);

@@ -385,8 +385,7 @@
 </head>
 <body>
     <%- include("../../views/partials/user/header") %>
-
-    <div class="order-details-container">
+<div class="order-details-container">
         <div class="mb-3">
             <a href="/" class="btn btn-outline-brown">
                 <i class="fas fa-home"></i> Back to Home
@@ -397,14 +396,8 @@
             <div class="order-info">
                 <div>
                     <p><strong>Order ID:</strong> <%= order.orderId %></p>
-                    <p><strong>Order Date:</strong> <%= new Date(order.createdOn).toLocaleString('en-IN', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true
-                    }) %></p>
+                    <p><strong>Order Date:</strong> <%= order.createdOnFormatted || 'N/A' %></p>
+
                     <p><strong>Payment Method:</strong> <%= order.paymentMethod %>
                     <% if (order.paymentStatus === 'Paid') { %>
                         <span style="color:#a3a728;font-weight:600;margin-left:10px;">(Payment: Success)</span>
@@ -414,27 +407,15 @@
                 <div>
                     <p><strong>Status:</strong> <span class="order-status status-<%= order.status.toLowerCase() %>"><%= order.status %></span></p>
                     <% if (order.status === 'Delivered') { %>
-                        <p><strong>Delivered On:</strong> <%= new Date(order.updatedAt).toLocaleString('en-IN', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                        }) %></p>
+                      <p><strong>Delivered On:</strong> <%= order.updatedAtFormatted || 'Pending' %></p>
+
                     <% } else if (order.status === 'Shipped') { %>
                         <p><strong>Status:</strong> Your order has been shipped and is on its way!</p>
                     <% } else if (order.status === 'Out for Delivery') { %>
                         <p><strong>Status:</strong> Your order is out for delivery and will arrive soon!</p>
                     <% } else { %>
-                        <p><strong>Estimated Delivery:</strong> <%= new Date(order.estimatedDeliveryDate).toLocaleString('en-IN', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: true
-                        }) %></p>
+                       <p><strong>Estimated Delivery:</strong> <%= order.estimatedDeliveryFormatted || 'N/A' %></p>
+
                     <% } %>
                 </div>
             </div>
@@ -449,44 +430,50 @@
                     <div class="card-body">
                         <% order.orderedItems.forEach(item => { %>
                             <div class="product-item">
-                                <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
-                                    <img src="<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" class="product-image">
-                                <% } else { %>
-                                    <img src="/images/default-product.jpg" alt="Product Image" class="product-image">
-                                <% } %>
-                                <div class="product-info">
-                                    <h6 class="product-name">
-                                        <%= item.product.productName %>
-                                        <% if (item.status === 'Cancelled') { %>
-                                            <span class="order-status status-cancelled ms-2">Cancelled</span>
-                                        <% } else if (item.status === 'Returned') { %>
-                                            <span class="order-status status-returned ms-2">Returned</span>
+                                <a href="/product/<%= item.product._id %>" class="text-decoration-none text-dark d-flex align-items-center" style="cursor: pointer;">
+                                    <% if (item.product && item.product.productImage && item.product.productImage.length > 0) { %>
+                                        <img src="<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>" class="product-image me-3">
+                                    <% } else { %>
+                                        <img src="/images/default-product.jpg" alt="Product Image" class="product-image me-3">
+                                    <% } %>
+                                    <div class="product-info flex-grow-1">
+                                        <h6 class="product-name">
+                                            <%= item.product.productName %>
+                                            <% if (item.status === 'Cancelled') { %>
+                                                <span class="order-status status-cancelled ms-2">Cancelled</span>
+                                            <% } else if (item.status === 'Returned') { %>
+                                                <span class="order-status status-returned ms-2">Returned</span>
+                                            <% } %>
+                                        </h6>
+                                        <p class="text-muted mb-1">Quantity: <%= item.quantity %></p>
+                                        <p class="product-price">₹<%= item.status === 'Cancelled' || item.status === 'Returned' || item.status === 'Return Requested' ? '0.00' : (item.price * item.quantity).toFixed(2) %></p>
+                                        <% if (item.status === 'Cancelled' && item.cancellationReason) { %>
+                                            <p class="text-muted fst-italic small">Reason: <%= item.cancellationReason %></p>
                                         <% } %>
-                                        <% if (!['Cancelled', 'Returned'].includes(item.status) && ['Processing', 'Pending'].includes(order.status)) { %>
-                                             <button type="button" class="btn btn-sm btn-danger ms-2" onclick="showCancelItemModal('<%= order._id %>', '<%= item._id %>')">
-                                                 <i class="fas fa-times"></i> Cancel Item
-                                             </button>
-                                         <% } %>
-                                    </h6>
-                                    <p class="text-muted mb-1">Quantity: <%= item.quantity %></p>
-                                    <p class="product-price">₹<%= item.status === 'Cancelled' || item.status === 'Returned' || item.status === 'Return Requested' ? '0.00' : (item.price * item.quantity).toFixed(2) %></p>
-                                    <% if (item.status === 'Cancelled' && item.cancellationReason) { %>
-                                        <p class="text-muted fst-italic small">Reason: <%= item.cancellationReason %></p>
+                                        <% if (item.status === 'Returned' && item.returnReason) { %>
+                                            <p class="text-muted fst-italic small">Return Reason: <%= item.returnReason %></p>
+                                        <% } %>
+                                        <% if (item.adminRejectionReason) { %>
+                                            <p class="text-muted fst-italic small text-danger">Admin Rejection Reason: <%= item.adminRejectionReason %></p>
+                                        <% } else if (item.adminReturnReason) { %>
+                                            <p class="text-muted fst-italic small text-danger">Admin Reason: <%= item.adminReturnReason %></p>
+                                        <% } %>
+                                    </div>
+                                </a>
+                                
+                                <!-- Action buttons outside the link to prevent conflicts -->
+                                <div class="product-actions ms-auto">
+                                    <% if (!['Cancelled', 'Returned'].includes(item.status) && ['Processing', 'Pending'].includes(order.status)) { %>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="event.stopPropagation(); showCancelItemModal('<%= order._id %>', '<%= item._id %>')">
+                                            <i class="fas fa-times"></i> Cancel Item
+                                        </button>
                                     <% } %>
-                                    <% if (item.status === 'Returned' && item.returnReason) { %>
-                                        <p class="text-muted fst-italic small">Return Reason: <%= item.returnReason %></p>
-                                    <% } %>
-                                    <% if (item.adminRejectionReason) { %>
-                                        <p class="text-muted fst-italic small text-danger">Admin Rejection Reason: <%= item.adminRejectionReason %></p>
-                                    <% } else if (item.adminReturnReason) { %>
-                                        <p class="text-muted fst-italic small text-danger">Admin Reason: <%= item.adminReturnReason %></p>
+                                    <% if (item.status !== 'Cancelled' && item.status !== 'Returned' && order.status === 'Delivered') { %>
+                                        <button type="button" class="btn btn-sm btn-warning" onclick="event.stopPropagation(); showReturnItemModal('<%= order._id %>', '<%= item._id %>')">
+                                            <i class="fas fa-undo"></i> Return Item
+                                        </button>
                                     <% } %>
                                 </div>
-                                <% if (item.status !== 'Cancelled' && item.status !== 'Returned' && order.status === 'Delivered') { %>
-                                    <button type="button" class="btn btn-sm btn-warning" onclick="showReturnItemModal('<%= order._id %>', '<%= item._id %>')">
-                                        <i class="fas fa-undo"></i> Return Item
-                                    </button>
-                                <% } %>
                             </div>
                         <% }) %>
                     </div>
@@ -499,7 +486,7 @@
                     <div class="card-body">
                         <div class="timeline">
                             <div class="timeline-item completed">
-                                <div class="timeline-date"><%= new Date(order.createdOn).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %></div>
+                                <div class="timeline-date"><%= order.updatedAtFormatted || '' %></div>
                                 <div class="timeline-content">Order Confirmed</div>
                             </div>
 
@@ -638,7 +625,6 @@
             </div>
         </div>
     </div>
-
     <!-- Cancel Order Modal -->
     <div class="modal fade" id="cancelOrderModal" tabindex="-1" aria-labelledby="cancelOrderModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -769,7 +755,6 @@
             modal.show();
         }
 
-        // Handle cancel order form submission via AJAX
         document.getElementById('cancelOrderForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const form = e.target;
@@ -800,7 +785,6 @@
             bootstrap.Modal.getInstance(document.getElementById('cancelOrderModal')).hide();
         });
 
-        // Handle return order form submission via AJAX
         document.getElementById('returnOrderForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const form = e.target;

@@ -1,12 +1,11 @@
 <%- include("../../views/partials/user/header") %>
 <style>
-/* ========================================
-   WISHLIST PAGE STYLES
-   ======================================== */
 
-/* ========================================
-   BASE LAYOUT & CONTAINERS
-   ======================================== */
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden; 
+}
 .main-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -14,9 +13,7 @@
   font-family: 'Playfair Display', 'Cormorant Garamond', serif;
 }
 
-/* ========================================
-   HEADER SECTION
-   ======================================== */
+
 .wishlist-header {
   display: flex;
   justify-content: space-between;
@@ -36,9 +33,7 @@
   font-size: 2.5rem;
 }
 
-/* ========================================
-   PRODUCT GRID LAYOUT
-   ======================================== */
+
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -46,9 +41,7 @@
   margin-top: 20px;
 }
 
-/* ========================================
-   PRODUCT CARD STYLES
-   ======================================== */
+
 .product-card {
   width: 100%;
   border: 1px solid #ddd;
